@@ -594,59 +594,57 @@ local function Notify(data: string, status: Color3?, time: number?)
     OpenTween:Play()
     OpenTween.Completed:Wait()
 
-    task.spawn(function()
-        task.wait(time or 4)
+    task.wait(time or 4)
 
-        if not Notif or not Notif.Parent then return end
+    if not Notif or not Notif.Parent then return end
 
-        Notif.AutomaticSize = Enum.AutomaticSize.None
+    Notif.AutomaticSize = Enum.AutomaticSize.None
 
-        local CloseTween = TweenService:Create(
-            Notif,
-            TweenInfo.new(.7),
-            {["Size"] = UDim2.new(notification_frame.Size.X.Scale, notification_frame.Size.X.Offset, 0, 0)}
-        )
+    local CloseTween = TweenService:Create(
+        Notif,
+        TweenInfo.new(.7),
+        {["Size"] = UDim2.new(notification_frame.Size.X.Scale, notification_frame.Size.X.Offset, 0, 0)}
+    )
 
-        TweenService:Create(
-            Status,
-            TweenInfo.new(.7),
-            {["BackgroundTransparency"] = 1}
-        ):Play()
+    TweenService:Create(
+        Status,
+        TweenInfo.new(.7),
+        {["BackgroundTransparency"] = 1}
+    ):Play()
 
-        TweenService:Create(
-            Text,
-            TweenInfo.new(.4),
-            {["TextTransparency"] = 1}
-        ):Play()
+    TweenService:Create(
+        Text,
+        TweenInfo.new(.4),
+        {["TextTransparency"] = 1}
+    ):Play()
 
-        CloseTween:Play()
-        CloseTween.Completed:Wait()
-        Notif:Destroy()
-    end)
+    CloseTween:Play()
+    CloseTween.Completed:Wait()
+    Notif:Destroy()
 end
 
 local DebugMode = false
 
 local function Error(data: string, time: number?)
-    Notify(data, Statuses.Error, time)
+    task.spawn(Notify, data, Statuses.Error, time)
 end
 
 local function Warn(data: string, time: number?)
-    Notify(data, Statuses.Warning, time)
+    task.spawn(Notify, data, Statuses.Warning, time)
 end
 
 local function Info(data: string, time: number?)
-    Notify(data, nil, time)
+    task.spawn(Notify, data, nil, time)
 end
 
 local function Debug(data: string, time: number?)
     if DebugMode then
-        Notify(data, Statuses.Debug, time)
+        task.spawn(Notify, data, Statuses.Debug, time)
     end
 end
 
 local function Success(data: string, time: number?)
-    Notify(data, Statuses.Success, time)
+    task.spawn(Notify, data, Statuses.Success, time)
 end
 
 local Commands = {}
@@ -664,6 +662,16 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
     else
         Error("Could not add command \""..name.."\". Command already exists!")
     end
+end
+
+local function GetCMD(name: string)
+    for Name, Table in pairs(Commands) do
+        if name == Name then
+            return Table
+        end
+    end
+    
+    return nil
 end
 
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
@@ -758,26 +766,31 @@ local function AutoCompleteCommand(data: string)
     local Command = Split and #Split > 1 and Split[1] or data
     local Arguments = Split and #Split > 1 and Split or nil
 
-    if Arguments then
+    if Arguments ~= nil then
         table.remove(Arguments, 1)
     else
         Arguments = {}
     end
 
-    if table.find(Commands, Command:lower()) then
+    if GetCMD(Command:lower()) then
         return command_box.Text
     else
         local Shortest: string? = nil
-        for Name: string, _: CommandTable in pairs(Commands) do
-            if Name:sub(1,Command:len()) == Command then
+
+        for Name: string, _ in pairs(Commands) do
+            if Name:sub(1, Command:len()) == Command then
                 if Shortest and (Name:len() < Shortest:len()) or Shortest == nil then
                     Shortest = Name
                 end
             end
         end
 
-        if Shortest then
-            return Shortest.." "..table.concat(Arguments, " ")
+        if Shortest ~= nil then
+            if #Arguments > 0 then
+                return Shortest.." "..table.concat(Arguments, " ")
+            else
+                return Shortest
+            end
         else
             return nil
         end
@@ -793,8 +806,8 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         local Command = Split and #Split > 1 and Split[1] or String
 
-        if not table.find(Commands, Command:lower()) then
-            local NewString = AutoCompleteCommand(Command)
+        if not GetCMD(Command:lower()) then
+            local NewString = AutoCompleteCommand(String)
 
             if NewString then
                 Split = NewString:split(" ")
@@ -807,7 +820,7 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         local Arguments = Split and #Split > 1 and Split or nil
 
-        if Arguments then
+        if Arguments ~= nil then
             table.remove(Arguments, 1)
         else
             Arguments = {}
