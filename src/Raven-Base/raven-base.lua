@@ -736,6 +736,79 @@ AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
     end
 end)
 
+AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(arguments)
+	local Tool: Tool = Instance.new("Tool", LocalPlayer.Backpack)
+	Tool.RequiresHandle = false
+	Tool.Name = "Teleport"
+	Tool.ToolTip = "Raven Base's teleport tool"
+
+    local MousePart = Instance.new("Part", GetCoreGui())
+    MousePart.Name = "RavenMouse"
+    MousePart.Color = Color3.fromRGB(126, 42, 223)
+    MousePart.Anchored = true
+    MousePart.CanCollide = false
+    MousePart.CanQuery = false
+    MousePart.CanTouch = false
+    MousePart.Shape = Enum.PartType.Ball
+    MousePart.Size = Vector3.new(.5,.5,.5)
+
+    local Highlight = Instance.new("Highlight", MousePart)
+    Highlight.Adornee = MousePart
+    Highlight.OutlineColor = Color3.fromRGB(126, 42, 223)
+    Highlight.FillColor = Color3.fromRGB(126, 42, 223)
+    Highlight.FillTransparency = 0
+    Highlight.OutlineTransparency = 0
+    Highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+	
+	local Activated; Activated = Tool.Activated:Connect(function()
+		local Mouse = LocalPlayer:GetMouse()
+		local Character = LocalPlayer.Character
+		local Root: BasePart? = Character and Character:FindFirstChild("HumanoidRootPart")
+		
+		if Root and Mouse.Target then Root.CFrame = Mouse.Hit end
+	end)
+	
+	local Holding = false
+	
+	local Equipped = Tool.Equipped:Connect(function()
+		Holding = true
+	end)
+	
+	local Unequipped = Tool.Unequipped:Connect(function()
+		Holding = false
+
+        MousePart.Parent = GetCoreGui()
+	end)
+
+    local RenderStepped = RunService.RenderStepped:Connect(function(_)
+        if Holding then
+            local Mouse = LocalPlayer:GetMouse()
+
+            if Mouse.Target then
+                if MousePart.Parent ~= workspace then
+                    MousePart.Parent = workspace
+                end
+
+                MousePart.CFrame = Mouse.Hit
+            else
+                MousePart.Parent = GetCoreGui()
+            end
+        end
+    end)
+	
+	local AncestryChanged; AncestryChanged = Tool.AncestryChanged:Connect(function(child, parent)
+		if child == Tool and parent == workspace or not parent then
+			Activated:Disconnect()
+			AncestryChanged:Disconnect()
+			Unequipped:Disconnect()
+			Equipped:Disconnect()
+            RenderStepped:Disconnect()
+			Tool:Destroy()
+            MousePart:Destroy()
+		end
+	end)
+end)
+
 local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
 
@@ -872,7 +945,7 @@ do -- Welcome Animation
 
     local GotoClosed = TweenService:Create(
         main_frame,
-        TweenInfo.new(slide.TimeLength, Enum.EasingStyle.Exponential),
+        TweenInfo.new(.1, Enum.EasingStyle.Exponential),
         {["Position"] = ClosedPosition}
     )
 
@@ -884,7 +957,7 @@ do -- Welcome Animation
 
     local GotoOpen = TweenService:Create(
         main_frame,
-        TweenInfo.new(2, Enum.EasingStyle.Exponential),
+        TweenInfo.new(1, Enum.EasingStyle.Exponential),
         {["Position"] = OpenPosition}
     )
 
@@ -894,12 +967,11 @@ do -- Welcome Animation
 
     local WelcomeClose = TweenService:Create(
         welcome_label,
-        TweenInfo.new(3, Enum.EasingStyle.Exponential),
+        TweenInfo.new(2, Enum.EasingStyle.Exponential),
         {["Size"] = UDim2.fromScale(0,0)}
     )
 
     WelcomeClose:Play()
-    WelcomeClose.Completed:Wait()
 end
 
 toggle_button.Interactable = true
