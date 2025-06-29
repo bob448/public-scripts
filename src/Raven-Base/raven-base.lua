@@ -30,7 +30,7 @@ end
 do
     local TestInstance = Instance.new("ScreenGui")
 
-    local success, err = pcall(function()
+    local success, _ = pcall(function()
         TestInstance.Parent = _CoreGui
     end)
 
@@ -315,10 +315,42 @@ commands_scrolling_frame.BackgroundColor3 = Color3.new(1, 1, 1)
 commands_scrolling_frame.BackgroundTransparency = 1
 commands_scrolling_frame.BorderColor3 = Color3.new(0, 0, 0)
 commands_scrolling_frame.BorderSizePixel = 0
-commands_scrolling_frame.Size = UDim2.new(0, 528, 0, 214)
+commands_scrolling_frame.Position = UDim2.new(0, 0, 0.0956175327, 0)
+commands_scrolling_frame.Size = UDim2.new(0, 528, 0, 190)
 commands_scrolling_frame.Visible = true
 commands_scrolling_frame.Name = "CommandsScrollingFrame"
 commands_scrolling_frame.Parent = commands_frame
+
+local uilist_layout = Instance.new("UIListLayout")
+uilist_layout.Padding = UDim.new(0, 2)
+uilist_layout.SortOrder = Enum.SortOrder.LayoutOrder
+uilist_layout.Parent = commands_scrolling_frame
+
+local search_commands_box = Instance.new("TextBox")
+search_commands_box.CursorPosition = -1
+search_commands_box.Font = Enum.Font.Arial
+search_commands_box.PlaceholderColor3 = Color3.new(0.258824, 0.180392, 0.27451)
+search_commands_box.PlaceholderText = "Search here.."
+search_commands_box.RichText = true
+search_commands_box.Text = ""
+search_commands_box.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+search_commands_box.TextSize = 21
+search_commands_box.TextWrapped = true
+search_commands_box.BackgroundColor3 = Color3.new(0.0980392, 0.0980392, 0.0980392)
+search_commands_box.BorderColor3 = Color3.new(0, 0, 0)
+search_commands_box.BorderSizePixel = 0
+search_commands_box.Size = UDim2.new(1, 0, 0.0956175327, 0)
+search_commands_box.Visible = true
+search_commands_box.Name = "SearchCommandsBox"
+search_commands_box.Parent = commands_frame
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = search_commands_box
+
+local uilist_layout = Instance.new("UIListLayout")
+uilist_layout.Padding = UDim.new(0, 2)
+uilist_layout.SortOrder = Enum.SortOrder.LayoutOrder
+uilist_layout.Parent = commands_scrolling_frame
 
 local uilist_layout = Instance.new("UIListLayout")
 uilist_layout.Padding = UDim.new(0, 2)
@@ -522,7 +554,9 @@ end)
 local Statuses = {
     Error = Color3.new(0.725490, 0, 0.301960),
     Warning = Color3.new(0.901960, 0.890196, 0.341176),
-    Info = status_frame.BackgroundColor3
+    Info = status_frame.BackgroundColor3,
+    Debug = Color3.new(0.992156, 0.717647, 0.490196),
+    Success = Color3.new(0.611764, 0.847058, 0.552941)
 }
 
 local function Notify(data: string, status: Color3?, time: number?)
@@ -591,6 +625,8 @@ local function Notify(data: string, status: Color3?, time: number?)
     end)
 end
 
+local DebugMode = false
+
 local function Error(data: string, time: number?)
     Notify(data, Statuses.Error, time)
 end
@@ -601,6 +637,16 @@ end
 
 local function Info(data: string, time: number?)
     Notify(data, nil, time)
+end
+
+local function Debug(data: string, time: number?)
+    if DebugMode then
+        Notify(data, Statuses.Debug, time)
+    end
+end
+
+local function Success(data: string, time: number?)
+    Notify(data, Statuses.Success, time)
 end
 
 local Commands = {}
@@ -620,8 +666,19 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
     end
 end
 
+AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
+    DebugMode = true
+end)
+
+AddCMD("debugoff", "Turns off debug mode.", {}, function(arguments)
+    DebugMode = false
+end)
+
 AddCMD("test", "A test command used in development of Raven.", {}, function(arguments)
-    Info("Successfully ran the test command! Arguments: "..table.concat(arguments, " "))
+    for i,v in pairs(arguments) do
+        Debug("Argument "..i..": "..v)
+    end
+    Success("Successfully ran the test command!")
 end)
 
 AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
@@ -634,8 +691,9 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
     end
     
     for Name: string, Table: CommandTable in pairs(Commands) do
-        local Command = command_frame:Clone()
+        local Command: Frame = command_frame:Clone()
         local Label: TextLabel = Command:WaitForChild("CommandLabel")
+        Command:AddTag(Name)
 
         Command.Parent = commands_scrolling_frame
 
@@ -655,6 +713,20 @@ end)
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
+
+search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
+    for i,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "CommandFrame" then
+            local Command: string = v:GetTags()[1]
+
+            if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) ~= search_commands_box.Text then
+                v.Visible = false
+            else
+                v.Visible = true
+            end
+        end
+    end
+end)
 
 closecommands_button.Activated:Connect(function(_, _)
     if not commands_frame.Visible then return end
