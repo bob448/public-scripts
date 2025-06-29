@@ -4,7 +4,7 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
-local VERSION = -2
+local VERSION = -1
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
