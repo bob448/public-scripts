@@ -421,7 +421,7 @@ notification_frame.BorderColor3 = Color3.new(0, 0, 0)
 notification_frame.BorderSizePixel = 0
 notification_frame.Size = UDim2.new(1, 0, 0, 80)
 notification_frame.Visible = true
-notification_frame.Name = "Notification"
+notification_frame.Name = "NotificationFrame"
 notification_frame.Parent = GetCoreGui()
 
 local uicorner = Instance.new("UICorner")
@@ -559,6 +559,32 @@ local Statuses = {
     Success = Color3.new(0.611764, 0.847058, 0.552941)
 }
 
+local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
+    Frame.AutomaticSize = Enum.AutomaticSize.None
+
+    local CloseTween = TweenService:Create(
+        Frame,
+        TweenInfo.new(.7),
+        {["Size"] = UDim2.new(notification_frame.Size.X.Scale, notification_frame.Size.X.Offset, 0, 0)}
+    )
+
+    TweenService:Create(
+        Status,
+        TweenInfo.new(.7),
+        {["BackgroundTransparency"] = 1}
+    ):Play()
+
+    TweenService:Create(
+        Text,
+        TweenInfo.new(.4),
+        {["TextTransparency"] = 1}
+    ):Play()
+
+    CloseTween:Play()
+    CloseTween.Completed:Wait()
+    Frame:Destroy()
+end
+
 local function Notify(data: string, status: Color3?, time: number?)
     local Notif = notification_frame:Clone()
     Notif.Parent = notifications_frame
@@ -598,29 +624,7 @@ local function Notify(data: string, status: Color3?, time: number?)
 
     if not Notif or not Notif.Parent then return end
 
-    Notif.AutomaticSize = Enum.AutomaticSize.None
-
-    local CloseTween = TweenService:Create(
-        Notif,
-        TweenInfo.new(.7),
-        {["Size"] = UDim2.new(notification_frame.Size.X.Scale, notification_frame.Size.X.Offset, 0, 0)}
-    )
-
-    TweenService:Create(
-        Status,
-        TweenInfo.new(.7),
-        {["BackgroundTransparency"] = 1}
-    ):Play()
-
-    TweenService:Create(
-        Text,
-        TweenInfo.new(.4),
-        {["TextTransparency"] = 1}
-    ):Play()
-
-    CloseTween:Play()
-    CloseTween.Completed:Wait()
-    Notif:Destroy()
+    CloseNotification(Notif, Status)
 end
 
 local DebugMode = false
@@ -716,6 +720,19 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
         end
 
         Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments
+    end
+end)
+
+AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
+    for i,v in ipairs(notifications_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "NotificationFrame" then
+            local Status = v:FindFirstChild("StatusFrame")
+            local Text = v:FindFirstChild("NotificationText")
+
+            if Status and Text then
+                task.spawn(CloseNotification, v, Status, Text)
+            end
+        end
     end
 end)
 
