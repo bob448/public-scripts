@@ -1318,3 +1318,206 @@ end)
 AddCMD("exit", "Exits the game.", {}, function(arguments)
     game:Shutdown()
 end)
+
+local EspPlayers = {}
+
+local function InitEspFolder(): Folder
+    local Folder = GetCoreGui():FindFirstChild("RAVEN_ESP")
+    if not Folder then
+        Folder = Instance.new("Folder", GetCoreGui())
+        Folder.Name = "RAVEN_ESP"
+    end
+
+    return Folder
+end
+
+local function InitEspPlayerFolder(player: Player, espFolder: Folder)
+    local Folder = espFolder:FindFirstChild(player.Name)
+
+    if not Folder then
+        Folder = Instance.new("Folder", espFolder)
+        Folder.Name = player.Name
+    end
+
+    return Folder
+end
+
+local function IsEspPart(part: BasePart)
+    for _, Table in pairs(EspPlayers) do
+        for Part, _ in pairs(Table.Parts) do
+            if Part and Part.Parent and Part == part then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+local function PlayerHasEsp(player: Player)
+    for Player, Table in pairs(EspPlayers) do
+        if Player == player then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function DestroyEspPart(part: Part, player: Player)
+    if PlayerHasEsp(player) and IsEspPart(part) then
+        local Table = EspPlayers[player].Parts[part]
+        if Table.Box then
+            Table.Box:Destroy()
+        end
+        if Table.SizeChanged then
+            Table.SizeChanged:Disconnect()
+        end
+
+        EspPlayers[player].Parts[part] = nil
+
+        return true
+    end
+
+    return false
+end
+
+local function DestroyEspPlayer(player: Player)
+    if PlayerHasEsp(player) then
+        for Part, Table in pairs(EspPlayers[player].Parts) do
+            DestroyEspPart(Part, player)
+        end
+
+        if EspPlayers[player].TeamChanged then
+            EspPlayers[player].TeamChanged:Disconnect()
+        end
+
+        if EspPlayers[player].BillboardGui then
+            EspPlayers[player].BillboardGui:Destroy()
+        end
+
+        if EspPlayers[player].TextLabel then
+            EspPlayers[player].TextLabel:Destroy()
+        end
+
+        if EspPlayers[player].HeadSizeChanged then
+            EspPlayers[player].HeadSizeChanged:Disconnect()
+        end
+
+        if EspPlayers[player].HealthChanged then
+            EspPlayers[player].HealthChanged:Disconnect()
+        end
+    end
+end
+
+local function InitEsp(player: Player, character: Model)
+    local EspFolder = InitEspFolder()
+    local Folder = InitEspPlayerFolder(player, EspFolder)
+
+    local Head: BasePart? = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+    local Humanoid: Humanoid? = character:FindFirstChild("Humanoid")
+
+    EspPlayers[player] = {}
+    EspPlayers[player].Parts = {}
+
+    if Head and Humanoid then
+        local BillboardGui = Instance.new("BillboardGui", Folder)
+        EspPlayers[player].BillboardGui = BillboardGui
+        BillboardGui.AlwaysOnTop = true
+        BillboardGui.Adornee = Head
+        BillboardGui.StudsOffset = Vector3.new(0, Head.Size.Y * 2, 0)
+        BillboardGui.ResetOnSpawn = false
+        BillboardGui.Size = UDim2.fromOffset(300, 50)
+
+        local TextLabel = Instance.new("TextLabel", BillboardGui)
+        EspPlayers[player].TextLabel = TextLabel
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.FontFace = Font.fromEnum(Enum.Font.Arimo)
+        TextLabel.TextStrokeTransparency = .5
+        TextLabel.TextStrokeColor3 = Color3.fromRGB(126, 42, 223)
+        TextLabel.RichText = true
+        TextLabel.TextScaled = true
+        TextLabel.Size = UDim2.fromScale(1,1)
+        TextLabel.Text = "Username: "..player.Name.." | DisplayName: "..player.DisplayName.." | Health: 100"
+
+        EspPlayers[player].HeadSizeChanged = Head:GetPropertyChangedSignal("Size"):Connect(function()
+            BillboardGui.StudsOffset = Vector3.new(0, Head.Size.Y * 2, 0)
+        end)
+
+        EspPlayers[player].HealthChanged = Humanoid.HealthChanged:Connect(function(_)
+            TextLabel.Text = "Username: "..player.Name.." | DisplayName: "..player.DisplayName.." | Health: "..Humanoid.Health
+        end)
+    end
+
+
+    for i,v: BasePart in ipairs(character:GetDescendants()) do
+        if v:IsA("BasePart") and not IsEspPart(v) then
+            local BoxHandleAdornment: BoxHandleAdornment = Instance.new("BoxHandleAdornment", Folder)
+            BoxHandleAdornment.Adornee = v
+            BoxHandleAdornment.AlwaysOnTop = true
+            BoxHandleAdornment.Color3 = player.Team and player.TeamColor.Color or Color3.fromRGB(126, 42, 223)
+            BoxHandleAdornment.Transparency = .5
+            BoxHandleAdornment.ZIndex = 10
+
+            EspPlayers[player].Parts[v] = {}
+
+            local PartTable = EspPlayers[player].Parts[v]
+
+            PartTable.Box = BoxHandleAdornment
+
+            PartTable.SizeChanged = v:GetPropertyChangedSignal("Size"):Connect(function()
+                if PlayerHasEsp(player) and IsEspPart(v) and BoxHandleAdornment.Parent then
+                    BoxHandleAdornment.Size = v.Size
+                elseif IsEspPart(v) then
+                    DestroyEspPart(v, player)
+                end
+            end)
+        end
+    end
+
+    EspPlayers[player].TeamChanged = player:GetPropertyChangedSignal("Team"):Connect(function()
+        if PlayerHasEsp(player) then
+            for _, Table in pairs(EspPlayers[player].Parts) do
+                Table.Box.Color3 = player.Team and player.TeamColor.Color or Color3.fromRGB(126, 42, 223)
+            end
+        end
+    end)
+end
+
+AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {"player"}, function(arguments)
+    local Targets = arguments and FindPlayers(unpack(arguments))
+
+    if Targets and #Targets > 0 then
+        for _,Target: Player in pairs(Targets) do
+            if PlayerHasEsp(Target) then
+                for Part, _ in pairs(EspPlayers[Target].Parts) do
+                    DestroyEspPart(Part, Target)
+                end
+            end
+            
+            if Target.Character then
+                InitEsp(Target, Target.Character)
+            end
+
+            Target.CharacterAdded:Connect(function(character)
+                InitEsp(Target, character)
+            end)
+        end
+    end
+end)
+
+AddCMD("unesp", "Disables ESP", {}, function(arguments)
+    for Player, Table in pairs(EspPlayers) do
+        if Player then
+            DestroyEspPlayer(Player)
+        end
+    end
+
+    local EspFolder = GetCoreGui():FindFirstChild("RAVEN_ESP")
+
+    if EspFolder then
+        EspFolder:ClearAllChildren()
+    end
+
+    table.clear(EspPlayers)
+end)
