@@ -34,32 +34,32 @@ type RavenMod = {
             Success: Color3
         },
         CloseNotification: (Frame, Frame, TextLabel) -> (),
-        Notify: (string, Color3?, number?) -> (),
-        Error: (string, number?) -> (),
-        Warn: (string, number?) -> (),
-        Info: (string, number?) -> (),
-        Debug: (string, number?) -> (),
-        Success: (string, number?) -> ()
+        Notify: (data: string, status: Color3?, time: number?) -> (),
+        Error: (data: string, time: number?) -> (),
+        Warn: (data: string, time: number?) -> (),
+        Info: (data: string, time: number?) -> (),
+        Debug: (data: string, time: number?) -> (),
+        Success: (data: string, time: number?) -> ()
     },
     Debug: {
         GetDebugMode: () -> (boolean),
         SetDebugMode: (boolean) -> ()
     },
     Commands: {},
-    AddCMD: (string, string, {string?}, ({string?}) -> (any?)) -> (),
-    GetCMD: (string) -> (CommandTable),
+    AddCMD: (name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    GetCMD: (name: string) -> (CommandTable),
     Output: {
         ClearOutput: () -> (),
-        OutputData: ({any?}) -> ()
+        OutputData: (data: {any?}) -> ()
     },
     Player: {
         PlayerSelectors: {
             () -> ({Player?})
         },
-        FindPlayers: (string) -> ({Player?})
+        FindPlayers: () -> ({Player?})
     },
     Command: {
-        AutoCompleteCommand: (string) -> (string?)
+        AutoCompleteCommand: (data: string) -> (string?)
     }
 }
 
@@ -728,5 +728,53 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
         Raven.Notif:Success("Activated permadmin.")
     else
         Raven.Notif:Error("Permadmin is already on. Try running \"unpermadmin\".")
+    end
+end)
+
+Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+
+    if Character then
+        local Toxify = Character:FindFirstChild("Toxify")
+
+        if Toxify then
+            Toxify.Enabled = false
+            
+            Raven.Notif:Success("Disabled toxic blocks.")
+        end
+    end
+end)
+
+Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+
+    if Character then
+        local Toxify = Character:FindFirstChild("Toxify")
+
+        if Toxify then
+            Toxify.Enabled = true
+
+            Raven.Notif:Success("Enabled toxic blocks.")
+        end
+    end
+end)
+
+Raven:AddCMD("disablefly", "Disables built in fly.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+
+    if Character then
+        LocalPlayer:SetAttribute("Flying", false)
+
+        Raven.Notif:Success("Disabled fly.")
+    end
+end)
+
+Raven:AddCMD("enablefly", "Enables built in fly.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+
+    if Character then
+        LocalPlayer:SetAttribute("Flying", true)
+
+        Raven.Notif:Success("Enabled fly.")
     end
 end)
