@@ -13,6 +13,7 @@ local module = {}
 module.Name = "Raven"
 module.VERSION = -1
 
+local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
 local StarterGui = game:GetService("StarterGui")
@@ -1080,8 +1081,10 @@ search_output_box:GetPropertyChangedSignal("Text"):Connect(function()
 
             if Text and search_output_box.Text:len() > 0 and Text.Text:lower():find(search_output_box.Text:lower()) then
                 v.Visible = true
-            elseif Text then
+            elseif Text and search_output_box.Text:len() > 0 then
                 v.Visible = false
+            else
+                v.Visible = true
             end
         end
     end
@@ -1150,9 +1153,25 @@ search_chat_logs_box:GetPropertyChangedSignal("Text"):Connect(function()
 
             if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:lower():find(search_chat_logs_box.Text:lower()) then
                 v.Visible = true
-            elseif Text then
+            elseif Text and search_chat_logs_box.Text:len() > 0 then
                 v.Visible = false
+            else
+                v.Visible = true
             end
+        end
+    end
+end)
+
+chat_logs_scrolling_frame.ChildAdded:Connect(function(child)
+    if child:IsA("Frame") and child.Name == "ChatLogFrame" then
+        local Text: TextLabel = child:WaitForChild("ChatLogLabel")
+
+        if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:lower():find(search_chat_logs_box.Text:lower()) then
+            v.Visible = true
+        elseif Text and search_chat_logs_box.Text:len() > 0 then
+            v.Visible = false
+        else
+            v.Visible = true
         end
     end
 end)
@@ -1219,7 +1238,9 @@ search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
         if v:IsA("Frame") and v.Name == "CommandFrame" then
             local Command: string = v:GetTags()[1]
 
-            if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) ~= search_commands_box.Text then
+            if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) == search_commands_box.Text then
+                v.Visible = true
+            elseif search_commands_box.Text:len() > 0 then
                 v.Visible = false
             else
                 v.Visible = true
