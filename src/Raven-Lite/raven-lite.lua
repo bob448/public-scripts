@@ -1,8 +1,7 @@
--- RAVEN
+-- RAVEN LITE
 -- made by @bob448 or bobmichealson8 on scriptblox
 
--- A command-based system which can be used to create other scripts
--- This is the official base version of Raven!
+-- A Chosen One Script.
 
 local VERSION = -1
 
@@ -1042,9 +1041,7 @@ do -- Welcome Animation
     local version = tostring(VERSION)
 
     if VERSION == -1 then
-        version = "BASE"
-    elseif VERSION == -2 then
-        version = "DEV BASE"
+        version = "DEV"
     end
 
     title_label.Text = "Raven | Version "..version
@@ -1317,4 +1314,63 @@ end)
 
 AddCMD("exit", "Exits the game.", {}, function(arguments)
     game:Shutdown()
+end)
+
+local AntiFreezeCon: RBXScriptConnection? = nil
+
+AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, function(arguments)
+    if not AntiFreezeCon then
+        local CurrentCharacter: Model? = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local CurrentHumanoid: Humanoid? = CurrentCharacter:WaitForChild("Humanoid")
+        local CurrentRoot: BasePart? = CurrentCharacter:WaitForChild("HumanoidRootPart")
+
+        AntiFreezeCon: RBXScriptConnection? = nil
+
+        local function CharacterChildAdded(child: Instance)
+            if child.Name == "Hielo" and CurrentHumanoid and CurrentRoot then
+                if AntiFreezeCon then
+                    AntiFreezeCon:Disconnect()
+                end
+                
+                local Pos = CurrentRoot.CFrame
+
+                CurrentHumanoid.Health = 0
+                CurrentCharacter = LocalPlayer.CharacterAdded:Wait()
+                CurrentHumanoid = CurrentCharacter:WaitForChild("Humanoid")
+                CurrentRoot = CurrentCharacter:WaitForChild("HumanoidRootPart")
+                
+                CurrentRoot.CFrame = Pos
+
+                AntiFreezeCon = CurrentCharacter.ChildAdded:Connect(CharacterChildAdded)
+            end
+        end
+
+        AntiFreezeCon = CurrentCharacter.ChildAdded:Connect(CharacterChildAdded)
+
+        Success("Turned on antifreeze.")
+    else
+        Error("Antifreeze is already on.")
+    end
+end)
+
+AddCMD("unantifreeze", "Turns off antifreeze.", {}, function(arguments)
+    if AntiFreezeCon then
+        AntiFreezeCon:Disconnect()
+    else
+        Error("Antifreeze is already off.")
+    end
+end)
+
+local AntiBringCon: RBXScriptConnection? = nil
+
+AddCMD("antibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
+    
+end)
+
+AddCMD("unantibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
+    if AntiBringCon then
+        AntiBringCon:Disconnect()
+    else
+        Error("Antibring is already off.")
+    end
 end)
