@@ -8,7 +8,7 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
-local VERSION = -1
+local VERSION = 1.0
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
