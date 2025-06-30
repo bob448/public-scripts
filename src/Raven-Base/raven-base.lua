@@ -871,6 +871,10 @@ function module.Notif:CloseNotification(...)
 end
 
 local function Notify(data: string, status: Color3?, time: number?)
+    if not data then
+        return Notify("Could not display notification.", Statuses.Error)
+    end
+    
     local Notif = notification_frame:Clone()
     Notif.Parent = notifications_frame
     Notif.Size = UDim2.new(notification_frame.Size.X.Scale, notification_frame.Size.X.Offset, 0, 0)
