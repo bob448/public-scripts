@@ -4,12 +4,15 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
+if getgenv and getgenv().RAVEN_LOADED then
+    error("Raven is already loaded.")
+end
+
 local module = {}
 
 module.Name = "Raven"
 module.VERSION = -1
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
 local StarterGui = game:GetService("StarterGui")
@@ -1777,5 +1780,9 @@ task.spawn(function()
 
     toggle_button.Interactable = true
 end)
+
+if getgenv then
+    getgenv().RAVEN_LOADED = true
+end
 
 return module
