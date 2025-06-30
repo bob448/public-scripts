@@ -2084,8 +2084,22 @@ if readfile and isfile then -- Load saved openbind if there is any.
     end
 end
 
+local function UpdateName()
+    local version = tostring(module.VERSION)
+
+    if module.VERSION == -1 then
+        version = "BASE"
+    elseif module.VERSION == -2 then
+        version = "DEV BASE"
+    end
+
+    title_label.Text = module.Name.." | Version "..version
+end
+
 task.spawn(function()
     task.wait(.1)
+
+    UpdateName()
 
     toggle_button.Interactable = false
 
@@ -2140,6 +2154,10 @@ end)
 
 if getgenv then
     getgenv().RAVEN_LOADED = true
+end
+
+function module:UpdateName()
+    UpdateName()
 end
 
 return module
