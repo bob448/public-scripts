@@ -9,6 +9,7 @@ local VERSION = -1
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -885,7 +886,7 @@ local PlayerSelectors = {
     end,
     random = function()
         local PlayerList = Players:GetPlayers()
-        return #PlayerList > 1 and PlayerList[math.random(1, #PlayerList + 1)] or {PlayerList[1]}
+        return #PlayerList > 1 and {PlayerList[math.random(1, #PlayerList + 1)]} or {PlayerList[1]}
     end
 }
 
@@ -915,157 +916,6 @@ local function FindPlayers(...: string): {Player?}
 
     return Found
 end
-
-AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
-    DebugMode = true
-end)
-
-AddCMD("debugoff", "Turns off debug mode.", {}, function(arguments)
-    DebugMode = false
-end)
-
-AddCMD("test", "A test command used in development of Raven.", {}, function(arguments)
-    for i,v in pairs(arguments) do
-        Debug("Argument "..i..": "..v)
-    end
-    Success("Successfully ran the test command!")
-end)
-
-AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
-    commands_frame.Visible = true
-
-    for _,v: Instance in ipairs(commands_frame:GetChildren()) do
-        if v:IsA("Frame") and v.Name == "CommandFrame" then
-            v:Destroy()
-        end
-    end
-    
-    for Name: string, Table: CommandTable in pairs(Commands) do
-        local Command: Frame = command_frame:Clone()
-        local Label: TextLabel = Command:WaitForChild("CommandLabel")
-        Command:AddTag(Name)
-
-        Command.Parent = commands_scrolling_frame
-
-        local Arguments = ""
-
-        for i, arg in pairs(Table.Arguments) do
-            Arguments = Arguments.."["..arg:upper().."]"..(i ~= #Table.Arguments and " " or "")
-        end
-
-        if Arguments:len() == 0 then
-            Arguments = "None"
-        end
-
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments
-    end
-end)
-
-AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
-    for _,v in ipairs(notifications_frame:GetChildren()) do
-        if v:IsA("Frame") and v.Name == "NotificationFrame" then
-            local Status = v:FindFirstChild("StatusFrame")
-            local Text = v:FindFirstChild("NotificationText")
-
-            if Status and Text then
-                task.spawn(CloseNotification, v, Status, Text)
-            end
-        end
-    end
-end)
-
-AddCMD("findplayer", "Finds a player based on a key or keys.", {"key"}, function(arguments)
-    local Found = FindPlayers(unpack(arguments))
-
-    for _,v in pairs(Found) do
-        Info("Found player "..v.Name)
-    end
-end)
-
-AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}, function(arguments)
-    local Selectors = {}
-
-    for Name, _ in pairs(PlayerSelectors) do
-        Selectors[#Selectors+1] = Name
-    end
-
-    Output(Selectors)
-end)
-
-AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(arguments)
-	local Tool: Tool = Instance.new("Tool", LocalPlayer.Backpack)
-	Tool.RequiresHandle = false
-	Tool.Name = "Teleport"
-	Tool.ToolTip = "Raven Base's teleport tool"
-
-    local MousePart = Instance.new("Part", GetCoreGui())
-    MousePart.Name = "RavenMouse"
-    MousePart.Color = Color3.fromRGB(126, 42, 223)
-    MousePart.Anchored = true
-    MousePart.CanCollide = false
-    MousePart.CanQuery = false
-    MousePart.CanTouch = false
-    MousePart.Shape = Enum.PartType.Ball
-    MousePart.Size = Vector3.new(.5,.5,.5)
-
-    local Highlight = Instance.new("Highlight", MousePart)
-    Highlight.Adornee = MousePart
-    Highlight.OutlineColor = Color3.fromRGB(126, 42, 223)
-    Highlight.FillColor = Color3.fromRGB(126, 42, 223)
-    Highlight.FillTransparency = 0
-    Highlight.OutlineTransparency = 0
-    Highlight.DepthMode = Enum.HighlightDepthMode.Occluded
-	
-	local Activated; Activated = Tool.Activated:Connect(function()
-		local Mouse = LocalPlayer:GetMouse()
-		local Character = LocalPlayer.Character
-		local Root: BasePart? = Character and Character:FindFirstChild("HumanoidRootPart")
-		
-		if Root and Mouse.Target then Root.CFrame = Mouse.Hit end
-	end)
-	
-	local Holding = false
-	
-	local Equipped = Tool.Equipped:Connect(function()
-		Holding = true
-	end)
-	
-	local Unequipped = Tool.Unequipped:Connect(function()
-		Holding = false
-
-        if MousePart.Parent then
-            MousePart.Parent = GetCoreGui()
-        end
-	end)
-
-    local RenderStepped = RunService.RenderStepped:Connect(function(_)
-        if Holding then
-            local Mouse = LocalPlayer:GetMouse()
-
-            if Mouse.Target then
-                if MousePart.Parent ~= workspace then
-                    MousePart.Parent = workspace
-                end
-
-                MousePart.CFrame = Mouse.Hit
-            else
-                MousePart.Parent = GetCoreGui()
-            end
-        end
-    end)
-	
-	local AncestryChanged; AncestryChanged = Tool.AncestryChanged:Connect(function(child, parent)
-		if child == Tool and parent == workspace or not parent then
-			Activated:Disconnect()
-			AncestryChanged:Disconnect()
-			Unequipped:Disconnect()
-			Equipped:Disconnect()
-            RenderStepped:Disconnect()
-			Tool:Destroy()
-            MousePart:Destroy()
-		end
-	end)
-end)
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
@@ -1233,3 +1083,238 @@ do -- Welcome Animation
 end
 
 toggle_button.Interactable = true
+
+AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
+    DebugMode = true
+end)
+
+AddCMD("debugoff", "Turns off debug mode.", {}, function(arguments)
+    DebugMode = false
+end)
+
+AddCMD("test", "A test command used in development of Raven.", {}, function(arguments)
+    for i,v in pairs(arguments) do
+        Debug("Argument "..i..": "..v)
+    end
+    Success("Successfully ran the test command!")
+end)
+
+AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
+    commands_frame.Visible = true
+
+    for _,v: Instance in ipairs(commands_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "CommandFrame" then
+            v:Destroy()
+        end
+    end
+    
+    for Name: string, Table: CommandTable in pairs(Commands) do
+        local Command: Frame = command_frame:Clone()
+        local Label: TextLabel = Command:WaitForChild("CommandLabel")
+        Command:AddTag(Name)
+
+        Command.Parent = commands_scrolling_frame
+
+        local Arguments = ""
+
+        for i, arg in pairs(Table.Arguments) do
+            Arguments = Arguments.."["..arg:upper().."]"..(i ~= #Table.Arguments and " " or "")
+        end
+
+        if Arguments:len() == 0 then
+            Arguments = "None"
+        end
+
+        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments
+    end
+end)
+
+AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
+    for _,v in ipairs(notifications_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "NotificationFrame" then
+            local Status = v:FindFirstChild("StatusFrame")
+            local Text = v:FindFirstChild("NotificationText")
+
+            if Status and Text then
+                task.spawn(CloseNotification, v, Status, Text)
+            end
+        end
+    end
+end)
+
+AddCMD("findplayer", "Finds a player based on a key or keys.", {"key"}, function(arguments)
+    local Found = FindPlayers(unpack(arguments))
+
+    for _,v in pairs(Found) do
+        Info("Found player "..v.Name)
+    end
+end)
+
+AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}, function(arguments)
+    local Selectors = {}
+
+    for Name, _ in pairs(PlayerSelectors) do
+        Selectors[#Selectors+1] = Name
+    end
+
+    Output(Selectors)
+end)
+
+AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(arguments)
+	local Tool: Tool = Instance.new("Tool", LocalPlayer.Backpack)
+	Tool.RequiresHandle = false
+	Tool.Name = "Teleport"
+	Tool.ToolTip = "Raven Base's teleport tool"
+
+    local MousePart = Instance.new("Part", GetCoreGui())
+    MousePart.Name = "RavenMouse"
+    MousePart.Color = Color3.fromRGB(126, 42, 223)
+    MousePart.Anchored = true
+    MousePart.CanCollide = false
+    MousePart.CanQuery = false
+    MousePart.CanTouch = false
+    MousePart.Shape = Enum.PartType.Ball
+    MousePart.Size = Vector3.new(.5,.5,.5)
+
+    local Highlight = Instance.new("Highlight", MousePart)
+    Highlight.Adornee = MousePart
+    Highlight.OutlineColor = Color3.fromRGB(126, 42, 223)
+    Highlight.FillColor = Color3.fromRGB(126, 42, 223)
+    Highlight.FillTransparency = 0
+    Highlight.OutlineTransparency = 0
+    Highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+	
+	local Activated; Activated = Tool.Activated:Connect(function()
+		local Mouse = LocalPlayer:GetMouse()
+		local Character = LocalPlayer.Character
+		local Root: BasePart? = Character and Character:FindFirstChild("HumanoidRootPart")
+		
+		if Root and Mouse.Target then Root.CFrame = Mouse.Hit end
+	end)
+	
+	local Holding = false
+	
+	local Equipped = Tool.Equipped:Connect(function()
+		Holding = true
+	end)
+	
+	local Unequipped = Tool.Unequipped:Connect(function()
+		Holding = false
+
+        if MousePart.Parent then
+            MousePart.Parent = GetCoreGui()
+        end
+	end)
+
+    local RenderStepped = RunService.RenderStepped:Connect(function(_)
+        if Holding then
+            local Mouse = LocalPlayer:GetMouse()
+
+            if Mouse.Target then
+                if MousePart.Parent ~= workspace then
+                    MousePart.Parent = workspace
+                end
+
+                MousePart.CFrame = Mouse.Hit
+            else
+                MousePart.Parent = GetCoreGui()
+            end
+        end
+    end)
+	
+	local AncestryChanged; AncestryChanged = Tool.AncestryChanged:Connect(function(child, parent)
+		if child == Tool and parent == workspace or not parent then
+			Activated:Disconnect()
+			AncestryChanged:Disconnect()
+			Unequipped:Disconnect()
+			Equipped:Disconnect()
+            RenderStepped:Disconnect()
+			Tool:Destroy()
+            MousePart:Destroy()
+		end
+	end)
+end)
+
+AddCMD("reset", "Sets the Humanoid state to Dead.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+    if Humanoid then
+        Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+    else
+        Error("Couldn't find Humanoid/Character.")
+    end
+end)
+
+AddCMD("view", "Views a player.", {"player"}, function(arguments)
+    local Player = arguments and arguments[1]
+    local Targets = Player and FindPlayers(Player)
+    local Target = Targets and Targets[1]
+
+    if Target and workspace.CurrentCamera then
+        local Character = Target.Character
+        local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+        if Humanoid then
+            workspace.CurrentCamera.CameraSubject = Humanoid
+        end
+    end
+end)
+
+AddCMD("unview", "Sets the camera to your Humanoid.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+    if Humanoid and workspace.CurrentCamera then
+        workspace.CurrentCamera.CameraSubject = Humanoid
+    end
+end)
+
+AddCMD("rejoin", "Rejoins the game.", {}, function(arguments)
+    local PlaceId = game.PlaceId
+    local JobId = game.JobId
+
+    local success, err = TeleportService:TeleportToPlaceInstance(PlaceId, JobId)
+
+    if not success and err then
+        Error("Error: "..err)
+    else
+        Success("Rejoining..")
+    end
+end)
+
+AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, function(arguments)
+    local PlaceId = game.PlaceId
+    local JobId = game.JobId
+
+    if CanAccessCoreGui and setclipboard then
+        setclipboard(
+            "game.TeleportService:TeleportToPlaceInstance("..PlaceId..",\""..JobId.."\")"
+        )
+        Success("Copied rejoin code to clipboard!")
+    end
+end)
+
+AddCMD("god", "Disables the Dead state of the Humanoid. May not work in some games.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+    if Humanoid then
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        Success("Turned godmode on.")
+    end
+end)
+
+AddCMD("ungod", "Enables the Dead state of the Humanoid.", {}, function(arguments)
+    local Character = LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+    if Humanoid then
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+        Success("Turned godmode off.")
+    end
+end)
+
+AddCMD("exit", "Exits the game.", {}, function(arguments)
+    game:Shutdown()
+end)
