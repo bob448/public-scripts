@@ -1749,6 +1749,10 @@ local function DestroyEspPlayer(player: Player)
         if EspPlayers[player].HealthChanged then
             EspPlayers[player].HealthChanged:Disconnect()
         end
+
+        if EspPlayers[player].CharacterAdded then
+            EspPlayers[player].CharacterAdded:Disconnect()
+        end
     end
 end
 
@@ -1841,7 +1845,7 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {"p
                 InitEsp(Target, Target.Character)
             end
 
-            Target.CharacterAdded:Connect(function(character)
+            EspPlayers[Target].CharacterAdded = Target.CharacterAdded:Connect(function(character)
                 InitEsp(Target, character)
             end)
         end
