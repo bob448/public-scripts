@@ -1566,7 +1566,7 @@ AddCMD("unesp", "Disables ESP", {}, function(arguments)
     table.clear(EspPlayers)
 end)
 
-NoclipCon = nil
+local NoclipCon = nil
 
 AddCMD("noclip", "Noclips your character.", {}, function(arguments)
     if not NoclipCon then
@@ -1597,6 +1597,77 @@ AddCMD("clip", "Stops noclipping.", {}, function(arguments)
         end
     else
         Error("Noclip is already off.")
+    end
+end)
+
+AddCMD("ws", "Changes your walkspeed.", {"speed"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1]) or 16
+
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.WalkSpeed = Speed
+    end
+end)
+
+AddCMD("jp", "Changes your jumppower.", {"power"}, function(arguments)
+    local Power = arguments[1] and tonumber(arguments[1]) or 50
+
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.WalkSpeed = Power
+    end
+end)
+
+local LoopWSCon = nil
+local LoopJPCon = nil
+
+AddCMD("loopws","Changes your walkspeed constantly.", {"speed"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1]) or 30
+
+    if not LoopWSCon then
+        LoopWSCon = RunService.Heartbeat:Connect(function()
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            
+            if Humanoid then
+                Humanoid.WalkSpeed = Speed
+            end
+        end)
+    else
+        Error("LoopWS is already on. Try running \"unloopws\".")
+    end
+end)
+
+AddCMD("loopjp","Changes your jumppower constantly.", {"power"}, function(arguments)
+    local Power = arguments[1] and tonumber(arguments[1]) or 30
+    
+    if not LoopJPCon then
+        LoopJPCon = RunService.Heartbeat:Connect(function()
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            
+            if Humanoid then
+                Humanoid.JumpPower = Power
+            end
+        end)
+    else
+        Error("LoopJP is already on. Try running \"unloopjp\".")
+    end
+end)
+
+AddCMD("unloopws", "Stops changing your walkspeed.", {}, function(arguments)
+    if LoopWSCon then
+        LoopWSCon:Disconnect()
+    else
+        Error("LoopWS is already off.")
+    end
+end)
+
+AddCMD("unloopjp", "Stops changing your jumppower.", {}, function(arguments)
+    if LoopJPCon then
+        LoopJPCon:Disconnect()
+    else
+        Error("LoopJP is already off.")
     end
 end)
 
