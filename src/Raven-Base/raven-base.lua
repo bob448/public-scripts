@@ -1456,24 +1456,6 @@ AddCMD("keycodes", "Shows all available keycodes.", {}, function(arguments)
     Output(Enum.KeyCode:GetEnumItems())
 end)
 
-AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folder of your exploit)", {"name"}, function(arguments)
-    if isfile and readfile then
-        local Name = arguments[1]
-
-        if Name and isfile(Name) then
-            local Func = loadstring(readfile(Name))
-
-            setfenv(Func, getfenv())
-
-            Func()
-        else
-            Error("Module not found.")
-        end
-    else
-        Error("Your exploit does not support isfile or readfile.")
-    end
-end)
-
 AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
     for _,v in ipairs(notifications_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "NotificationFrame" then
@@ -2071,10 +2053,32 @@ end)
 --[[
 
 
-DO NOT PUT ANY COMMANDS PAST THIS POINT
+DO NOT PUT ANY COMMANDS PAST THIS POINT (except for loadmodule)
 
 
 ]]
+
+AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folder of your exploit)", {"name"}, function(arguments)
+    if isfile and readfile then
+        local Name = arguments[1]
+
+        if Name and isfile(Name) then
+            local Func = loadstring(readfile(Name))
+            local Env = table.clone(getfenv())
+            Env["Raven"] = module
+            Env["module"] = module
+            Env["raven"] = module
+
+            setfenv(Func, Env)
+
+            Func()
+        else
+            Error("Module not found.")
+        end
+    else
+        Error("Your exploit does not support isfile or readfile.")
+    end
+end)
 
 if readfile and isfile then -- Load saved openbind if there is any.
     if isfile("RAVEN_OPENBIND") then
