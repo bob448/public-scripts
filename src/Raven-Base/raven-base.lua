@@ -12,6 +12,7 @@ module.VERSION = -1
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
 local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -1107,8 +1108,8 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         local Succ, Err = pcall(Table.Function, Arguments)
 
-        if not Succ and Err then
-            Error("Error: "..tostring(Err))
+        if not Succ and Err ~= nil and tostring(Err) then
+            Error("Error: "..Err)
         end
     end
 end)
@@ -1305,7 +1306,7 @@ AddCMD("rejoin", "Rejoins the game.", {}, function(arguments)
 
     local Succ, Err = TeleportService:TeleportToPlaceInstance(PlaceId, JobId)
 
-    if not Succ and Err then
+    if not Succ and Err ~= nil and tostring(Err) then
         Error("Error: "..Err)
     else
         Success("Rejoining..")
@@ -1668,6 +1669,58 @@ AddCMD("unloopjp", "Stops changing your jumppower.", {}, function(arguments)
         LoopJPCon:Disconnect()
     else
         Error("LoopJP is already off.")
+    end
+end)
+
+local CoreGuis = {
+    ["backpack"] = Enum.CoreGuiType.Backpack,
+    ["chat"] = Enum.CoreGuiType.Chat,
+    ["all"] = Enum.CoreGuiType.All,
+    ["emotes"] = Enum.CoreGuiType.EmotesMenu,
+    ["selfview"] = Enum.CoreGuiType.SelfView,
+    ["playerlist"] = Enum.CoreGuiType.PlayerList,
+    ["reset"] = -1,
+    ["captures"] = Enum.CoreGuiType.Captures,
+    ["health"] = Enum.CoreGuiType.Health
+}
+
+AddCMD("enablecore", "Enables a coregui", {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
+    local Type = arguments[1] and CoreGuis[arguments[1]]
+
+    if Type and Type ~= -1 then
+        StarterGui:SetCoreGuiEnabled(Type, true)
+
+        Success("Enabled CoreGui \""..arguments[1].."\".")
+    else
+        local Succ, Err = pcall(function()
+            StarterGui:SetCore("ResetButtonCallback", true)
+        end)
+
+        if not Succ and Err ~= nil and tostring(Err) then
+            Error("Error: "..Err)
+        else
+            Success("Enabled CoreGui \"reset\".")
+        end
+    end
+end)
+
+AddCMD("disablecore", "Disables a coregui", {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
+    local Type = arguments[1] and CoreGuis[arguments[1]]
+
+    if Type and Type ~= -1 then
+        StarterGui:SetCoreGuiEnabled(Type, false)
+
+        Success("Disabled CoreGui \""..arguments[1].."\".")
+    else
+        local Succ, Err = pcall(function()
+            StarterGui:SetCore("ResetButtonCallback", false)
+        end)
+
+        if not Succ and Err ~= nil and tostring(Err) then
+            Error("Error: "..Err)
+        else
+            Success("Disabled CoreGui \"reset\".")
+        end
     end
 end)
 
