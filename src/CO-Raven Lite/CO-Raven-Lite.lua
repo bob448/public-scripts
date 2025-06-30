@@ -2201,6 +2201,8 @@ AddCMD("permadmin", "Spams reset in the system channel whenever enlighten is in 
                 end
             end
         end)
+
+        Success("Activated permadmin.")
     else
         Error("Permadmin is already on. Try running \"unpermadmin\".")
     end
