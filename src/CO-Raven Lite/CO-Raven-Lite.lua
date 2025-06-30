@@ -2103,6 +2103,8 @@ AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {"ha
         InitBuildScripts(Tools)
 
         table.move(Tools, 1, #Tools, 1, ClientBkitTools)
+
+        Success("Successfully initialized client-sided building tools.")
     end
 end)
 
@@ -2114,4 +2116,62 @@ AddCMD("unclientbkit", "Removes the client-sided build tools from your character
     end
 
     table.clear(ClientBkitTools)
+
+    Success("Cleared your client building tools.")
+end)
+
+local BreakBkitTools = {
+    "Build",
+    "Delete",
+    "Shape",
+    "Paint",
+    "Sign",
+    "Shovel"
+}
+
+local BreakBkitPlayers = {}
+
+AddCMD("breakbkit", "Spams a player or a group of player's remotes so they exhaust.", {"player"}, function(arguments)
+    local Targets = arguments and FindPlayers(unpack(arguments))
+
+    for i,v in pairs(Targets) do
+        if v and v.Character then
+            BreakBkitPlayers[v] = {}
+
+            BreakBkitPlayers[v].Heartbeat = RunService.Heartbeat:Connect(function(_)
+                if v.Character then
+                    local LoopThrough = {}
+                    local CharacterChildren = v.Character:GetChildren()
+                    local BackpackChildren = v.Backpack:GetChildren()
+
+                    table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
+                    table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+
+                    for i, tool: Tool in pairs(LoopThrough) do
+                        if tool and tool:IsA("Tool") and table.find(BreakBkitTools, tool.Name) then
+                            local Remote = GetRemoteFromTool(tool)
+
+                            if Remote then
+                                Remote:FireServer()
+                            end
+                        end
+                    end
+                end
+            end)
+
+            Success("Added "..v.Name.." to the BreakBkit list.")
+        end
+    end
+end)
+
+AddCMD("unbreakbkit", "Stops spamming remotes.", {}, function(arguments)
+    for i,v in pairs(BreakBkitPlayers) do
+        if v.Heartbeat then
+            v.Heartbeat:Disconnect()
+        end
+    end
+    
+    table.clear(BreakBkitPlayers)
+
+    Success("Turned off breakbkit.")
 end)
