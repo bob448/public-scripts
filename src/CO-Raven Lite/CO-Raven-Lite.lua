@@ -1,4 +1,4 @@
--- RAVEN LITE
+-- CO-RAVEN LITE
 -- made by @bob448 or bobmichealson8 on scriptblox
 
 -- A Chosen One Script.
