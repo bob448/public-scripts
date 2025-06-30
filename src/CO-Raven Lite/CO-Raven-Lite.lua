@@ -349,6 +349,13 @@ local function InitBuildTools(parent: Instance, includeHandle: boolean)
         sign:AddTag("The Chosen One by TomazDev")
         shovel:AddTag("The Chosen One by TomazDev")
         paint:AddTag("The Chosen One by TomazDev")
+    else
+        build.RequiresHandle = false
+        delete.RequiresHandle = false
+        shape.RequiresHandle = false
+        paint.RequiresHandle = false
+        sign.RequiresHandle = false
+        shovel.RequiresHandle = false
     end
 
     return {build, delete, shape, paint, sign, shovel}
