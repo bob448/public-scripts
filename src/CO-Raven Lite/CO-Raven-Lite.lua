@@ -1044,7 +1044,7 @@ do -- Welcome Animation
         version = "DEV"
     end
 
-    title_label.Text = "Raven | Version "..version
+    title_label.Text = "CO-Raven Lite | Version "..version
 
     GuiOpen = true
 
