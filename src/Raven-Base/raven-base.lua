@@ -4,7 +4,7 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
-local VERSION = -1
+local VERSION = -2
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -98,12 +98,12 @@ function Draggable(dragframe,mainframe)
 	end)
 end
 
-local raven_lite = Instance.new("ScreenGui")
-raven_lite.IgnoreGuiInset = true
-raven_lite.ResetOnSpawn = false
-raven_lite.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-raven_lite.Name = "RavenLite"
-raven_lite.Parent = GetCoreGui()
+local raven = Instance.new("ScreenGui")
+raven.IgnoreGuiInset = true
+raven.ResetOnSpawn = false
+raven.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+raven.Name = "Raven"
+raven.Parent = GetCoreGui()
 
 local main_frame = Instance.new("Frame")
 main_frame.AnchorPoint = Vector2.new(0.5, 0)
@@ -114,7 +114,7 @@ main_frame.Position = UDim2.new(0.5, 0, 0, -270)
 main_frame.Size = UDim2.new(0, 475, 0, 240)
 main_frame.Visible = true
 main_frame.Name = "MainFrame"
-main_frame.Parent = raven_lite
+main_frame.Parent = raven
 
 local uicorner = Instance.new("UICorner")
 uicorner.Parent = main_frame
@@ -262,7 +262,7 @@ commands_frame.Position = UDim2.new(0.499370664, 0, 0.498955697, 0)
 commands_frame.Size = UDim2.new(0, 528, 0, 251)
 commands_frame.Visible = false
 commands_frame.Name = "CommandsFrame"
-commands_frame.Parent = raven_lite
+commands_frame.Parent = raven
 
 local uicorner_4 = Instance.new("UICorner")
 uicorner_4.Parent = commands_frame
@@ -407,7 +407,7 @@ notifications_frame.Size = UDim2.new(0, 382, 1, 0)
 notifications_frame.Visible = true
 notifications_frame.Name = "NotificationsFrame"
 notifications_frame.ScrollingEnabled = false
-notifications_frame.Parent = raven_lite
+notifications_frame.Parent = raven
 
 local uilist_layout = Instance.new("UIListLayout")
 uilist_layout.Padding = UDim.new(0, 5)
@@ -462,21 +462,151 @@ local click = Instance.new("Sound")
 click.RollOffMode = Enum.RollOffMode.InverseTapered
 click.SoundId = "rbxassetid://6042053626"
 click.Name = "Click"
-click.Parent = raven_lite
+click.Parent = raven
 
 local slide = Instance.new("Sound")
 slide.RollOffMode = Enum.RollOffMode.InverseTapered
 slide.SoundId = "rbxassetid://18919544132"
 slide.Name = "Slide"
-slide.Parent = raven_lite
+slide.Parent = raven
+
+local outputs_frame = Instance.new("Frame")
+outputs_frame.AnchorPoint = Vector2.new(0.5, 0.5)
+outputs_frame.BackgroundColor3 = Color3.new(0, 0, 0)
+outputs_frame.BorderColor3 = Color3.new(0, 0, 0)
+outputs_frame.BorderSizePixel = 0
+outputs_frame.Position = UDim2.new(0.499370664, 0, 0.498955697, 0)
+outputs_frame.Size = UDim2.new(0, 528, 0, 251)
+outputs_frame.Visible = false
+outputs_frame.Name = "OutputsFrame"
+outputs_frame.Parent = raven
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = outputs_frame
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = outputs_frame
+
+local animated_output_gradient = Instance.new("UIGradient")
+animated_output_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_output_gradient.Name = "AnimatedOutputGradient"
+animated_output_gradient.Parent = uistroke
+
+local close_output_button = Instance.new("TextButton")
+close_output_button.Font = Enum.Font.Arial
+close_output_button.Text = "Close"
+close_output_button.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+close_output_button.TextScaled = true
+close_output_button.TextSize = 14
+close_output_button.TextWrapped = true
+close_output_button.AnchorPoint = Vector2.new(0.5, 0.5)
+close_output_button.BackgroundColor3 = Color3.new(0, 0, 0)
+close_output_button.BorderColor3 = Color3.new(0, 0, 0)
+close_output_button.BorderSizePixel = 0
+close_output_button.Position = UDim2.new(0.5, 0, 0.940239072, 0)
+close_output_button.Size = UDim2.new(0.321969688, 0, -0.119521923, 0)
+close_output_button.Visible = true
+close_output_button.Name = "CloseOutputButton"
+close_output_button.Parent = outputs_frame
+
+local uistroke_2 = Instance.new("UIStroke")
+uistroke_2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke_2.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke_2.Thickness = 5
+uistroke_2.Parent = close_output_button
+
+local animated_close_output_gradient = Instance.new("UIGradient")
+animated_close_output_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_close_output_gradient.Name = "AnimatedCloseOutputGradient"
+animated_close_output_gradient.Parent = uistroke_2
+
+local output_scrolling_frame = Instance.new("ScrollingFrame")
+output_scrolling_frame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+output_scrolling_frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+output_scrolling_frame.ScrollBarImageColor3 = Color3.new(0.564706, 0.564706, 0.564706)
+output_scrolling_frame.Active = true
+output_scrolling_frame.BackgroundColor3 = Color3.new(1, 1, 1)
+output_scrolling_frame.BackgroundTransparency = 1
+output_scrolling_frame.BorderColor3 = Color3.new(0, 0, 0)
+output_scrolling_frame.BorderSizePixel = 0
+output_scrolling_frame.Position = UDim2.new(0, 0, 0.0956175327, 0)
+output_scrolling_frame.Size = UDim2.new(0, 528, 0, 190)
+output_scrolling_frame.Visible = true
+output_scrolling_frame.Name = "OutputScrollingFrame"
+output_scrolling_frame.Parent = outputs_frame
+
+local uilist_layout = Instance.new("UIListLayout")
+uilist_layout.Padding = UDim.new(0, 2)
+uilist_layout.SortOrder = Enum.SortOrder.LayoutOrder
+uilist_layout.Parent = output_scrolling_frame
+
+local search_output_box = Instance.new("TextBox")
+search_output_box.Font = Enum.Font.Arial
+search_output_box.PlaceholderColor3 = Color3.new(0.258824, 0.180392, 0.27451)
+search_output_box.PlaceholderText = "Search here.."
+search_output_box.RichText = true
+search_output_box.Text = ""
+search_output_box.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+search_output_box.TextSize = 21
+search_output_box.TextWrapped = true
+search_output_box.BackgroundColor3 = Color3.new(0.0980392, 0.0980392, 0.0980392)
+search_output_box.BorderColor3 = Color3.new(0, 0, 0)
+search_output_box.BorderSizePixel = 0
+search_output_box.Size = UDim2.new(1, 0, 0.0956175327, 0)
+search_output_box.Visible = true
+search_output_box.Name = "SearchOutputBox"
+search_output_box.Parent = outputs_frame
+
+local uicorner_2 = Instance.new("UICorner")
+uicorner_2.Parent = search_output_box
+
+local output_frame = Instance.new("Frame")
+output_frame.AutomaticSize = Enum.AutomaticSize.Y
+output_frame.BackgroundColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+output_frame.BackgroundTransparency = 0.5
+output_frame.BorderColor3 = Color3.new(0, 0, 0)
+output_frame.BorderSizePixel = 0
+output_frame.Size = UDim2.new(1, 0, 0, 38)
+output_frame.Visible = true
+output_frame.Name = "OutputFrame"
+output_frame.Parent = GetCoreGui()
+
+local output_label = Instance.new("TextLabel")
+output_label.Font = Enum.Font.Arial
+output_label.Text = "Loading Command.."
+output_label.TextColor3 = Color3.new(0.745098, 0.745098, 0.745098)
+output_label.TextSize = 14
+output_label.TextStrokeColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+output_label.TextStrokeTransparency = 0.30000001192092896
+output_label.TextWrapped = true
+output_label.TextXAlignment = Enum.TextXAlignment.Left
+output_label.AutomaticSize = Enum.AutomaticSize.Y
+output_label.BackgroundColor3 = Color3.new(1, 1, 1)
+output_label.BackgroundTransparency = 1
+output_label.BorderColor3 = Color3.new(0, 0, 0)
+output_label.BorderSizePixel = 0
+output_label.Position = UDim2.new(0.0170454551, 0, 0, 0)
+output_label.Size = UDim2.new(0.982954562, 0, 1, 0)
+output_label.Visible = true
+output_label.Name = "OutputLabel"
+output_label.Parent = output_frame
+
+local uicorner_3 = Instance.new("UICorner")
+uicorner_3.Parent = output_frame
 
 AnimateGradient(animated_commands_gradient, 10)
 AnimateGradient(animated_main_gradient, 10)
 AnimateGradient(animated_command_gradient, 10)
 AnimateGradient(animated_toggle_gradient, 10)
 AnimateGradient(animated_close_commands_gradient, 10)
+AnimateGradient(animated_output_gradient, 10)
+AnimateGradient(animated_close_output_gradient, 10)
 
 Draggable(commands_frame, commands_frame)
+Draggable(outputs_frame, outputs_frame)
 
 local NormalToggleButtonSize = toggle_button.Size
 local GuiOpen = false
@@ -624,7 +754,7 @@ local function Notify(data: string, status: Color3?, time: number?)
 
     if not Notif or not Notif.Parent then return end
 
-    CloseNotification(Notif, Status)
+    CloseNotification(Notif, Status, Text)
 end
 
 local DebugMode = false
@@ -678,6 +808,114 @@ local function GetCMD(name: string)
     return nil
 end
 
+local function ClearOutput()
+    for _,v: Frame in pairs(output_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "OutputFrame" then
+            v:Destroy()
+        end
+    end
+end
+
+local function Output(data: {any?})
+    outputs_frame.Visible = true
+
+    ClearOutput()
+
+    for _, data in pairs(data) do
+        local StringData = data and tostring(data)
+
+        if StringData then
+            local Frame = output_frame:Clone()
+            Frame.Parent = output_scrolling_frame
+            
+            local Text: TextLabel = Frame:WaitForChild("OutputLabel")
+            Text.Text = StringData
+        end
+    end
+end
+
+local NormalOutputsFrameSize = outputs_frame.Size
+local NormalCloseOutputButtonSize = close_output_button.Size
+
+close_output_button.Activated:Connect(function(inputObject, clickCount)
+    ClearOutput()
+
+    local CloseTween = TweenService:Create(
+        outputs_frame,
+        TweenInfo.new(1),
+        {Size = UDim2.fromScale(0,0)}
+    )
+
+    BounceButton(close_output_button, NormalCloseOutputButtonSize)
+
+    CloseTween:Play()
+    CloseTween.Completed:Wait()
+
+    outputs_frame.Visible = false
+    outputs_frame.Size = NormalOutputsFrameSize
+end)
+
+search_output_box:GetPropertyChangedSignal("Text"):Connect(function()
+    for _,v: Frame in ipairs(output_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "OutputFrame" then
+            local Text = v:FindFirstChild("OutputLabel")
+
+            if Text and search_output_box.Text:len() > 0 and Text.Text:sub(1, search_output_box.Text:len()) ~= search_output_box.Text then
+                v.Visible = false
+            elseif Text then
+                v.Visible = true
+            end
+        end
+    end
+end)
+
+local PlayerSelectors = {
+    me = function()
+        return {LocalPlayer}
+    end,
+    others = function()
+        local PlayerList = Players:GetPlayers()
+        local LocalIndex = table.find(PlayerList, LocalPlayer)
+        if LocalIndex then table.remove(PlayerList, LocalIndex) end
+
+        return PlayerList
+    end,
+    all = function()
+        return Players:GetPlayers()
+    end,
+    random = function()
+        local PlayerList = Players:GetPlayers()
+        return #PlayerList > 1 and PlayerList[math.random(1, #PlayerList + 1)] or {PlayerList[1]}
+    end
+}
+
+local function FindPlayers(...: string): {Player?}
+    local Found = {}
+    local Args = {...}
+
+    for _, key in pairs(Args) do
+        local IsSelector = false
+        for i,v in pairs(PlayerSelectors) do
+            if i == key then
+                local Result = v()
+                table.move(Result, 1, #Result, 1, Found)
+
+                IsSelector = true
+            end
+        end
+
+        if not IsSelector then
+            for _,v: Player in ipairs(Players:GetPlayers()) do
+                if v.Name:lower():sub(1, key:len()) == key:lower() then
+                    Found[#Found+1] = v
+                end
+            end
+        end
+    end
+
+    return Found
+end
+
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
     DebugMode = true
 end)
@@ -712,7 +950,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
         local Arguments = ""
 
         for i, arg in pairs(Table.Arguments) do
-            Arguments += "["..arg.."]"..i ~= #Table.Arguments and " " or ""
+            Arguments = Arguments.."["..arg:upper().."]"..(i ~= #Table.Arguments and " " or "")
         end
 
         if Arguments:len() == 0 then
@@ -724,7 +962,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
 end)
 
 AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
-    for i,v in ipairs(notifications_frame:GetChildren()) do
+    for _,v in ipairs(notifications_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "NotificationFrame" then
             local Status = v:FindFirstChild("StatusFrame")
             local Text = v:FindFirstChild("NotificationText")
@@ -734,6 +972,24 @@ AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
             end
         end
     end
+end)
+
+AddCMD("findplayer", "Finds a player based on a key or keys.", {"key"}, function(arguments)
+    local Found = FindPlayers(unpack(arguments))
+
+    for _,v in pairs(Found) do
+        Info("Found player "..v.Name)
+    end
+end)
+
+AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}, function(arguments)
+    local Selectors = {}
+
+    for Name, _ in pairs(PlayerSelectors) do
+        Selectors[#Selectors+1] = Name
+    end
+
+    Output(Selectors)
 end)
 
 AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(arguments)
@@ -813,7 +1069,7 @@ local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
 
 search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
-    for i,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
+    for _,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
             local Command: string = v:GetTags()[1]
 
@@ -829,7 +1085,7 @@ end)
 closecommands_button.Activated:Connect(function(_, _)
     if not commands_frame.Visible then return end
 
-    for i,v: Instance in ipairs(commands_scrolling_frame:GetChildren()) do
+    for _,v: Instance in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
             v:Destroy()
         end
