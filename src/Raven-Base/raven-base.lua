@@ -787,7 +787,7 @@ function module.Debug:GetDebugMode()
     return DebugMode
 end
 
-function Module.Debug:SetDebugMode(value: boolean)
+function module.Debug:SetDebugMode(value: boolean)
     DebugMode = value
 end
 
