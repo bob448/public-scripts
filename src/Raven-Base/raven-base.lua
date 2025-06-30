@@ -1456,6 +1456,22 @@ AddCMD("keycodes", "Shows all available keycodes.", {}, function(arguments)
     Output(Enum.KeyCode:GetEnumItems())
 end)
 
+AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folder of your exploit)", {"name"}, function(arguments)
+    if isfile and readfile then
+        local Name = arguments[1]
+
+        if Name and isfile(Name) then
+            local Mod = loadstring(readfile(Name))
+
+            setfenv(Mod, debug.info(1))
+        else
+            Error("Module not found.")
+        end
+    else
+        Error("Your exploit does not support isfile or readfile.")
+    end
+end)
+
 AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
     for _,v in ipairs(notifications_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "NotificationFrame" then
