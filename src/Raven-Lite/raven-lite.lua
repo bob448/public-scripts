@@ -1324,7 +1324,7 @@ AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, functio
         local CurrentHumanoid: Humanoid? = CurrentCharacter:WaitForChild("Humanoid")
         local CurrentRoot: BasePart? = CurrentCharacter:WaitForChild("HumanoidRootPart")
 
-        AntiFreezeCon: RBXScriptConnection? = nil
+        AntiFreezeCon = nil
 
         local function CharacterChildAdded(child: Instance)
             if child.Name == "Hielo" and CurrentHumanoid and CurrentRoot then
@@ -1356,6 +1356,7 @@ end)
 AddCMD("unantifreeze", "Turns off antifreeze.", {}, function(arguments)
     if AntiFreezeCon then
         AntiFreezeCon:Disconnect()
+        Success("Turned off antifreeze.")
     else
         Error("Antifreeze is already off.")
     end
@@ -1364,12 +1365,42 @@ end)
 local AntiBringCon: RBXScriptConnection? = nil
 
 AddCMD("antibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
-    
+    if not AntiBringCon then
+        local Movements: {CFrame?} = {}
+
+        AntiBringCon = RunService.Heartbeat:Connect(function(delta)
+            local Character = LocalPlayer.Character
+            local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Character and Character:FindFirstChild("Humanoid")
+
+            if Root and Humanoid and Humanoid.Health > 0 then
+                Movements[#Movements+1] = Root.CFrame
+
+                if #Movements >= 40 then
+                    table.remove(Movements, 1)
+                end
+
+                if #Movements >= 40 then
+                    if (Movements[40].Position - Movements[1].Position).Magnitude > Humanoid.WalkSpeed + (Humanoid.UseJumpPower and Humanoid.JumpPower / 8 or Humanoid.JumpHeight) then
+                        Root.CFrame = Movements[1]
+                        table.clear(Movements)
+                    end
+                end
+            else
+                table.clear(Movements)
+            end
+        end)
+        
+        Success("Turned on antibring.")
+    else
+        Error("Antibring is already on!")
+    end
 end)
 
-AddCMD("unantibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
+AddCMD("unantibring", "Turns off antibring.", {}, function(arguments)
     if AntiBringCon then
         AntiBringCon:Disconnect()
+        Success("Turned off antibring.")
     else
         Error("Antibring is already off.")
     end
