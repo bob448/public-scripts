@@ -7,7 +7,7 @@
 local module = {}
 
 module.Name = "Raven"
-module.VERSION = 1
+module.VERSION = -1
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
