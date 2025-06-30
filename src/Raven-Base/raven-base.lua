@@ -1033,7 +1033,9 @@ AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(argume
 	local Unequipped = Tool.Unequipped:Connect(function()
 		Holding = false
 
-        MousePart.Parent = GetCoreGui()
+        if MousePart.Parent then
+            MousePart.Parent = GetCoreGui()
+        end
 	end)
 
     local RenderStepped = RunService.RenderStepped:Connect(function(_)
