@@ -1367,23 +1367,34 @@ local AntiBringCon: RBXScriptConnection? = nil
 AddCMD("antibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
     if not AntiBringCon then
         local Movements: {CFrame?} = {}
+        local Disable = false
 
         AntiBringCon = RunService.Heartbeat:Connect(function(delta)
+            if Disable then return end
+
             local Character = LocalPlayer.Character
-            local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+            local Root: Part = Character and Character:FindFirstChild("HumanoidRootPart")
             local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
             if Root and Humanoid and Humanoid.Health > 0 then
                 Movements[#Movements+1] = Root.CFrame
 
-                if #Movements >= 40 then
+                if #Movements > 15 then
                     table.remove(Movements, 1)
                 end
 
-                if #Movements >= 40 then
-                    if (Movements[40].Position - Movements[1].Position).Magnitude > Humanoid.WalkSpeed + (Humanoid.UseJumpPower and Humanoid.JumpPower / 8 or Humanoid.JumpHeight) then
-                        Root.CFrame = Movements[1]
+                if #Movements >= 15 then
+                    if (Movements[15].Position - Movements[1].Position).Magnitude > Humanoid.WalkSpeed + (Humanoid.UseJumpPower and Humanoid.JumpPower / 8 or Humanoid.JumpHeight) then
+                        local Pos: CFrame = Movements[1]
                         table.clear(Movements)
+
+                        Disable = true
+
+                        repeat task.wait()
+                            Root.CFrame = Pos
+                        until not Character.Parent or (Root.Position - Pos.Position).Magnitude <= 1
+
+                        Disable = false
                     end
                 end
             else
