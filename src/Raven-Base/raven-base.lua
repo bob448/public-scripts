@@ -1113,56 +1113,6 @@ command_box.FocusLost:Connect(function(enterPressed, _)
     end
 end)
 
-toggle_button.Interactable = false
-
-do -- Welcome Animation
-    welcome_label.Visible = true
-
-    local version = tostring(module.VERSION)
-
-    if module.VERSION == -1 then
-        version = "BASE"
-    elseif module.VERSION == -2 then
-        version = "DEV BASE"
-    end
-
-    title_label.Text = module.Name.." | Version "..version
-
-    GuiOpen = true
-
-    local GotoClosed = TweenService:Create(
-        main_frame,
-        TweenInfo.new(.1, Enum.EasingStyle.Exponential),
-        {["Position"] = ClosedPosition}
-    )
-
-    GotoClosed:Play()
-    slide:Play()
-    GotoClosed.Completed:Wait()
-
-    task.wait(1)
-
-    local GotoOpen = TweenService:Create(
-        main_frame,
-        TweenInfo.new(1, Enum.EasingStyle.Exponential),
-        {["Position"] = OpenPosition}
-    )
-
-    GotoOpen:Play()
-    toggle_button.Text = "Ʌ"
-    GotoOpen.Completed:Wait()
-
-    local WelcomeClose = TweenService:Create(
-        welcome_label,
-        TweenInfo.new(2, Enum.EasingStyle.Exponential),
-        {["Size"] = UDim2.fromScale(0,0)}
-    )
-
-    WelcomeClose:Play()
-end
-
-toggle_button.Interactable = true
-
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
     DebugMode = true
 end)
@@ -1615,5 +1565,57 @@ AddCMD("unesp", "Disables ESP", {}, function(arguments)
 
     table.clear(EspPlayers)
 end)
+
+task.wait()
+
+toggle_button.Interactable = false
+
+do -- Welcome Animation
+    welcome_label.Visible = true
+
+    local version = tostring(module.VERSION)
+
+    if module.VERSION == -1 then
+        version = "BASE"
+    elseif module.VERSION == -2 then
+        version = "DEV BASE"
+    end
+
+    title_label.Text = module.Name.." | Version "..version
+
+    GuiOpen = true
+
+    local GotoClosed = TweenService:Create(
+        main_frame,
+        TweenInfo.new(.1, Enum.EasingStyle.Exponential),
+        {["Position"] = ClosedPosition}
+    )
+
+    GotoClosed:Play()
+    slide:Play()
+    GotoClosed.Completed:Wait()
+
+    task.wait(1)
+
+    local GotoOpen = TweenService:Create(
+        main_frame,
+        TweenInfo.new(1, Enum.EasingStyle.Exponential),
+        {["Position"] = OpenPosition}
+    )
+
+    GotoOpen:Play()
+    toggle_button.Text = "Ʌ"
+    GotoOpen.Completed:Wait()
+
+    local WelcomeClose = TweenService:Create(
+        welcome_label,
+        TweenInfo.new(2, Enum.EasingStyle.Exponential),
+        {["Size"] = UDim2.fromScale(0,0)}
+    )
+
+    WelcomeClose:Play()
+end
+
+toggle_button.Interactable = true
 
 return module
