@@ -4,7 +4,10 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
-local VERSION = -1
+local module = {}
+
+module.Name = "Raven"
+module.VERSION = -1
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -28,6 +31,10 @@ local function GetCoreGui()
     end
 end
 
+function module:GetCoreGui()
+    GetCoreGui()
+end
+
 do
     local TestInstance = Instance.new("ScreenGui")
 
@@ -39,6 +46,8 @@ do
 
     TestInstance:Destroy()
 end
+
+module.CanAccessCoreGui = CanAccessCoreGui
 
 local function AnimateGradient(uigradient: UIGradient, speed: number)
     return RunService.RenderStepped:Connect(function(delta)
@@ -682,6 +691,8 @@ toggle_button.Activated:Connect(function(_inputObject, _clickCount)
     end
 end)
 
+module.Notif = {}
+
 local Statuses = {
     Error = Color3.new(0.725490, 0, 0.301960),
     Warning = Color3.new(0.901960, 0.890196, 0.341176),
@@ -689,6 +700,8 @@ local Statuses = {
     Debug = Color3.new(0.992156, 0.717647, 0.490196),
     Success = Color3.new(0.611764, 0.847058, 0.552941)
 }
+
+module.Notif.Statuses = Statuses
 
 local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
     Frame.AutomaticSize = Enum.AutomaticSize.None
@@ -714,6 +727,10 @@ local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
     CloseTween:Play()
     CloseTween.Completed:Wait()
     Frame:Destroy()
+end
+
+function module.Notif:CloseNotification(...)
+    CloseNotification(...)
 end
 
 local function Notify(data: string, status: Color3?, time: number?)
@@ -758,7 +775,21 @@ local function Notify(data: string, status: Color3?, time: number?)
     CloseNotification(Notif, Status, Text)
 end
 
+function module.Notif:Notify(...)
+    Notify(...)
+end
+
 local DebugMode = false
+
+module.Debug = {}
+
+function module.Debug:GetDebugMode()
+    return DebugMode
+end
+
+function module.Debug:SetDebugMode(value: boolean)
+    DebugMode = value
+end
 
 local function Error(data: string, time: number?)
     task.spawn(Notify, data, Statuses.Error, time)
@@ -782,7 +813,25 @@ local function Success(data: string, time: number?)
     task.spawn(Notify, data, Statuses.Success, time)
 end
 
+function module.Notif:Error(...)
+    Error(...)
+end
+function module.Notif:Warn(...)
+    Warn(...)
+end
+function module.Notif:Info(...)
+    Info(...)
+end
+function module.Notif:Debug(...)
+    Debug(...)
+end
+function module.Notif:Success(...)
+    Success(...)
+end
+
 local Commands = {}
+
+module.Commands = Commands
 
 type CommandTable = {Function: ({string?}) -> (any?), Arguments: {string?}, Description: string}
 
@@ -799,6 +848,10 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
     end
 end
 
+function module:AddCMD(...)
+    AddCMD(...)
+end
+
 local function GetCMD(name: string)
     for Name, Table in pairs(Commands) do
         if name == Name then
@@ -809,12 +862,22 @@ local function GetCMD(name: string)
     return nil
 end
 
+function module:GetCMD(...)
+    GetCMD(...)
+end
+
 local function ClearOutput()
     for _,v: Frame in pairs(output_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "OutputFrame" then
             v:Destroy()
         end
     end
+end
+
+module.Output = {}
+
+function module.Output:ClearOutput()
+    ClearOutput()
 end
 
 local function Output(data: {any?})
@@ -833,6 +896,10 @@ local function Output(data: {any?})
             Text.Text = StringData
         end
     end
+end
+
+function module.Output:OutputData(...)
+    Output(...)
 end
 
 local NormalOutputsFrameSize = outputs_frame.Size
@@ -890,6 +957,9 @@ local PlayerSelectors = {
     end
 }
 
+module.Player = {}
+module.Player.PlayerSelectors = PlayerSelectors
+
 local function FindPlayers(...: string): {Player?}
     local Found = {}
     local Args = {...}
@@ -915,6 +985,10 @@ local function FindPlayers(...: string): {Player?}
     end
 
     return Found
+end
+
+function module.Player:FindPlayers(...)
+    FindPlayers(...)
 end
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
@@ -995,6 +1069,11 @@ local function AutoCompleteCommand(data: string)
     end
 end
 
+module.Command = {}
+function module.Command:AutoCompleteCommand(...)
+    AutoCompleteCommand(...)
+end
+
 command_box.FocusLost:Connect(function(enterPressed, _)
     if enterPressed then
         local String = command_box.Text
@@ -1033,56 +1112,6 @@ command_box.FocusLost:Connect(function(enterPressed, _)
         end
     end
 end)
-
-toggle_button.Interactable = false
-
-do -- Welcome Animation
-    welcome_label.Visible = true
-
-    local version = tostring(VERSION)
-
-    if VERSION == -1 then
-        version = "BASE"
-    elseif VERSION == -2 then
-        version = "DEV BASE"
-    end
-
-    title_label.Text = "Raven | Version "..version
-
-    GuiOpen = true
-
-    local GotoClosed = TweenService:Create(
-        main_frame,
-        TweenInfo.new(.1, Enum.EasingStyle.Exponential),
-        {["Position"] = ClosedPosition}
-    )
-
-    GotoClosed:Play()
-    slide:Play()
-    GotoClosed.Completed:Wait()
-
-    task.wait(1)
-
-    local GotoOpen = TweenService:Create(
-        main_frame,
-        TweenInfo.new(1, Enum.EasingStyle.Exponential),
-        {["Position"] = OpenPosition}
-    )
-
-    GotoOpen:Play()
-    toggle_button.Text = "Ʌ"
-    GotoOpen.Completed:Wait()
-
-    local WelcomeClose = TweenService:Create(
-        welcome_label,
-        TweenInfo.new(2, Enum.EasingStyle.Exponential),
-        {["Size"] = UDim2.fromScale(0,0)}
-    )
-
-    WelcomeClose:Play()
-end
-
-toggle_button.Interactable = true
 
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
     DebugMode = true
@@ -1536,3 +1565,164 @@ AddCMD("unesp", "Disables ESP", {}, function(arguments)
 
     table.clear(EspPlayers)
 end)
+
+local NoclipCon = nil
+
+AddCMD("noclip", "Noclips your character.", {}, function(arguments)
+    if not NoclipCon then
+        NoclipCon = RunService.Heartbeat:Connect(function()
+            local Character = LocalPlayer.Character
+            
+            if Character then
+                for i,v in ipairs(Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        Error("Noclip is already on.")
+    end
+end)
+
+AddCMD("clip", "Stops noclipping.", {}, function(arguments)
+    if NoclipCon then
+        NoclipCon:Disconnect()
+
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Root then
+            Root.CanCollide = true
+        end
+    else
+        Error("Noclip is already off.")
+    end
+end)
+
+AddCMD("ws", "Changes your walkspeed.", {"speed"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1]) or 16
+
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.WalkSpeed = Speed
+    end
+end)
+
+AddCMD("jp", "Changes your jumppower.", {"power"}, function(arguments)
+    local Power = arguments[1] and tonumber(arguments[1]) or 50
+
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.WalkSpeed = Power
+    end
+end)
+
+local LoopWSCon = nil
+local LoopJPCon = nil
+
+AddCMD("loopws","Changes your walkspeed constantly.", {"speed"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1]) or 30
+
+    if not LoopWSCon then
+        LoopWSCon = RunService.Heartbeat:Connect(function()
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            
+            if Humanoid then
+                Humanoid.WalkSpeed = Speed
+            end
+        end)
+    else
+        Error("LoopWS is already on. Try running \"unloopws\".")
+    end
+end)
+
+AddCMD("loopjp","Changes your jumppower constantly.", {"power"}, function(arguments)
+    local Power = arguments[1] and tonumber(arguments[1]) or 30
+    
+    if not LoopJPCon then
+        LoopJPCon = RunService.Heartbeat:Connect(function()
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            
+            if Humanoid then
+                Humanoid.JumpPower = Power
+            end
+        end)
+    else
+        Error("LoopJP is already on. Try running \"unloopjp\".")
+    end
+end)
+
+AddCMD("unloopws", "Stops changing your walkspeed.", {}, function(arguments)
+    if LoopWSCon then
+        LoopWSCon:Disconnect()
+    else
+        Error("LoopWS is already off.")
+    end
+end)
+
+AddCMD("unloopjp", "Stops changing your jumppower.", {}, function(arguments)
+    if LoopJPCon then
+        LoopJPCon:Disconnect()
+    else
+        Error("LoopJP is already off.")
+    end
+end)
+
+task.spawn(function()
+    task.wait(.1)
+
+    toggle_button.Interactable = false
+
+    do -- Welcome Animation
+        welcome_label.Visible = true
+
+        local version = tostring(module.VERSION)
+
+        if module.VERSION == -1 then
+            version = "BASE"
+        elseif module.VERSION == -2 then
+            version = "DEV BASE"
+        end
+
+        title_label.Text = module.Name.." | Version "..version
+
+        GuiOpen = true
+
+        local GotoClosed = TweenService:Create(
+            main_frame,
+            TweenInfo.new(.1, Enum.EasingStyle.Exponential),
+            {["Position"] = ClosedPosition}
+        )
+
+        GotoClosed:Play()
+        slide:Play()
+        GotoClosed.Completed:Wait()
+
+        task.wait(1)
+
+        local GotoOpen = TweenService:Create(
+            main_frame,
+            TweenInfo.new(1, Enum.EasingStyle.Exponential),
+            {["Position"] = OpenPosition}
+        )
+
+        GotoOpen:Play()
+        toggle_button.Text = "Ʌ"
+        GotoOpen.Completed:Wait()
+
+        local WelcomeClose = TweenService:Create(
+            welcome_label,
+            TweenInfo.new(2, Enum.EasingStyle.Exponential),
+            {["Size"] = UDim2.fromScale(0,0)}
+        )
+
+        WelcomeClose:Play()
+    end
+
+    toggle_button.Interactable = true
+end)
+
+return module
