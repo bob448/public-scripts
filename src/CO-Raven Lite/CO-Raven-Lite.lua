@@ -52,6 +52,7 @@ type RavenMod = {
     Commands: {},
     AddCMD: (name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
     GetCMD: (name: string) -> (CommandTable),
+    ReplaceCMD: (name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
     Output: {
         ClearOutput: () -> (),
         OutputData: (data: {any?}) -> ()
@@ -678,7 +679,7 @@ local BreakBkitTools = {
 local BreakBkitPlayers = {}
 
 Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they exhaust.", {"player"}, function(arguments)
-    local Targets = arguments and FindPlayers(unpack(arguments))
+    local Targets = arguments and Raven.Player:FindPlayers(unpack(arguments))
 
     for i,v in pairs(Targets) do
         if v and v.Character then

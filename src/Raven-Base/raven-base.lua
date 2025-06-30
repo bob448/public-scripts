@@ -866,7 +866,7 @@ local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
 end
 
 function module.Notif:CloseNotification(...)
-    CloseNotification(...)
+    return CloseNotification(...)
 end
 
 local function Notify(data: string, status: Color3?, time: number?)
@@ -912,7 +912,7 @@ local function Notify(data: string, status: Color3?, time: number?)
 end
 
 function module.Notif:Notify(...)
-    Notify(...)
+    return Notify(...)
 end
 
 local DebugMode = false
@@ -950,19 +950,19 @@ local function Success(data: string, time: number?)
 end
 
 function module.Notif:Error(...)
-    Error(...)
+    return Error(...)
 end
 function module.Notif:Warn(...)
-    Warn(...)
+    return Warn(...)
 end
 function module.Notif:Info(...)
-    Info(...)
+    return Info(...)
 end
 function module.Notif:Debug(...)
-    Debug(...)
+    return Debug(...)
 end
 function module.Notif:Success(...)
-    Success(...)
+    return Success(...)
 end
 
 local Commands = {}
@@ -985,7 +985,7 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
 end
 
 function module:AddCMD(...)
-    AddCMD(...)
+    return AddCMD(...)
 end
 
 local function GetCMD(name: string)
@@ -999,7 +999,21 @@ local function GetCMD(name: string)
 end
 
 function module:GetCMD(...)
-    GetCMD(...)
+    return GetCMD(...)
+end
+
+local function ReplaceCMD(name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?))
+    if Commands[name:lower()] then
+        Commands[name:lower()] = nil
+
+        AddCMD(name, description, arguments, func)
+    else
+        Error("Could not replace command \""..name.."\". Command does not exist.")
+    end
+end
+
+function module:ReplaceCMD(...)
+    return ReplaceCMD(...)
 end
 
 local function ClearOutput()
@@ -1035,7 +1049,7 @@ local function Output(data: {any?})
 end
 
 function module.Output:OutputData(...)
-    Output(...)
+    return Output(...)
 end
 
 local NormalOutputsFrameSize = outputs_frame.Size
@@ -1194,7 +1208,7 @@ local function FindPlayers(...: string): {Player?}
 end
 
 function module.Player:FindPlayers(...)
-    FindPlayers(...)
+    return FindPlayers(...)
 end
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
@@ -1277,7 +1291,7 @@ end
 
 module.Command = {}
 function module.Command:AutoCompleteCommand(...)
-    AutoCompleteCommand(...)
+    return AutoCompleteCommand(...)
 end
 
 command_box.FocusLost:Connect(function(enterPressed, _)
