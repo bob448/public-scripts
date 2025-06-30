@@ -31,7 +31,9 @@ local function GetCoreGui()
     end
 end
 
-module:GetCoreGui = GetCoreGui
+function module:GetCoreGui()
+    GetCoreGui()
+end
 
 do
     local TestInstance = Instance.new("ScreenGui")
@@ -45,7 +47,7 @@ do
     TestInstance:Destroy()
 end
 
-module:CanAccessCoreGui = CanAccessCoreGui
+module.CanAccessCoreGui = CanAccessCoreGui
 
 local function AnimateGradient(uigradient: UIGradient, speed: number)
     return RunService.RenderStepped:Connect(function(delta)
@@ -727,7 +729,9 @@ local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
     Frame:Destroy()
 end
 
-module.Notif:CloseNotification = CloseNotification
+function module.Notif:CloseNotification(...)
+    CloseNotification(...)
+end
 
 local function Notify(data: string, status: Color3?, time: number?)
     local Notif = notification_frame:Clone()
@@ -771,17 +775,19 @@ local function Notify(data: string, status: Color3?, time: number?)
     CloseNotification(Notif, Status, Text)
 end
 
-module.Notif:Notify = Notify
+function module.Notif:Notify(...)
+    Notify(...)
+end
 
 local DebugMode = false
 
 module.Debug = {}
 
-module.Debug:GetDebugMode = function()
+function module.Debug:GetDebugMode()
     return DebugMode
 end
 
-module.Debug:SetDebugMode = function(value: boolean)
+function Module.Debug:SetDebugMode(value: boolean)
     DebugMode = value
 end
 
@@ -807,11 +813,21 @@ local function Success(data: string, time: number?)
     task.spawn(Notify, data, Statuses.Success, time)
 end
 
-module.Notif:Error = Error
-module.Notif:Warn = Warn
-module.Notif:Info = Info
-module.Notif:Debug = Debug
-module.Notif:Success = Success
+function module.Notif:Error(...)
+    Error(...)
+end
+function module.Notif:Warn(...)
+    Warn(...)
+end
+function module.Notif:Info(...)
+    Info(...)
+end
+function module.Notif:Debug(...)
+    Debug(...)
+end
+function module.Notif:Success(...)
+    Success(...)
+end
 
 local Commands = {}
 
@@ -832,7 +848,9 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
     end
 end
 
-module:AddCMD = AddCMD
+function module:AddCMD(...)
+    AddCMD(...)
+end
 
 local function GetCMD(name: string)
     for Name, Table in pairs(Commands) do
@@ -844,7 +862,9 @@ local function GetCMD(name: string)
     return nil
 end
 
-module:GetCMD = GetCMD
+function module:GetCMD(...)
+    GetCMD(...)
+end
 
 local function ClearOutput()
     for _,v: Frame in pairs(output_scrolling_frame:GetChildren()) do
@@ -855,7 +875,10 @@ local function ClearOutput()
 end
 
 module.Output = {}
-module.Output:ClearOutput = ClearOutput
+
+function module.Output:ClearOutput()
+    ClearOutput()
+end
 
 local function Output(data: {any?})
     outputs_frame.Visible = true
@@ -875,7 +898,9 @@ local function Output(data: {any?})
     end
 end
 
-module.Output:OutputData = Output
+function module.Output:OutputData(...)
+    Output(...)
+end
 
 local NormalOutputsFrameSize = outputs_frame.Size
 local NormalCloseOutputButtonSize = close_output_button.Size
@@ -962,7 +987,9 @@ local function FindPlayers(...: string): {Player?}
     return Found
 end
 
-module.Player:FindPlayers = FindPlayers
+function module.Player:FindPlayers(...)
+    FindPlayers(...)
+end
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
@@ -1043,7 +1070,9 @@ local function AutoCompleteCommand(data: string)
 end
 
 module.Command = {}
-module.Command:AutoCompleteCommand = AutoCompleteCommand
+function module.Command:AutoCompleteCommand(...)
+    AutoCompleteCommand(...)
+end
 
 command_box.FocusLost:Connect(function(enterPressed, _)
     if enterPressed then
