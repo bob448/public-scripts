@@ -1026,9 +1026,9 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         local Table: CommandTable = Commands[Command:lower()]
 
-        local Success, Err = pcall(Table.Function, Arguments)
+        local Succ, Err = pcall(Table.Function, Arguments)
 
-        if not Success and Err then
+        if not Succ and Err then
             Error("Error: "..tostring(Err))
         end
     end
@@ -1274,9 +1274,9 @@ AddCMD("rejoin", "Rejoins the game.", {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
 
-    local Success, Err = TeleportService:TeleportToPlaceInstance(PlaceId, JobId)
+    local Succ, Err = TeleportService:TeleportToPlaceInstance(PlaceId, JobId)
 
-    if not Success and Err then
+    if not Succ and Err then
         Error("Error: "..Err)
     else
         Success("Rejoining..")
