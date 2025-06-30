@@ -1566,6 +1566,40 @@ AddCMD("unesp", "Disables ESP", {}, function(arguments)
     table.clear(EspPlayers)
 end)
 
+NoclipCon = nil
+
+AddCMD("noclip", "Noclips your character.", {}, function(arguments)
+    if not NoclipCon then
+        NoclipCon = RunService.Heartbeat:Connect(function()
+            local Character = LocalPlayer.Character
+            
+            if Character then
+                for i,v in ipairs(Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        Error("Noclip is already on.")
+    end
+end)
+
+AddCMD("clip", "Stops noclipping.", {}, function(arguments)
+    if NoclipCon then
+        NoclipCon:Disconnect()
+
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Root then
+            Root.CanCollide = true
+        end
+    else
+        Error("Noclip is already off.")
+    end
+end)
+
 task.spawn(function()
     task.wait(.1)
 
