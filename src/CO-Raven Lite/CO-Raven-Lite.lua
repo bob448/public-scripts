@@ -802,3 +802,13 @@ Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
         Blur.Enabled = false
     end
 end)
+
+Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", function(arguments)
+    local System: RemoteEvent = ReplicatedStorage:WaitForChild("System")
+
+    System:FireServer("Unfocused")
+    task.wait()
+    System:FireServer("Focused")
+    task.wait()
+    System:Destroy()
+end)
