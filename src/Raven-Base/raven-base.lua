@@ -1319,6 +1319,21 @@ AddCMD("exit", "Exits the game.", {}, function(arguments)
     game:Shutdown()
 end)
 
+AddCMD("goto", "Goes to a player.", {"player"}, function(arguments)
+    local Targets = arguments and FindPlayers(unpack(arguments))
+
+    if Targets and #Targets >= 1 then
+        local Target = Targets[1]
+        local TRoot = Target.Character and Target.Character:FindFirstChild("HumanoidRootPart")
+
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if TRoot and Root then
+            Root.CFrame = TRoot.CFrame
+        end
+    end
+end)
+
 local EspPlayers = {}
 
 local function InitEspFolder(): Folder
