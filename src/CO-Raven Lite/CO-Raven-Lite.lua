@@ -8,6 +8,7 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
+local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Teams = game:GetService("Teams")
@@ -783,5 +784,17 @@ Raven:AddCMD("enablefly", "Enables built in fly.", {}, function(arguments)
         LocalPlayer:SetAttribute("Flying", true)
 
         Raven.Notif:Success("Enabled fly.")
+    end
+end)
+
+Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
+    local BlindGUI = LocalPlayer.PlayerGui:FindFirstChild("Blind")
+    local Blur = Lighting:FindFirstChild("Blur")
+
+    if BlindGUI then
+        BlindGUI.Enabled = false
+    end
+    if Blur then
+        Blur.Enabled = false
     end
 end)
