@@ -1419,7 +1419,9 @@ UserInputService.InputBegan:Connect(function(input, processed)
                 task.wait()
                 command_box.Text = ""
             else
-                task.spawn(ToggleButtonPressed)
+                command_box:CaptureFocus()
+                task.wait()
+                command_box.Text = ""
             end
         end
     end
