@@ -590,7 +590,7 @@ output_frame.Parent = GetCoreGui()
 
 local output_label = Instance.new("TextLabel")
 output_label.Font = Enum.Font.Arial
-output_label.Text = "Loading Command.."
+output_label.Text = "Loading Output.."
 output_label.TextColor3 = Color3.new(0.745098, 0.745098, 0.745098)
 output_label.TextSize = 14
 output_label.TextStrokeColor3 = Color3.new(0.494118, 0.164706, 0.87451)
@@ -611,6 +611,133 @@ output_label.Parent = output_frame
 local uicorner_3 = Instance.new("UICorner")
 uicorner_3.Parent = output_frame
 
+local chat_log_frame = Instance.new("Frame")
+chat_log_frame.AutomaticSize = Enum.AutomaticSize.Y
+chat_log_frame.BackgroundColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+chat_log_frame.BackgroundTransparency = 0.5
+chat_log_frame.BorderColor3 = Color3.new(0, 0, 0)
+chat_log_frame.BorderSizePixel = 0
+chat_log_frame.Size = UDim2.new(1, 0, 0, 38)
+chat_log_frame.Visible = true
+chat_log_frame.Name = "ChatLogFrame"
+chat_log_frame.Parent = GetCoreGui()
+
+local chat_log_label = Instance.new("TextLabel")
+chat_log_label.Font = Enum.Font.Arial
+chat_log_label.Text = "Loading ChatLog.."
+chat_log_label.TextColor3 = Color3.new(0.745098, 0.745098, 0.745098)
+chat_log_label.TextSize = 14
+chat_log_label.TextStrokeColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+chat_log_label.TextStrokeTransparency = 0.30000001192092896
+chat_log_label.TextWrapped = true
+chat_log_label.TextXAlignment = Enum.TextXAlignment.Left
+chat_log_label.AutomaticSize = Enum.AutomaticSize.Y
+chat_log_label.BackgroundColor3 = Color3.new(1, 1, 1)
+chat_log_label.BackgroundTransparency = 1
+chat_log_label.BorderColor3 = Color3.new(0, 0, 0)
+chat_log_label.BorderSizePixel = 0
+chat_log_label.Position = UDim2.new(0.0170454551, 0, 0, 0)
+chat_log_label.Size = UDim2.new(0.982954562, 0, 1, 0)
+chat_log_label.Visible = true
+chat_log_label.Name = "ChatLogLabel"
+chat_log_label.Parent = chat_log_frame
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = chat_log_frame
+
+local chat_logs_frame = Instance.new("Frame")
+chat_logs_frame.AnchorPoint = Vector2.new(0.5, 0.5)
+chat_logs_frame.BackgroundColor3 = Color3.new(0, 0, 0)
+chat_logs_frame.BorderColor3 = Color3.new(0, 0, 0)
+chat_logs_frame.BorderSizePixel = 0
+chat_logs_frame.Position = UDim2.new(0.499370664, 0, 0.498955697, 0)
+chat_logs_frame.Size = UDim2.new(0, 528, 0, 251)
+chat_logs_frame.Visible = false
+chat_logs_frame.Name = "ChatLogsFrame"
+chat_logs_frame.Parent = raven
+
+local uicorner_2 = Instance.new("UICorner")
+uicorner_2.Parent = chat_logs_frame
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = chat_logs_frame
+
+local animated_chat_logs_gradient = Instance.new("UIGradient")
+animated_chat_logs_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_chat_logs_gradient.Name = "AnimatedChatLogsGradient"
+animated_chat_logs_gradient.Parent = uistroke
+
+local closechat_logs_button = Instance.new("TextButton")
+closechat_logs_button.Font = Enum.Font.Arial
+closechat_logs_button.Text = "Close"
+closechat_logs_button.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+closechat_logs_button.TextScaled = true
+closechat_logs_button.TextSize = 14
+closechat_logs_button.TextWrapped = true
+closechat_logs_button.AnchorPoint = Vector2.new(0.5, 0.5)
+closechat_logs_button.BackgroundColor3 = Color3.new(0, 0, 0)
+closechat_logs_button.BorderColor3 = Color3.new(0, 0, 0)
+closechat_logs_button.BorderSizePixel = 0
+closechat_logs_button.Position = UDim2.new(0.5, 0, 0.940239072, 0)
+closechat_logs_button.Size = UDim2.new(0.321969688, 0, -0.119521923, 0)
+closechat_logs_button.Visible = true
+closechat_logs_button.Name = "CloseChatLogsButton"
+closechat_logs_button.Parent = chat_logs_frame
+
+local uistroke_2 = Instance.new("UIStroke")
+uistroke_2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke_2.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke_2.Thickness = 5
+uistroke_2.Parent = closechat_logs_button
+
+local animated_close_chat_logs_gradient = Instance.new("UIGradient")
+animated_close_chat_logs_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_close_chat_logs_gradient.Name = "AnimatedCloseChatLogsGradient"
+animated_close_chat_logs_gradient.Parent = uistroke_2
+
+local chat_logs_scrolling_frame = Instance.new("ScrollingFrame")
+chat_logs_scrolling_frame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+chat_logs_scrolling_frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+chat_logs_scrolling_frame.ScrollBarImageColor3 = Color3.new(0.564706, 0.564706, 0.564706)
+chat_logs_scrolling_frame.Active = true
+chat_logs_scrolling_frame.BackgroundColor3 = Color3.new(1, 1, 1)
+chat_logs_scrolling_frame.BackgroundTransparency = 1
+chat_logs_scrolling_frame.BorderColor3 = Color3.new(0, 0, 0)
+chat_logs_scrolling_frame.BorderSizePixel = 0
+chat_logs_scrolling_frame.Position = UDim2.new(0, 0, 0.0956175327, 0)
+chat_logs_scrolling_frame.Size = UDim2.new(0, 528, 0, 190)
+chat_logs_scrolling_frame.Visible = true
+chat_logs_scrolling_frame.Name = "ChatLogsScrollingFrame"
+chat_logs_scrolling_frame.Parent = chat_logs_frame
+
+local uilist_layout = Instance.new("UIListLayout")
+uilist_layout.Padding = UDim.new(0, 2)
+uilist_layout.SortOrder = Enum.SortOrder.LayoutOrder
+uilist_layout.Parent = chat_logs_scrolling_frame
+
+local search_chat_logs_box = Instance.new("TextBox")
+search_chat_logs_box.Font = Enum.Font.Arial
+search_chat_logs_box.PlaceholderColor3 = Color3.new(0.258824, 0.180392, 0.27451)
+search_chat_logs_box.PlaceholderText = "Search here.."
+search_chat_logs_box.RichText = true
+search_chat_logs_box.Text = ""
+search_chat_logs_box.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
+search_chat_logs_box.TextSize = 21
+search_chat_logs_box.TextWrapped = true
+search_chat_logs_box.BackgroundColor3 = Color3.new(0.0980392, 0.0980392, 0.0980392)
+search_chat_logs_box.BorderColor3 = Color3.new(0, 0, 0)
+search_chat_logs_box.BorderSizePixel = 0
+search_chat_logs_box.Size = UDim2.new(1, 0, 0.0956175327, 0)
+search_chat_logs_box.Visible = true
+search_chat_logs_box.Name = "SearchChatLogsBox"
+search_chat_logs_box.Parent = chat_logs_frame
+
+local uicorner_3 = Instance.new("UICorner")
+uicorner_3.Parent = search_chat_logs_box
+
 AnimateGradient(animated_commands_gradient, 10)
 AnimateGradient(animated_main_gradient, 10)
 AnimateGradient(animated_command_gradient, 10)
@@ -618,9 +745,12 @@ AnimateGradient(animated_toggle_gradient, 10)
 AnimateGradient(animated_close_commands_gradient, 10)
 AnimateGradient(animated_output_gradient, 10)
 AnimateGradient(animated_close_output_gradient, 10)
+AnimateGradient(animated_close_chat_logs_gradient, 10)
+AnimateGradient(animated_chat_logs_gradient, 10)
 
 Draggable(commands_frame, commands_frame)
 Draggable(outputs_frame, outputs_frame)
+Draggable(chat_logs_frame, chat_logs_frame)
 
 local NormalToggleButtonSize = toggle_button.Size
 local GuiOpen = false
@@ -909,7 +1039,7 @@ end
 local NormalOutputsFrameSize = outputs_frame.Size
 local NormalCloseOutputButtonSize = close_output_button.Size
 
-close_output_button.Activated:Connect(function(inputObject, clickCount)
+close_output_button.Activated:Connect(function()
     ClearOutput()
 
     local CloseTween = TweenService:Create(
@@ -930,9 +1060,79 @@ end)
 search_output_box:GetPropertyChangedSignal("Text"):Connect(function()
     for _,v: Frame in ipairs(output_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "OutputFrame" then
-            local Text = v:FindFirstChild("OutputLabel")
+            local Text: TextLabel = v:FindFirstChild("OutputLabel")
 
-            if Text and search_output_box.Text:len() > 0 and Text.Text:sub(1, search_output_box.Text:len()) ~= search_output_box.Text then
+            if Text and search_output_box.Text:len() > 0 and Text.Text:find(search_output_box.Text) then
+                v.Visible = false
+            elseif Text then
+                v.Visible = true
+            end
+        end
+    end
+end)
+
+local function ClearChatLogs()
+    for i,v in pairs(chat_logs_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "ChatLogFrame" then
+            v:Destroy()
+        end
+    end
+end
+
+local function AddChatLog(message: string, player: Player)
+    local ChatLog = chat_log_frame:Clone()
+    ChatLog.Parent = chat_logs_scrolling_frame
+
+    local Label: TextLabel = ChatLog:WaitForChild("ChatLogLabel")
+    Label.Text = "["..player.Name.."]: "..message
+end
+
+local NormalCloseChatLogsButtonSize = closechat_logs_button.Size
+local NormalChatLogsFrameSize = chat_logs_frame.Size
+
+closechat_logs_button.Activated:Connect(function()
+    local CloseTween = TweenService:Create(
+        chat_logs_frame,
+        TweenInfo.new(1),
+        {Size = UDim2.fromScale(0,0)}
+    )
+
+    local Frames = {}
+
+    for i,v in ipairs(chat_logs_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "ChatLogFrame" then
+            Frames[v] = v.Visible
+            v.Visible = false
+        end
+    end
+
+    local ChildAdded = chat_logs_scrolling_frame.ChildAdded:Connect(function(child)
+        Frames[child] = child.Visible
+        child.Visible = false
+    end)
+
+    BounceButton(closechat_logs_button, NormalCloseChatLogsButtonSize)
+
+    CloseTween:Play()
+    CloseTween.Completed:Wait()
+
+    chat_logs_frame.Visible = false
+
+    ChildAdded:Disconnect()
+    
+    chat_logs_frame.Size = NormalChatLogsFrameSize
+
+    for i,v in pairs(Frames) do
+        i.Visible = v
+    end
+end)
+
+search_chat_logs_box:GetPropertyChangedSignal("Text"):Connect(function()
+    for _,v: Frame in ipairs(chat_logs_scrolling_frame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "ChatLogFrame" then
+            local Text = v:FindFirstChild("ChatLogLabel")
+
+            if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:find(search_chat_logs_box.Text) then
                 v.Visible = false
             elseif Text then
                 v.Visible = true
@@ -1135,7 +1335,7 @@ end)
 AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
     commands_frame.Visible = true
 
-    for _,v: Instance in ipairs(commands_frame:GetChildren()) do
+    for _,v: Instance in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
             v:Destroy()
         end
@@ -1779,6 +1979,35 @@ task.spawn(function()
     end
 
     toggle_button.Interactable = true
+end)
+
+local ChatLogsCon = nil
+
+AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, function(arguments)
+    if not ChatLogsCon then
+        local Succ, Err = pcall(function()
+            ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
+                AddChatLog(message, player)
+            end)
+
+            chat_logs_frame.Visible = true
+        end)
+
+        if not Succ and Err ~= nil and tostring(Err) then
+            Error("Error: "..Err)
+        end
+    else
+        chat_logs_frame.Visible = true
+    end
+end)
+
+AddCMD("unchatlogs", "Stop recording chatlogs.", {}, function(arguments)
+    if ChatLogsCon then
+        ChatLogsCon:Disconnect()
+        ClearChatLogs()
+    else
+        Error("Chatlogs are already disabled.")
+    end
 end)
 
 if getgenv then
