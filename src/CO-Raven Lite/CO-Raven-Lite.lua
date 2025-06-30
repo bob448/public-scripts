@@ -1634,3 +1634,484 @@ AddCMD("unantibring", "Turns off antibring.", {}, function(arguments)
         Error("Antibring is already off.")
     end
 end)
+
+local function InitBuildTools(parent: Instance, includeHandle: boolean)
+    local build = Instance.new("Tool")
+    build.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    build.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    build.WorldPivot = CFrame.fromMatrix(Vector3.new(87.37981414794922, 0.841164231300354, 78.57115173339844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    build.Name = "Build"
+    build.Parent = parent
+
+    local preview_6 = Instance.new("SelectionBox")
+    preview_6.LineThickness = 0.05000000074505806
+    preview_6.SurfaceColor3 = Color3.new(0.501961, 1, 0.501961)
+    preview_6.SurfaceTransparency = 0.5
+    preview_6.Color3 = Color3.new(0.501961, 1, 0.501961)
+    preview_6.Visible = true
+    preview_6.Name = "Preview"
+    preview_6.Parent = build
+
+    local delete = Instance.new("Tool")
+    delete.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    delete.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    delete.WorldPivot = CFrame.fromMatrix(Vector3.new(85.87981414794922, 11.94116497039795, 78.97115325927734), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    delete.Name = "Delete"
+    delete.Parent = parent
+
+    local preview_5 = Instance.new("SelectionBox")
+    preview_5.LineThickness = 0.05000000074505806
+    preview_5.SurfaceColor3 = Color3.new(1, 0.501961, 0.501961)
+    preview_5.SurfaceTransparency = 0.5
+    preview_5.Color3 = Color3.new(1, 0.501961, 0.501961)
+    preview_5.Visible = true
+    preview_5.Name = "Preview"
+    preview_5.Parent = delete
+
+    local shape = Instance.new("Tool")
+    shape.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    shape.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    shape.WorldPivot = CFrame.fromMatrix(Vector3.new(85.87981414794922, 11.94116497039795, 78.97115325927734), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    shape.Name = "Shape"
+    shape.Parent = parent
+
+    local preview_3 = Instance.new("SelectionBox")
+    preview_3.LineThickness = 0.05000000074505806
+    preview_3.SurfaceColor3 = Color3.new(0, 0.501961, 1)
+    preview_3.SurfaceTransparency = 0.5
+    preview_3.Color3 = Color3.new(0, 0.501961, 1)
+    preview_3.Visible = true
+    preview_3.Name = "Preview"
+    preview_3.Parent = shape
+
+    local paint = Instance.new("Tool")
+    paint.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    paint.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    paint.WorldPivot = CFrame.fromMatrix(Vector3.new(85.87981414794922, 11.94116497039795, 78.97115325927734), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    paint.Name = "Paint"
+    paint.Parent = parent
+
+    local preview_4 = Instance.new("SelectionBox")
+    preview_4.LineThickness = 0.05000000074505806
+    preview_4.SurfaceColor3 = Color3.new(0.623529, 0.631373, 0.67451)
+    preview_4.SurfaceTransparency = 0.5
+    preview_4.Color3 = Color3.new(0.623529, 0.631373, 0.67451)
+    preview_4.Visible = true
+    preview_4.Name = "Preview"
+    preview_4.Parent = paint
+
+    local sign = Instance.new("Tool")
+    sign.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    sign.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    sign.WorldPivot = CFrame.fromMatrix(Vector3.new(85.87981414794922, 11.94116497039795, 78.97115325927734), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    sign.Name = "Sign"
+    sign.Parent = parent
+
+    local preview = Instance.new("SelectionBox")
+    preview.LineThickness = 0.05000000074505806
+    preview.SurfaceColor3 = Color3.new(0.494118, 0.407843, 0.247059)
+    preview.SurfaceTransparency = 0.5
+    preview.Color3 = Color3.new(0.494118, 0.407843, 0.247059)
+    preview.Visible = true
+    preview.Name = "Preview"
+    preview.Parent = sign
+
+    local shovel = Instance.new("Tool")
+    shovel.Grip = CFrame.fromMatrix(Vector3.new(0, 0, 0.4000000059604645), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    shovel.GripPos = Vector3.new(0, 0, 0.4000000059604645)
+    shovel.WorldPivot = CFrame.fromMatrix(Vector3.new(85.87981414794922, 11.94116497039795, 78.97115325927734), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+    shovel.Name = "Shovel"
+    shovel.Parent = parent
+
+    local preview_2 = Instance.new("SelectionBox")
+    preview_2.LineThickness = 0.05000000074505806
+    preview_2.SurfaceColor3 = Color3.new(0.854902, 0.521569, 0.254902)
+    preview_2.SurfaceTransparency = 0.5
+    preview_2.Color3 = Color3.new(0.854902, 0.521569, 0.254902)
+    preview_2.Visible = true
+    preview_2.Name = "Preview"
+    preview_2.Parent = shovel
+
+    if includeHandle then
+        local handle = Instance.new("Part")
+        handle.Anchored = false
+        handle.AssemblyAngularVelocity = Vector3.new(1, 1, 1)
+        handle.BottomSurface = Enum.SurfaceType.Smooth
+        handle.BrickColor = BrickColor.new(0.4941176772117615, 0.4078431725502014, 0.24705883860588074)
+        handle.CFrame = CFrame.fromMatrix(Vector3.new(8.412849426269531, 12.203357696533203, -24.174400329589844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle.Color = Color3.new(0.494118, 0.407843, 0.247059)
+        handle.Material = Enum.Material.SmoothPlastic
+        handle.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle.TopSurface = Enum.SurfaceType.Smooth
+        handle.Name = "Handle"
+        handle.Parent = sign
+
+        local handle_2 = Instance.new("Part")
+        handle_2.Anchored = false
+        handle_2.AssemblyAngularVelocity = Vector3.new(1, 1, 1)
+        handle_2.BottomSurface = Enum.SurfaceType.Smooth
+        handle_2.BrickColor = BrickColor.new(0.8549020290374756, 0.5215686559677124, 0.2549019753932953)
+        handle_2.CFrame = CFrame.fromMatrix(Vector3.new(8.412849426269531, 12.203357696533203, -24.174400329589844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle_2.Color = Color3.new(0.854902, 0.521569, 0.254902)
+        handle_2.Material = Enum.Material.SmoothPlastic
+        handle_2.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle_2.TopSurface = Enum.SurfaceType.Smooth
+        handle_2.Name = "Handle"
+        handle_2.Parent = shovel
+
+        local handle_3 = Instance.new("Part")
+        handle_3.Anchored = false
+        handle_3.AssemblyAngularVelocity = Vector3.new(1, 1, 1)
+        handle_3.BottomSurface = Enum.SurfaceType.Smooth
+        handle_3.BrickColor = BrickColor.new(0.05098039656877518, 0.4117647409439087, 0.6745098233222961)
+        handle_3.CFrame = CFrame.fromMatrix(Vector3.new(8.412849426269531, 12.203357696533203, -24.174400329589844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle_3.Color = Color3.new(0.0509804, 0.411765, 0.67451)
+        handle_3.Material = Enum.Material.SmoothPlastic
+        handle_3.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle_3.TopSurface = Enum.SurfaceType.Smooth
+        handle_3.Name = "Handle"
+        handle_3.Parent = shape
+
+        local handle_4 = Instance.new("Part")
+        handle_4.Anchored = false
+        handle_4.AssemblyAngularVelocity = Vector3.new(1, 1, 1)
+        handle_4.BottomSurface = Enum.SurfaceType.Smooth
+        handle_4.BrickColor = BrickColor.new(0.6235294342041016, 0.6313725709915161, 0.6745098233222961)
+        handle_4.CFrame = CFrame.fromMatrix(Vector3.new(8.412849426269531, 12.203357696533203, -24.174400329589844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle_4.Color = Color3.new(0.623529, 0.631373, 0.67451)
+        handle_4.Material = Enum.Material.SmoothPlastic
+        handle_4.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle_4.TopSurface = Enum.SurfaceType.Smooth
+        handle_4.Name = "Handle"
+        handle_4.Parent = paint
+
+        local handle_5 = Instance.new("Part")
+        handle_5.Anchored = false
+        handle_5.AssemblyAngularVelocity = Vector3.new(1, 1, 1)
+        handle_5.BottomSurface = Enum.SurfaceType.Smooth
+        handle_5.BrickColor = BrickColor.new(0.7686275243759155, 0.1568627506494522, 0.1098039299249649)
+        handle_5.CFrame = CFrame.fromMatrix(Vector3.new(8.412849426269531, 12.203357696533203, -24.174400329589844), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle_5.Color = Color3.new(0.768627, 0.156863, 0.109804)
+        handle_5.Material = Enum.Material.SmoothPlastic
+        handle_5.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle_5.TopSurface = Enum.SurfaceType.Smooth
+        handle_5.Name = "Handle"
+        handle_5.Parent = delete
+
+        local handle_6 = Instance.new("Part")
+        handle_6.Anchored = false
+        handle_6.BottomSurface = Enum.SurfaceType.Smooth
+        handle_6.BrickColor = BrickColor.new(0.29411765933036804, 0.5921568870544434, 0.29411765933036804)
+        handle_6.CFrame = CFrame.fromMatrix(Vector3.new(9.912849426269531, 1.1033567190170288, -24.57440185546875), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+        handle_6.Color = Color3.new(0.294118, 0.592157, 0.294118)
+        handle_6.Material = Enum.Material.SmoothPlastic
+        handle_6.Size = Vector3.new(0.800000011920929, 0.800000011920929, 0.800000011920929)
+        handle_6.TopSurface = Enum.SurfaceType.Smooth
+        handle_6.Name = "Handle"
+        handle_6.Parent = build
+
+        build:AddTag("The Chosen One by TomazDev") -- Enable animations
+        delete:AddTag("The Chosen One by TomazDev")
+        shape:AddTag("The Chosen One by TomazDev")
+        sign:AddTag("The Chosen One by TomazDev")
+        shovel:AddTag("The Chosen One by TomazDev")
+        paint:AddTag("The Chosen One by TomazDev")
+    end
+
+    return {build, delete, shape, paint, sign, shovel}
+end
+
+local function GetRemoteFromTool(tool: Tool)
+    local Script = tool:FindFirstChild("Script") or tool:FindFirstChildWhichIsA("LocalScript")
+    
+    return Script and (Script:FindFirstChild("Event") or Script:FindFirstChildWhichIsA("RemoteEvent"))
+end
+
+local function GetOtherPlayerToolRemote(name: string)
+    for i,v: Player in ipairs(Players:GetPlayers()) do
+        if v.Character then
+            local LoopThrough = {}
+            local CharacterChildren = v.Character:GetChildren()
+            local BackpackChildren = v.Backpack:GetChildren()
+
+            table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
+            table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+
+            for i,v in pairs(LoopThrough) do
+                if v and v.Name == name then
+                    local Remote = GetRemoteFromTool(v)
+
+                    if Remote then
+                        return Remote
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+local Equipped = {}
+Equipped["Build"] = function()
+    return LocalPlayer.PlayerGui:WaitForChild("Build")
+end
+Equipped["Paint"] = function()
+    return LocalPlayer.PlayerGui:WaitForChild("Paint")
+end
+Equipped["Shape"] = function()
+    return LocalPlayer.PlayerGui:WaitForChild("Shape")
+end
+Equipped["Shovel"] = function()
+    return LocalPlayer.PlayerGui:WaitForChild("Shovel")
+end
+Equipped["Delete"] = function() end
+Equipped["Sign"] = function() end
+
+local Activated = {}
+
+Activated["Build"] = function(tool: Tool)
+    local Gui = Equipped.Build()
+    local Button: TextButton = Gui:WaitForChild("Button")
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+                Mouse.Target,
+                Mouse.TargetSurface,
+                Mouse.Hit.Position,
+                Button.Text
+            )
+    elseif not Remote then
+        Error("No build remote found.")
+    end
+end
+
+Activated["Delete"] = function(tool: Tool)
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+            Mouse.Target,
+            Mouse.Hit.Position
+        )
+    elseif not Remote then
+        Error("No delete remote found.")
+    end
+end
+
+Activated["Paint"] = function(tool: Tool)
+    local Gui = Equipped.Paint()
+    local Color: ObjectValue = Gui:WaitForChild("Color")
+    local Mater: ObjectValue = Gui:WaitForChild("Mater")
+    local Button: TextButton = Gui:WaitForChild("Button")
+    local SprayText: TextBox = Gui:WaitForChild("MaterUI"):WaitForChild("Spray"):WaitForChild("Input")
+
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position,
+            Button.Text:find("both") and "both \240\159\164\157" or Button.Text,
+            Color.Value.BackgroundColor3,
+            Mater.Value.Text,
+            SprayText.Text
+        )
+    elseif not Remote then
+        Error("No paint remote found.")
+    end
+end
+
+Activated["Shape"] = function(tool: Tool)
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Gui = Equipped.Shape()
+    local Button: TextButton = Gui:WaitForChild("Button")
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position,
+            Button.Text
+        )
+    elseif not Remote then
+        Error("No shape remote found.")
+    end
+end
+
+Activated["Shovel"] = function(tool: Tool)
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Gui = Equipped.Shovel()
+    local Button: TextButton = Gui:WaitForChild("Button")
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position,
+            Button.Text
+        )
+    elseif not Remote then
+        Error("No shovel remote found.")
+    end
+end
+
+Activated["Sign"] = function(tool: Tool)
+    local Remote: RemoteEvent = GetOtherPlayerToolRemote(tool.Name)
+
+    local Mouse = LocalPlayer:GetMouse()
+
+    if Remote and Mouse.Target and tool.Preview.Adornee then
+        Remote:FireServer(
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position
+        )
+    elseif not Remote then
+        Error("No sign remote found.")
+    end
+end
+
+local function InitBuildScripts(tools: {Tool})
+    for i, tool:Tool in pairs(tools) do
+        local SelectionBox: SelectionBox = tool:WaitForChild("Preview")
+        local Hovering = false
+        local GetPos = require(ReplicatedStorage:WaitForChild("GetPos"))
+        local Brick = ReplicatedStorage:FindFirstChild("Brick")
+
+        local EquippedCon = tool.Equipped:Connect(function(mouse)
+            local Gui = Equipped[tool.Name]()
+            if Gui then
+                Gui.Enabled = true
+            end
+            Hovering = true
+            local Con; Con = RunService.RenderStepped:Connect(function()
+                if not Hovering then
+                    Con:Disconnect()
+                    return
+                end
+
+                local Mouse = LocalPlayer:GetMouse()
+                if Mouse.Target then
+                    local InChar=false
+                    for i,v in ipairs(Players:GetPlayers()) do
+                        if v.Character then
+                            if Mouse.Target:IsDescendantOf(v.Character) then
+                                InChar=true
+                                break
+                            end
+                        end
+                    end
+
+                    if not InChar then
+                        SelectionBox.Visible = true
+                        if tool.Name == "Build" then
+                            local Gui = Equipped["Build"]()
+                            local Button: TextButton = Gui:WaitForChild("Button")
+
+                            if Mouse.Target.Name == "Brick" and Button.Text == "normal" then
+                                SelectionBox.Adornee = Mouse.Target
+                            else
+                                SelectionBox.Adornee = Brick
+                            end
+                        else
+                            if Mouse.Target.Name == "Brick" then
+                                SelectionBox.Adornee = Mouse.Target
+                            else
+                                SelectionBox.Adornee = Brick
+                            end
+                        end
+
+                        if Mouse.Target then
+                            Brick.Position = GetPos("Dig", Brick.Size, Mouse.TargetSurface, Mouse.Hit.Position)
+                        end
+
+                        if tool.Name == "Build" then
+                            local Gui = Equipped["Build"]()
+                            local Button: TextButton = Gui:WaitForChild("Button")
+
+                            if Button.Text == "normal" then
+                                Brick.Size = Vector3.new(4,4,4)
+                            else
+                                Brick.Size = Vector3.new(1,1,1)
+                            end
+                        else
+                            Brick.Size = Vector3.new(4,4,4)
+                        end
+                    else
+                        SelectionBox.Adornee = nil
+                        SelectionBox.Visible = false
+                    end
+                else
+                    SelectionBox.Adornee = nil
+                    SelectionBox.Visible = false
+                end
+            end)
+        end)
+        local function unequipped()
+            Hovering = false
+            SelectionBox.Adornee = nil
+            SelectionBox.Visible = false
+            local Gui = Equipped[tool.Name]()
+            if Gui then
+                Gui.Enabled = false
+            end
+        end
+        local Unequipped = tool.Unequipped:Connect(unequipped)
+        local Deactivated = tool.Deactivated:Connect(function()
+            Activated[tool.Name](tool)
+        end)
+
+        local AncestryChanged; AncestryChanged = tool.AncestryChanged:Connect(function(child,parent)
+            if tool.Parent ~= LocalPlayer.Backpack and tool.Parent ~= LocalPlayer.Character and tool.Parent ~= ReplicatedStorage then
+                unequipped()
+                tool:Destroy()
+                EquippedCon:Disconnect()
+                Unequipped:Disconnect()
+                Deactivated:Disconnect()
+            end
+        end)
+    end
+end
+
+local ClientBkitTools = {}
+
+local function ToBool(str: string)
+    return str == "true"
+end
+
+AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {"handle (true/false)"}, function(arguments)
+    local Character = LocalPlayer.Character
+    local HasHandle = arguments[1] and ToBool(arguments[1]) or arguments[1] == nil
+
+    if Character and #ClientBkitTools == 0 then
+        local Tools = InitBuildTools(LocalPlayer.Backpack, HasHandle)
+        InitBuildScripts(Tools)
+
+        table.move(Tools, 1, #Tools, 1, ClientBkitTools)
+    end
+end)
+
+AddCMD("unclientbkit", "Removes the client-sided build tools from your character/backpack", {}, function(arguments)
+    for i,v in pairs(ClientBkitTools) do
+        if v and v.Parent then
+            v:Destroy()
+        end
+    end
+
+    table.clear(ClientBkitTools)
+end)
