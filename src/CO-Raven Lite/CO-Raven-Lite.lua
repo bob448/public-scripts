@@ -28,6 +28,7 @@ type RavenMod = {
     VERSION: number,
     GetCoreGui: () -> (CoreGui | PlayerGui),
     CanAccessCoreGui: boolean,
+    SetOpenBind: (key: string?) -> (),
     Notif: {
         Statuses: {
             Error: Color3,

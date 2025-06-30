@@ -780,7 +780,7 @@ local function BounceButton(button: TextButton | ImageButton, OgSize: UDim2)
     BounceTween.Completed:Wait()
 end
 
-toggle_button.Activated:Connect(function(_inputObject, _clickCount)
+local function ToggleButtonPressed(_inputObject, _clickCount)
     if toggle_button.Interactable then
         local SizeTween = TweenService:Create(
             toggle_button,
@@ -823,7 +823,9 @@ toggle_button.Activated:Connect(function(_inputObject, _clickCount)
 
         GuiOpen = not GuiOpen
     end
-end)
+end
+
+toggle_button.Activated:Connect(ToggleButtonPressed)
 
 module.Notif = {}
 
@@ -1062,10 +1064,10 @@ search_output_box:GetPropertyChangedSignal("Text"):Connect(function()
         if v:IsA("Frame") and v.Name == "OutputFrame" then
             local Text: TextLabel = v:FindFirstChild("OutputLabel")
 
-            if Text and search_output_box.Text:len() > 0 and Text.Text:find(search_output_box.Text) then
-                v.Visible = false
-            elseif Text then
+            if Text and search_output_box.Text:len() > 0 and Text.Text:lower():find(search_output_box.Text:lower()) then
                 v.Visible = true
+            elseif Text then
+                v.Visible = false
             end
         end
     end
@@ -1119,7 +1121,7 @@ closechat_logs_button.Activated:Connect(function()
     chat_logs_frame.Visible = false
 
     ChildAdded:Disconnect()
-    
+
     chat_logs_frame.Size = NormalChatLogsFrameSize
 
     for i,v in pairs(Frames) do
@@ -1132,10 +1134,10 @@ search_chat_logs_box:GetPropertyChangedSignal("Text"):Connect(function()
         if v:IsA("Frame") and v.Name == "ChatLogFrame" then
             local Text = v:FindFirstChild("ChatLogLabel")
 
-            if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:find(search_chat_logs_box.Text) then
-                v.Visible = false
-            elseif Text then
+            if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:lower():find(search_chat_logs_box.Text:lower()) then
                 v.Visible = true
+            elseif Text then
+                v.Visible = false
             end
         end
     end
@@ -1360,6 +1362,63 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
 
         Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments
     end
+end)
+
+local OpenBind = nil
+
+function module:SetOpenBind(key: string?)
+    OpenBind = key
+end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed then
+        if OpenBind and input.KeyCode.Name:lower() == OpenBind:lower() then
+            if not GuiOpen then
+                task.spawn(ToggleButtonPressed)
+
+                command_box:CaptureFocus()
+                task.wait()
+                command_box.Text = ""
+            else
+                task.spawn(ToggleButtonPressed)
+            end
+        end
+    end
+end)
+
+AddCMD("setopenbind", "Sets the key to open Raven and focus on the command box.", {"key/none"}, function(arguments)
+    local Key = arguments[1]
+
+    local Keycodes = Enum.KeyCode:GetEnumItems()
+    local KeycodeNames = {}
+
+    for i,v in pairs(Keycodes) do
+        KeycodeNames[#KeycodeNames+1] = v.Name:lower()
+    end
+
+    if Key and table.find(KeycodeNames, Key:lower()) then
+        OpenBind = Key
+
+        Success("Set open bind.")
+    elseif Key then
+        Error(Key.." is not a KeyCode. Execute the command \"keycodes\" to see all available keycodes.")
+    else
+        OpenBind = nil
+    end
+end)
+
+AddCMD("saveopenbind", "Saves the open bind to a file.", {}, function(arguments)
+    if writefile then
+        writefile("RAVEN_OPENBIND", OpenBind or "")
+
+        Success("Saved open bind.")
+    else
+        Error("Your executor does not have writefile.")
+    end
+end)
+
+AddCMD("keycodes", "Shows all available keycodes.", {}, function(arguments)
+    Output(Enum.KeyCode:GetEnumItems())
 end)
 
 AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
@@ -1927,6 +1986,51 @@ AddCMD("disablecore", "Disables a coregui", {"gui (backpack/reset/playerlist/all
     end
 end)
 
+local ChatLogsCon = nil
+
+AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, function(arguments)
+    if not ChatLogsCon then
+        local Succ, Err = pcall(function()
+            ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
+                AddChatLog(message, player)
+            end)
+
+            chat_logs_frame.Visible = true
+        end)
+
+        if not Succ and Err ~= nil and tostring(Err) then
+            Error("Error: "..Err)
+        end
+    else
+        chat_logs_frame.Visible = true
+    end
+end)
+
+AddCMD("unchatlogs", "Stop recording chatlogs.", {}, function(arguments)
+    if ChatLogsCon then
+        ChatLogsCon:Disconnect()
+        ClearChatLogs()
+    else
+        Error("Chatlogs are already disabled.")
+    end
+end)
+
+--[[
+
+
+DO NOT PUT ANY COMMANDS PAST THIS POINT
+
+
+]]
+
+if readfile and isfile then -- Load saved openbind if there is any.
+    if isfile("RAVEN_OPENBIND") then
+        local bind = readfile("RAVEN_OPENBIND")
+
+        OpenBind = bind
+    end
+end
+
 task.spawn(function()
     task.wait(.1)
 
@@ -1979,35 +2083,6 @@ task.spawn(function()
     end
 
     toggle_button.Interactable = true
-end)
-
-local ChatLogsCon = nil
-
-AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, function(arguments)
-    if not ChatLogsCon then
-        local Succ, Err = pcall(function()
-            ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
-                AddChatLog(message, player)
-            end)
-
-            chat_logs_frame.Visible = true
-        end)
-
-        if not Succ and Err ~= nil and tostring(Err) then
-            Error("Error: "..Err)
-        end
-    else
-        chat_logs_frame.Visible = true
-    end
-end)
-
-AddCMD("unchatlogs", "Stop recording chatlogs.", {}, function(arguments)
-    if ChatLogsCon then
-        ChatLogsCon:Disconnect()
-        ClearChatLogs()
-    else
-        Error("Chatlogs are already disabled.")
-    end
 end)
 
 if getgenv then
