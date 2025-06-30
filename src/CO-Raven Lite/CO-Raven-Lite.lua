@@ -1,6 +1,8 @@
 -- CO-RAVEN LITE
 -- made by @bob448 or bobmichealson8 on scriptblox
 
+-- Lite because I don't want to leak too much vulnerabilities (I found some really game-breaking ones)
+
 -- A Chosen One Script.
 
 if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
