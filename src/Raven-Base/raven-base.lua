@@ -4,7 +4,10 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
-local VERSION = -1
+local module = {}
+
+module.Name = "Raven"
+module.VERSION = 1
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -28,6 +31,8 @@ local function GetCoreGui()
     end
 end
 
+module:GetCoreGui = GetCoreGui
+
 do
     local TestInstance = Instance.new("ScreenGui")
 
@@ -39,6 +44,8 @@ do
 
     TestInstance:Destroy()
 end
+
+module:CanAccessCoreGui = CanAccessCoreGui
 
 local function AnimateGradient(uigradient: UIGradient, speed: number)
     return RunService.RenderStepped:Connect(function(delta)
@@ -682,6 +689,8 @@ toggle_button.Activated:Connect(function(_inputObject, _clickCount)
     end
 end)
 
+module.Notif = {}
+
 local Statuses = {
     Error = Color3.new(0.725490, 0, 0.301960),
     Warning = Color3.new(0.901960, 0.890196, 0.341176),
@@ -689,6 +698,8 @@ local Statuses = {
     Debug = Color3.new(0.992156, 0.717647, 0.490196),
     Success = Color3.new(0.611764, 0.847058, 0.552941)
 }
+
+module.Notif.Statuses = Statuses
 
 local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
     Frame.AutomaticSize = Enum.AutomaticSize.None
@@ -715,6 +726,8 @@ local function CloseNotification(Frame: Frame, Status: Frame, Text: TextLabel)
     CloseTween.Completed:Wait()
     Frame:Destroy()
 end
+
+module.Notif:CloseNotification = CloseNotification
 
 local function Notify(data: string, status: Color3?, time: number?)
     local Notif = notification_frame:Clone()
@@ -758,7 +771,19 @@ local function Notify(data: string, status: Color3?, time: number?)
     CloseNotification(Notif, Status, Text)
 end
 
+module.Notif:Notify = Notify
+
 local DebugMode = false
+
+module.Debug = {}
+
+module.Debug:GetDebugMode = function()
+    return DebugMode
+end
+
+module.Debug:SetDebugMode = function(value: boolean)
+    DebugMode = value
+end
 
 local function Error(data: string, time: number?)
     task.spawn(Notify, data, Statuses.Error, time)
@@ -782,7 +807,15 @@ local function Success(data: string, time: number?)
     task.spawn(Notify, data, Statuses.Success, time)
 end
 
+module.Notif:Error = Error
+module.Notif:Warn = Warn
+module.Notif:Info = Info
+module.Notif:Debug = Debug
+module.Notif:Success = Success
+
 local Commands = {}
+
+module.Commands = Commands
 
 type CommandTable = {Function: ({string?}) -> (any?), Arguments: {string?}, Description: string}
 
@@ -799,6 +832,8 @@ local function AddCMD(name: string, description: string, arguments: {string?}, f
     end
 end
 
+module:AddCMD = AddCMD
+
 local function GetCMD(name: string)
     for Name, Table in pairs(Commands) do
         if name == Name then
@@ -809,6 +844,8 @@ local function GetCMD(name: string)
     return nil
 end
 
+module:GetCMD = GetCMD
+
 local function ClearOutput()
     for _,v: Frame in pairs(output_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "OutputFrame" then
@@ -816,6 +853,9 @@ local function ClearOutput()
         end
     end
 end
+
+module.Output = {}
+module.Output:ClearOutput = ClearOutput
 
 local function Output(data: {any?})
     outputs_frame.Visible = true
@@ -834,6 +874,8 @@ local function Output(data: {any?})
         end
     end
 end
+
+module.Output:OutputData = Output
 
 local NormalOutputsFrameSize = outputs_frame.Size
 local NormalCloseOutputButtonSize = close_output_button.Size
@@ -890,6 +932,9 @@ local PlayerSelectors = {
     end
 }
 
+module.Player = {}
+module.Player.PlayerSelectors = PlayerSelectors
+
 local function FindPlayers(...: string): {Player?}
     local Found = {}
     local Args = {...}
@@ -916,6 +961,8 @@ local function FindPlayers(...: string): {Player?}
 
     return Found
 end
+
+module.Player:FindPlayers = FindPlayers
 
 local CloseCommandsButtonNormalSize = closecommands_button.Size
 local CommandFrameNormalSize = commands_frame.Size
@@ -995,6 +1042,9 @@ local function AutoCompleteCommand(data: string)
     end
 end
 
+module.Command = {}
+module.Command:AutoCompleteCommand = AutoCompleteCommand
+
 command_box.FocusLost:Connect(function(enterPressed, _)
     if enterPressed then
         local String = command_box.Text
@@ -1039,15 +1089,15 @@ toggle_button.Interactable = false
 do -- Welcome Animation
     welcome_label.Visible = true
 
-    local version = tostring(VERSION)
+    local version = tostring(module.VERSION)
 
-    if VERSION == -1 then
+    if module.VERSION == -1 then
         version = "BASE"
-    elseif VERSION == -2 then
+    elseif module.VERSION == -2 then
         version = "DEV BASE"
     end
 
-    title_label.Text = "Raven | Version "..version
+    title_label.Text = module.Name.." | Version "..version
 
     GuiOpen = true
 
@@ -1536,3 +1586,5 @@ AddCMD("unesp", "Disables ESP", {}, function(arguments)
 
     table.clear(EspPlayers)
 end)
+
+return module
