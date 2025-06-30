@@ -906,7 +906,7 @@ local function FindPlayers(...: string): {Player?}
 
         if not IsSelector then
             for _,v: Player in ipairs(Players:GetPlayers()) do
-                if v.Name:lower():sub(1, key:len()) == key:lower() then
+                if v.Name:lower():sub(1, key:len()) == key:lower() or v.DisplayName:lower():sub(1, key:len()) == key:lower() then
                     Found[#Found+1] = v
                 end
             end
