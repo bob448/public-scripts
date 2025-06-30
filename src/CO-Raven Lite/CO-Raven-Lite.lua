@@ -803,7 +803,7 @@ Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", function(arguments)
+Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", {}, function(arguments)
     local System: RemoteEvent = ReplicatedStorage:WaitForChild("System")
 
     System:FireServer("Unfocused")
