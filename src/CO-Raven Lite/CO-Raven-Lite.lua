@@ -804,11 +804,18 @@ Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
 end)
 
 Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", {}, function(arguments)
-    local System: RemoteEvent = ReplicatedStorage:WaitForChild("System")
+    local System: RemoteEvent = ReplicatedStorage:FindFirstChild("System")
 
-    System:FireServer("Unfocused")
-    task.wait()
-    System:FireServer("Focused")
-    task.wait()
-    System:Destroy()
+    if System then
+        System:FireServer("Unfocused")
+        task.wait()
+        System:FireServer("Focused")
+        task.wait()
+        System:Destroy()
+
+
+        Raven:Success("Enabled antiafk.")
+    else
+        Raven:Error("Antiafk was already triggered before.")
+    end
 end)
