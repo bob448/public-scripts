@@ -802,3 +802,15 @@ Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
         Blur.Enabled = false
     end
 end)
+
+--[[
+
+KEEP AT BOTTOM
+
+]]
+
+if isfile and readfile then
+    if isfile("COR.lua") then
+        readfile("COR.lua")
+    end
+end
