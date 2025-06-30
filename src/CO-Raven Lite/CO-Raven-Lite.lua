@@ -3,16 +3,26 @@
 
 -- A Chosen One Script.
 
+if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
+    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/main/src/Raven-Base/raven-base.lua")))
+    error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
+end
+
 local VERSION = -1
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
+local Teams = game:GetService("Teams")
 local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TextChatService = game:GetService("TextChatService")
+
+local TextChannels = TextChatService:WaitForChild("TextChannels")
+local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
 
 local ClosedPosition = UDim2.new(.5, 0, 0, -244)
 local OpenPosition = UDim2.new(.5, 0, 0, 4)
@@ -2105,6 +2115,8 @@ AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {"ha
         table.move(Tools, 1, #Tools, 1, ClientBkitTools)
 
         Success("Successfully initialized client-sided building tools.")
+    else
+        Error("Either could not find character, or clientbkit has already been initialized. Try running \"unclientbkit\".")
     end
 end)
 
@@ -2174,4 +2186,22 @@ AddCMD("unbreakbkit", "Stops spamming remotes.", {}, function(arguments)
     table.clear(BreakBkitPlayers)
 
     Success("Turned off breakbkit.")
+end)
+
+local PermAdminCon = nil
+
+AddCMD("permadmin", "Spams reset in the system channel whenever enlighten is in your backpack or character.", {}, function(arguments)
+    if not PermAdminCon then
+        PermAdminCon = RunService.RenderStepped:Connect(function()
+            local Character = LocalPlayer.Character
+
+            if Character and LocalPlayer.Team ~= Teams.Chosen then
+                if Character:FindFirstChild("The Arkenstone") or LocalPlayer.Backpack:FindFirstChild("The Arkenstone") then
+                    RBXSystem:SendAsync("reset me")
+                end
+            end
+        end)
+    else
+        Error("Permadmin is already on. Try running \"unpermadmin\".")
+    end
 end)
