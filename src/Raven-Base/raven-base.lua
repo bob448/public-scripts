@@ -1461,9 +1461,11 @@ AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folde
         local Name = arguments[1]
 
         if Name and isfile(Name) then
-            local Mod = loadstring(readfile(Name))
+            local Func = loadstring(readfile(Name))
 
-            setfenv(Mod, getfenv())
+            setfenv(Func, getfenv())
+
+            Func()
         else
             Error("Module not found.")
         end
