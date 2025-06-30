@@ -63,8 +63,6 @@ type RavenMod = {
     }
 }
 
-print(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/Raven-Base/raven-base.lua"))
-
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/dev/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
 Raven.VERSION = -1
