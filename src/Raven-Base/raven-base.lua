@@ -1675,12 +1675,13 @@ AddCMD("view", "Views a player.", {}, {"player"}, function(arguments)
     end
 end)
 
-AddCMD("unview", "Sets the camera to your Humanoid.", {}, {}, function(arguments)
+AddCMD("unview", "Sets the camera to your Humanoid.", {"fixcam"}, {}, function(arguments)
     local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
     if Humanoid and workspace.CurrentCamera then
         workspace.CurrentCamera.CameraSubject = Humanoid
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
     end
 end)
 
