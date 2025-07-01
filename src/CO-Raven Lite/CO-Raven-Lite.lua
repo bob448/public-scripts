@@ -963,3 +963,68 @@ Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {"comma
         RBXSystem:SendAsync(table.concat(arguments, " "))
     end
 end)
+
+local function LoopThroughTables(...: {any?})
+    local Tables = {...}
+    local LoopThrough = {}
+
+    for _, Table in Tables do
+        if #Table and #Table > 0 then
+            table.move(Table, 1, #Table, 1, LoopThrough)
+        end
+    end
+
+    return LoopThrough
+end
+
+Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=24)","increase"}, function(arguments)
+    local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if Root then
+        local Radius = arguments[1] and tonumber(arguments[1]) or 24
+        Radius = Radius > 24 and 24 or Radius
+        local Increase = arguments[2] and tonumber(arguments[2]) or 8
+
+        Raven.Notif:Success("Started building a circle.")
+
+        for i=-180+Increase, 180-Increase, Increase do
+            RunService.Heartbeat:Wait()
+
+            local Remotes = {}
+            
+            for _, v in ipairs(Players:GetPlayers()) do
+                if v.Character then
+                    local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+
+                    for _, tool: Tool in pairs(LoopThrough) do
+                        if tool:IsA("Tool") and tool.Name == "Build" then
+                            local Remote = GetRemoteFromTool(tool)
+
+                            if Remote then Remotes[#Remotes+1] = Remote end
+                        end
+                    end
+                end
+            end
+
+            if #Remotes > 0 and Root and Root.Parent then
+                local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(0, math.rad(i), 0) * CFrame.new(0, 0, -Radius)
+                local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+
+                Remote:FireServer(
+                    workspace.Terrain,
+                    Enum.NormalId.Top,
+                    CFrame.Position,
+                    "detailed"
+                )
+            elseif #Remotes == 0 then
+                Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                return
+            else
+                Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                return
+            end
+        end
+
+        Raven.Notif:Success("Completed building a circle.")
+    end
+end)
