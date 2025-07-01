@@ -1981,6 +1981,22 @@ AddCMD("unesp", "Disables ESP", {}, {}, function(arguments)
     table.clear(EspPlayers)
 end)
 
+AddCMD("freeze", "Anchors your root.", {"fr"}, {}, function(arguments)
+    local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if Root then
+        Root.Anchored = true
+    end
+end)
+
+AddCMD("unfreeze", "Unanchors your root.", {"unfr"}, {}, function(arguments)
+    local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if Root then
+        Root.Anchored = false
+    end
+end)
+
 local NoclipCon = nil
 
 AddCMD("noclip", "Noclips your character.", {}, {}, function(arguments)
