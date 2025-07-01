@@ -981,9 +981,9 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root then
-        local Radius = arguments[1] and tonumber(arguments[1]) or 24
+        local Radius = arguments[1] and tonumber(arguments[1]) or 10
         Radius = Radius > 24 and 24 or Radius
-        local Increase = arguments[2] and tonumber(arguments[2]) or 8
+        local Increase = arguments[2] and tonumber(arguments[2]) or 3
 
         Raven.Notif:Success("Started building a circle.")
 
@@ -1026,5 +1026,59 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
         end
 
         Raven.Notif:Success("Completed building a circle.")
+    end
+end)
+
+Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=24)","increase"}, function(arguments)
+    local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if Root then
+        local Radius = arguments[1] and tonumber(arguments[1]) or 10
+        Radius = math.clamp(Radius, 1, 24)
+        local Increase = arguments[2] and tonumber(arguments[2]) or 4
+
+        Raven.Notif:Success("Started building a sphere.")
+
+        for y=-90+Increase, 90-Increase, Increase do
+            for x=0, 360-Increase, Increase do
+                RunService.RenderStepped:Wait()
+
+                local Remotes = {}
+                
+                for _, v in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+
+                        for _, tool: Tool in pairs(LoopThrough) do
+                            if tool:IsA("Tool") and tool.Name == "Build" then
+                                local Remote = GetRemoteFromTool(tool)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
+                        end
+                    end
+                end
+
+                if #Remotes > 0 and Root and Root.Parent then
+                    local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(math.rad(y), math.rad(x), 0) * CFrame.new(0, 0, -Radius)
+                    local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+
+                    Remote:FireServer(
+                        workspace.Terrain,
+                        Enum.NormalId.Top,
+                        CFrame.Position,
+                        "detailed"
+                    )
+                elseif #Remotes == 0 then
+                    Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                    return
+                else
+                    Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                    return
+                end
+            end
+        end
+
+        Raven.Notif:Success("Completed building a sphere.")
     end
 end)
