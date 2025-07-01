@@ -1136,3 +1136,33 @@ Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, function(arg
         Raven.Notif:Error("You are not building a sphere.")
     end
 end)
+
+Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then clearinvs them)", {"player"}, function(arguments)
+    local Targets = Raven.Player:FindPlayers(unpack(arguments))
+
+    if #Targets > 0 then
+        local HasEnlighten = false
+
+        local Names = {}
+        for i,v in pairs(Targets) do if v then Names[#Names+1] = v.Name end end
+
+        RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
+
+        task.wait(.1)
+
+        while HasEnlighten do
+            task.wait(.2)
+
+            for i,v in pairs(Targets) do
+                if v and v.Character then
+                    table.clear(Names)
+                    for i,v in pairs(Targets) do if v then Names[#Names+1] = v.Name end end
+
+                    if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
+                        RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
+                    end
+                end
+            end
+        end
+    end
+end)
