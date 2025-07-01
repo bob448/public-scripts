@@ -1462,7 +1462,7 @@ AddCMD("savealiases", "Saves both user-defined and built-in aliases", {}, {}, fu
                     Aliases = Aliases..Alias..i ~= #CommandTable.Aliases and ";" or ""
                 end
 
-                appendfile("RAVEN_SAVED_ALIASES", Name.."="..Aliases)
+                appendfile("RAVEN_SAVED_ALIASES", Name.."="..Aliases.."\n")
             end
         end
 
@@ -2538,7 +2538,7 @@ if readfile and isfile then -- Load saved aliases.
 
             for _, Line in pairs(Lines) do
                 local Split = Line:split("=")
-                if #Split == 2 then
+                if Split and #Split == 2 then
                     local Command = Split[1]
                     local Aliases = Split[2]
                     local CommandTable: CommandTable? = GetCMD(Command)
