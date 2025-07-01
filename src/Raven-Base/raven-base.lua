@@ -14,6 +14,7 @@ module.Name = "Raven"
 module.VERSION = -1
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
 local StarterGui = game:GetService("StarterGui")
@@ -1941,25 +1942,27 @@ AddCMD("invisible", "Makes your character invisible to others", {}, function(arg
 
             local OGCFrame = Root.CFrame
 
-            Root.CFrame = CFrame.new(0, 9e9, 0)
-            task.wait(.1)
-            Root.Anchored = true
+            Character:PivotTo(CFrame.new(0,15e15,0))
+            task.wait(.3)
 
-            Root.Parent = GetCoreGui()
+            Root.Parent = ReplicatedStorage
             Invisible.InvisibleRoot = Root
-
-            task.wait()
 
             local CRoot: BasePart = Root:Clone()
             CRoot.Parent = Character
-            CRoot.Anchored = false
 
             Invisible.InvisibleCRoot = CRoot
             Invisible.InvisibleCharacter = Character
 
-            task.wait()
+            task.wait(.1)
 
-            Character:PivotTo(OGCFrame)
+            repeat task.wait()
+                CRoot.AssemblyAngularVelocity = Vector3.zero
+                CRoot.AssemblyLinearVelocity = Vector3.zero
+
+                Character:PivotTo(OGCFrame)
+                CRoot.CFrame = OGCFrame
+            until (CRoot.Position - OGCFrame.Position).Magnitude < 1
 
             if Humanoid.RigType == Enum.HumanoidRigType.R15 then
                 local AlignPosition = Instance.new("AlignPosition", CRoot)
@@ -1984,6 +1987,8 @@ AddCMD("invisible", "Makes your character invisible to others", {}, function(arg
 
                 Invisible.TorsoOrientation = AlignOrientation
 
+                local NoGettingUp = false
+
                 Invisible.TorsoHeartbeat = RunService.Heartbeat:Connect(function()
                     if Invisible.Enabled and Character.Parent then
                         for i,v in ipairs(Character:GetDescendants()) do
@@ -1993,6 +1998,24 @@ AddCMD("invisible", "Makes your character invisible to others", {}, function(arg
                         end
                         AlignPosition.Position = CRoot.Position + Vector3.new(0, LowerTorso.Size.Y, 0)
                         AlignOrientation.CFrame = CRoot.CFrame
+
+                        if Humanoid:GetState() == Enum.HumanoidStateType.GettingUp and not NoGettingUp then
+                            NoGettingUp = true
+
+                            Info("Getting back up..")
+
+                            AlignPosition.ReactionForceEnabled = false
+
+                            task.wait(.5)
+
+                            AlignPosition.ReactionForceEnabled = true
+
+                            task.wait(.5)
+
+                            Success("Done!")
+
+                            NoGettingUp = false
+                        end
                     end
                 end)
             end
@@ -2064,6 +2087,7 @@ AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
         local Goto = nil
         if Invisible.InvisibleCRoot then
             Goto = Invisible.InvisibleCRoot.CFrame
+            
             Invisible.InvisibleCRoot:Destroy()
             Invisible.InvisibleCRoot = nil
         end
@@ -2090,14 +2114,19 @@ AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
 
         if Invisible.InvisibleRoot and Invisible.InvisibleCharacter then
             Invisible.InvisibleRoot.Parent = Invisible.InvisibleCharacter
-            Invisible.InvisibleRoot.CFrame = Goto or CFrame.new(0,0,0)
-            task.wait()
 
-            Invisible.InvisibleRoot.Anchored = false
+            Goto = Goto or CFrame.new(0,0,0)
+
+            repeat task.wait()
+                Invisible.InvisibleRoot.AssemblyAngularVelocity = Vector3.zero
+                Invisible.InvisibleRoot.AssemblyLinearVelocity = Vector3.zero
+
+                Invisible.InvisibleRoot.CFrame = Goto
+            until (Invisible.InvisibleRoot.Position - Goto.Position).Magnitude < 1
         end
 
         if Invisible.InvisibleCharacter then
-            for i,v in ipairs(Invisible.InvisibleCharacter:GetDescendants()) do
+            for _, v in ipairs(Invisible.InvisibleCharacter:GetDescendants()) do
                 if v:IsA("BasePart") and v ~= Invisible.InvisibleRoot then
                     v.Transparency = 0
                 end
@@ -2107,7 +2136,7 @@ AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
         Invisible.InvisibleRoot = nil
         Invisible.InvisibleCharacter = nil
 
-        for _,v in pairs(Invisible.InvisibleHighlights) do
+        for _, v in pairs(Invisible.InvisibleHighlights) do
             if v and v.Parent then
                 v:Destroy()
             end
@@ -2121,6 +2150,8 @@ AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
         end
 
         Invisible.Enabled = false
+
+        Success("Turned off invisibility.")
     else
         Error("Invisible is already off.")
     end
