@@ -69,38 +69,37 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.6
+Raven.VERSION = 1.7
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
 Raven:AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, function(arguments)
     if not AntiFreezeCon then
-        local CurrentCharacter: Model? = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local CurrentHumanoid: Humanoid? = CurrentCharacter:WaitForChild("Humanoid")
-        local CurrentRoot: BasePart? = CurrentCharacter:WaitForChild("HumanoidRootPart")
+        local NoReset = false
 
         AntiFreezeCon = nil
 
-        local function CharacterChildAdded(child: Instance)
-            if child.Name == "Hielo" and CurrentHumanoid and CurrentRoot then
-                if AntiFreezeCon then
-                    AntiFreezeCon:Disconnect()
+        AntiFreezeCon = RunService.Heartbeat:Connect(function()
+            local Character: Model? = LocalPlayer.Character
+            if Character and Character:FindFirstChild("Hielo") and not NoReset then
+                local Humanoid: Humanoid? = Character:FindFirstChildWhichIsA("Humanoid")
+                local Root: BasePart? = Character:FindFirstChild("HumanoidRootPart")
+
+                if Humanoid and Root then
+                    NoReset = true
+
+                    local OGPos = Root.CFrame
+                    Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+
+                    Character = LocalPlayer.CharacterAdded:Wait()
+                    Root = Character:WaitForChild("HumanoidRootPart")
+
+                    Root.CFrame = OGPos
+
+                    NoReset = false
                 end
-                
-                local Pos = CurrentRoot.CFrame
-
-                CurrentHumanoid.Health = 0
-                CurrentCharacter = LocalPlayer.CharacterAdded:Wait()
-                CurrentHumanoid = CurrentCharacter:WaitForChild("Humanoid")
-                CurrentRoot = CurrentCharacter:WaitForChild("HumanoidRootPart")
-                
-                CurrentRoot.CFrame = Pos
-
-                AntiFreezeCon = CurrentCharacter.ChildAdded:Connect(CharacterChildAdded)
             end
-        end
-
-        AntiFreezeCon = CurrentCharacter.ChildAdded:Connect(CharacterChildAdded)
+        end)
 
         Raven.Notif:Success("Turned on antifreeze.")
     else
@@ -112,6 +111,7 @@ Raven:AddCMD("unantifreeze", "Turns off antifreeze.", {}, function(arguments)
     if AntiFreezeCon then
         AntiFreezeCon:Disconnect()
         AntiFreezeCon = nil
+        
         Raven.Notif:Success("Turned off antifreeze.")
     else
         Raven.Notif:Error("Antifreeze is already off.")
