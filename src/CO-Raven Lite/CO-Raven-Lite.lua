@@ -113,6 +113,7 @@ end)
 Raven:AddCMD("unantifreeze", "Turns off antifreeze.", {}, function(arguments)
     if AntiFreezeCon then
         AntiFreezeCon:Disconnect()
+        AntiFreezeCon = nil
         Raven.Notif:Success("Turned off antifreeze.")
     else
         Raven.Notif:Error("Antifreeze is already off.")
@@ -168,6 +169,7 @@ end)
 Raven:AddCMD("unantibring", "Turns off antibring.", {}, function(arguments)
     if AntiBringCon then
         AntiBringCon:Disconnect()
+        AntiBringCon = nil
         Raven.Notif:Success("Turned off antibring.")
     else
         Raven.Notif:Error("Antibring is already off.")
