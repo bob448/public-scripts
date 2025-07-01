@@ -141,7 +141,7 @@ Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances travele
                     table.remove(Movements, 1)
                 end
 
-                if #Movements >= 15 and Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
+                if #Movements >= 15 and Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall and not Humanoid.PlatformStand then
                     if (Movements[15].Position - Movements[1].Position).Magnitude > Humanoid.WalkSpeed + (Humanoid.UseJumpPower and Humanoid.JumpPower / 8 or Humanoid.JumpHeight) then
                         local Pos: CFrame = Movements[1]
                         table.clear(Movements)
