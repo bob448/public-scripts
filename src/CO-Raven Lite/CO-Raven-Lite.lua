@@ -887,6 +887,9 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                             Brick,
                             Brick.Position
                         )
+
+                        task.wait(.3)
+                        DeleteHighlight:Destroy()
                     end
                 end
             end
