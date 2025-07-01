@@ -69,7 +69,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.4
+Raven.VERSION = 1.5
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -977,10 +977,12 @@ local function LoopThroughTables(...: {any?})
     return LoopThrough
 end
 
+local BuildCircle = false
+
 Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-    if Root then
+    if Root and not BuildCircle then
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
@@ -988,7 +990,13 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
 
         Raven.Notif:Success("Started building a circle.")
 
+        BuildCircle = true
+
         for i=-180+Increase, 180-Increase, Increase do
+            if not BuildCircle then
+                return
+            end
+
             RunService.Heartbeat:Wait()
 
             local Remotes = {}
@@ -1019,21 +1027,41 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
                 )
             elseif #Remotes == 0 then
                 Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                BuildCircle = false
+
                 return
             else
                 Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                BuildCircle = false
+
                 return
             end
         end
 
         Raven.Notif:Success("Completed building a circle.")
+
+        BuildCircle = false
+    elseif BuildCircle then
+        Raven.Notif:Error("You are already building a circle.")
     end
 end)
+
+Raven:AddCMD("uncircle", "Stops building a circle if you are.", {}, function(arguments)
+    if BuildCircle then
+        BuildCircle = false
+
+        Raven.Notif:Success("Stopped building a circle.")
+    else
+        Raven.Notif:Error("You are not building a circle.")
+    end
+end)
+
+local BuildSphere = false
 
 Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-    if Root then
+    if Root and not BuildSphere then
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
@@ -1041,8 +1069,14 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
 
         Raven.Notif:Success("Started building a sphere.")
 
+        BuildSphere = true
+
         for y=-90+Increase, 90-Increase, Increase do
             for x=0, 360-Increase, Increase do
+                if not BuildSphere then
+                    return
+                end
+
                 RunService.RenderStepped:Wait()
 
                 local Remotes = {}
@@ -1073,14 +1107,32 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
                     )
                 elseif #Remotes == 0 then
                     Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                    BuildSphere = false
+
                     return
                 else
                     Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                    BuildSphere = false
+
                     return
                 end
             end
         end
 
         Raven.Notif:Success("Completed building a sphere.")
+        
+        BuildSphere = false
+    elseif BuildSphere then
+        Raven.Notif:Error("You are already building a sphere.")
+    end
+end)
+
+Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, function(arguments)
+    if BuildSphere then
+        BuildSphere = false
+
+        Raven.Notif:Success("Stopped building a sphere.")
+    else
+        Raven.Notif:Error("You are not building a sphere.")
     end
 end)
