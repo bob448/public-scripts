@@ -1171,11 +1171,11 @@ chat_logs_scrolling_frame.ChildAdded:Connect(function(child)
         local Text: TextLabel = child:WaitForChild("ChatLogLabel")
 
         if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:lower():find(search_chat_logs_box.Text:lower()) then
-            v.Visible = true
+            child.Visible = true
         elseif Text and search_chat_logs_box.Text:len() > 0 then
-            v.Visible = false
+            child.Visible = false
         else
-            v.Visible = true
+            child.Visible = true
         end
     end
 end)

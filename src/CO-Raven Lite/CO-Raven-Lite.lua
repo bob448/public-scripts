@@ -822,3 +822,140 @@ Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose 
         Raven:Error("Antiafk was already triggered before.")
     end
 end)
+
+local DeleteAuraCon = nil
+
+Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, function(arguments)
+    if not DeleteAuraCon then
+        DeleteAuraCon = RunService.Heartbeat:Connect(function(delta)
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                local Remotes = {}
+
+                for i, v: Player in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = {}
+                        local CharacterChildren = v.Character:GetChildren()
+                        local BackpackChildren = v.Backpack:GetChildren()
+
+                        table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
+                        table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+
+                        for _, v: Tool in pairs(LoopThrough) do
+                            if v:IsA("Tool") and v.Name == "Delete" then
+                                local Remote = GetRemoteFromTool(v)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
+                        end
+                    end
+                end
+
+                if #Remotes > 0 then
+                    local Brick = nil
+                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
+
+                    for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
+                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 then
+                            Brick = v
+                            break
+                        end
+                    end
+
+                    if Brick then
+                        Remote:FireServer(
+                            Brick,
+                            Brick.Position
+                        )
+                    end
+                end
+            end
+        end)
+        Raven.Notif:Success("Enabled delete aura.")
+    else
+        Raven.Notif:Error("Delete aura is already on. Try executing the command \"undeleteaura\".")
+    end
+end)
+
+Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, function(arguments)
+    if DeleteAuraCon then
+        DeleteAuraCon:Disconnect()
+        DeleteAuraCon = nil
+
+        Raven.Notif:Success("Disabled delete aura.")
+    else
+        Raven.Notif:Error("Delete aura is already disabled.") 
+    end
+end)
+
+local UnanchorAuraCon = nil
+
+Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, function(arguments)
+    if not UnanchorAuraCon then
+        UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                local Remotes = {}
+
+                for i, v: Player in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = {}
+                        local CharacterChildren = v.Character:GetChildren()
+                        local BackpackChildren = v.Backpack:GetChildren()
+
+                        table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
+                        table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+
+                        for _, v: Tool in pairs(LoopThrough) do
+                            if v:IsA("Tool") and v.Name == "Paint" then
+                                local Remote = GetRemoteFromTool(v)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
+                        end
+                    end
+                end
+
+                if #Remotes > 0 then
+                    local Brick = nil
+                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
+
+                    for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
+                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 then
+                            Brick = v
+                            break
+                        end
+                    end
+
+                    if Brick then
+                        Remote:FireServer(
+                            Brick,
+                            Enum.NormalId.Top,
+                            Brick.Position,
+                            "material",
+                            Brick.Color,
+                            "anchor",
+                            ""
+                        )
+                    end
+                end
+            end
+        end)
+        Raven.Notif:Success("Enabled unanchor aura.")
+    else
+        Raven.Notif:Error("Unanchor aura is already on. Try executing the command \"stopunanchoraura\".")
+    end
+end)
+
+Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, function(arguments)
+    if UnanchorAuraCon then
+        UnanchorAuraCon:Disconnect()
+        UnanchorAuraCon = nil
+
+        Raven.Notif:Success("Disabled unanchor aura.")
+    else
+        Raven.Notif:Error("Unanchor aura is already disabled.") 
+    end
+end)
