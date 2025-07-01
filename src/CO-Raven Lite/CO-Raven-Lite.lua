@@ -757,6 +757,16 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
     end
 end)
 
+Raven:AddCMD("unpermadmin", "Stops pemradmin.", {}, {}, function(arguments)
+    if PermAdminCon then
+        PermAdminCon:Disconnect()
+
+        Raven.Notif:Success("Stopped permadmin.")
+    else
+        Raven.Notif:Error("Permadmin is already off.")
+    end
+end)
+
 Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
@@ -1182,13 +1192,13 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         local HasEnlighten = {}
 
         for i,v in pairs(Targets) do
-            if v and v.Team ~= Teams.Chosen then
+            if v and v.Team ~= Teams.Chosen and v ~= LocalPlayer then
                 HasEnlighten[#HasEnlighten+1] = v
             end
         end
 
         local Names = {}
-        for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
+        for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-1).."." end end
 
         RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
 
@@ -1201,7 +1211,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                 local HasEnlightenIndex = table.find(HasEnlighten, v)
                 if v and v.Character and HasEnlightenIndex then
                     table.clear(Names)
-                    for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
+                    for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-1).."." end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
                         RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
