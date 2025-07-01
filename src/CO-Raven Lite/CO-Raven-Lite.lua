@@ -993,6 +993,10 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
         BuildCircle = true
 
         for i=-180+Increase, 180-Increase, Increase do
+            if not BuildCircle then
+                return
+            end
+
             RunService.Heartbeat:Wait()
 
             local Remotes = {}
@@ -1034,9 +1038,7 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
             end
         end
 
-        if BuildCircle then
-            Raven.Notif:Success("Completed building a circle.")
-        end
+        Raven.Notif:Success("Completed building a circle.")
 
         BuildCircle = false
     elseif BuildCircle then
@@ -1117,9 +1119,7 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
             end
         end
 
-        if BuildSphere then
-            Raven.Notif:Success("Completed building a sphere.")
-        end
+        Raven.Notif:Success("Completed building a sphere.")
         
         BuildSphere = false
     elseif BuildSphere then
