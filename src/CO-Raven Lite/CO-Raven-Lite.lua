@@ -983,7 +983,7 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root and not BuildCircle then
-        local Radius = arguments[1] and tonumber(arguments[1]) or 10
+        local Radius = arguments[1] and tonumber(arguments[1]) or 23
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
         Increase = math.clamp(Increase, 1, 90)
@@ -1062,7 +1062,7 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root and not BuildSphere then
-        local Radius = arguments[1] and tonumber(arguments[1]) or 10
+        local Radius = arguments[1] and tonumber(arguments[1]) or 23
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
         Increase = math.clamp(Increase, 1, 90)
