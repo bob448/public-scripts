@@ -923,7 +923,7 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, f
                     local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 then
+                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 and v.Anchored then
                             Brick = v
                             break
                         end
