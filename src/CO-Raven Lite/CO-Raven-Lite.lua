@@ -757,6 +757,16 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
     end
 end)
 
+Raven:AddCMD("unpermadmin", "Stops pemradmin.", {}, {}, function(arguments)
+    if PermAdminCon then
+        PermAdminCon:Disconnect()
+
+        Raven.Notif:Success("Stopped permadmin.")
+    else
+        Raven.Notif:Error("Permadmin is already off.")
+    end
+end)
+
 Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
@@ -1188,7 +1198,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         end
 
         local Names = {}
-        for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
+        for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name.."." end end
 
         RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
 
