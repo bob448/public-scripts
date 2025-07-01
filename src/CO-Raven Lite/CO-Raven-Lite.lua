@@ -646,7 +646,7 @@ Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack."
     local Character = LocalPlayer.Character
     local HasHandle = arguments[1] and ToBool(arguments[1]) or arguments[1] == nil
 
-    if Character and #ClientBkitTools == 0 then
+    if Character then
         local Tools = InitBuildTools(LocalPlayer.Backpack, HasHandle)
         InitBuildScripts(Tools)
 
