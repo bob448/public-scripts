@@ -979,6 +979,10 @@ type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Argume
 
 local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
     if not Commands[name:lower()] then
+        for i,v in pairs(aliases) do
+            aliases[i] = v:lower()
+        end
+
         local Table: CommandTable = {}
         Table.Function = func
         Table.Description = description
@@ -1402,7 +1406,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
         local Aliases = ""
 
         for i, arg in pairs(Table.Aliases) do
-            Aliases = Aliases..arg..(i ~= #Table.Aliases and "," or "")
+            Aliases = Aliases..arg..(i ~= #Table.Aliases and ", " or "")
         end
 
         if Aliases:len() == 0 then
@@ -1410,6 +1414,59 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
         end
 
         Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases
+    end
+end)
+
+AddCMD("addalias", "Adds an alias for a command if it does not exist.", {"alias"}, {"command", "new alias"}, function(arguments)
+    local CommandName = arguments[1]
+    local CommandTable: CommandTable? = CommandName and GetCMD(CommandName:lower())
+
+    local NewAlias = arguments[2]
+
+    if CommandTable and NewAlias then
+        table.insert(CommandTable.Aliases, NewAlias:lower())
+        
+        Success("Added alias.")
+    elseif not CommandTable then
+        Error("Could not find command.")
+    else
+        Error("You did not supply a new alias.")
+    end
+end)
+
+AddCMD("savealiases", "Saves both user-defined and built-in aliases", {}, {}, function(arguments)
+    if writefile and appendfile and isfile then
+        if not isfile("RAVEN_SAVED_ALIASES") then
+            writefile("RAVEN_SAVED_ALIASES", "")
+        end
+
+        for Name: string, CommandTable: CommandTable in pairs(Commands) do
+            if #CommandTable.Aliases > 0 then
+                local Aliases = ""
+
+                for i, Alias: string in pairs(CommandTable.Aliases) do
+                    Aliases = Aliases..Alias..i ~= #CommandTable.Aliases and ";" or ""
+                end
+
+                appendfile("RAVEN_SAVED_ALIASES", Name.."="..Aliases)
+            end
+        end
+
+        Success("Saved aliases.")
+    else
+        Error("Your exploit does not support writefile/appendfile.")
+    end
+end)
+
+AddCMD("clearsavedaliases", "Deletes the file which saved aliases are in.", {"deletesavedaliases"}, {}, function(arguments)
+    if delfile and isfile then
+        if isfile("RAVEN_SAVED_ALIASES") then
+            delfile("RAVEN_SAVED_ALIASES")
+        else
+            Error("The file does not exist. This command might have already been called or you have never saved any aliases.")
+        end
+    else
+        Error("Your exploit does not support delfile/isfile")
     end
 end)
 
@@ -2454,6 +2511,29 @@ if readfile and isfile then -- Load saved openbind if there is any.
         local bind = readfile("RAVEN_OPENBIND")
 
         OpenBind = bind
+    end
+end
+
+if readfile and isfile then -- Load saved aliases.
+    if isfile("RAVEN_SAVED_ALIASES") then
+        local SavedAliasesData: string = readfile("RAVEN_SAVED_ALIASES")
+
+        if SavedAliasesData:len() > 0 then
+            local Lines = SavedAliasesData:split("\n")
+
+            for _, Line in pairs(Lines) do
+                local Split = Line:split("=")
+                if #Split == 2 then
+                    local Command = Split[1]
+                    local Aliases = Split[2]
+                    local CommandTable: CommandTable? = GetCMD(Command)
+
+                    if CommandTable then -- Don't throw an error here if it doesn't exist. It might be a command in another Raven script, so skip it instead.
+                        CommandTable.Aliases = Aliases:split(";")
+                    end
+                end
+            end
+        end
     end
 end
 
