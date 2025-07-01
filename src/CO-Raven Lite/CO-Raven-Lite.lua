@@ -815,9 +815,9 @@ Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose 
         System:Destroy()
 
 
-        Raven:Success("Enabled antiafk.")
+        Raven.Notif:Success("Enabled antiafk.")
     else
-        Raven:Error("Antiafk was already triggered before.")
+        Raven.Notif:Error("Antiafk was already triggered before.")
     end
 end)
 
@@ -1134,5 +1134,44 @@ Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, function(arg
         Raven.Notif:Success("Stopped building a sphere.")
     else
         Raven.Notif:Error("You are not building a sphere.")
+    end
+end)
+
+Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then clearinvs them)", {"player"}, function(arguments)
+    local Targets = Raven.Player:FindPlayers(unpack(arguments))
+
+    if #Targets > 0 then
+        local HasEnlighten = {}
+
+        for i,v in pairs(Targets) do
+            if v and v.Team ~= Teams.Chosen then
+                HasEnlighten[#HasEnlighten+1] = v
+            end
+        end
+
+        local Names = {}
+        for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
+
+        RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
+
+        task.wait(.1)
+
+        while #HasEnlighten > 0 do
+            task.wait(.1)
+
+            for i,v in pairs(Targets) do
+                local HasEnlightenIndex = table.find(HasEnlighten, v)
+                if v and v.Character and HasEnlightenIndex then
+                    table.clear(Names)
+                    for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
+
+                    if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") and v.Team ~= Teams.Chosen then
+                        RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
+                    else
+                        table.remove(HasEnlighten, HasEnlightenIndex)
+                    end
+                end
+            end
+        end
     end
 end)
