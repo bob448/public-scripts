@@ -815,9 +815,9 @@ Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose 
         System:Destroy()
 
 
-        Raven:Success("Enabled antiafk.")
+        Raven.Notif:Success("Enabled antiafk.")
     else
-        Raven:Error("Antiafk was already triggered before.")
+        Raven.Notif:Error("Antiafk was already triggered before.")
     end
 end)
 
@@ -1158,7 +1158,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                     table.clear(Names)
                     for i,v in pairs(Targets) do if v then Names[#Names+1] = v.Name end end
 
-                    if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
+                    if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") and v.Team ~= Teams.Chosen then
                         RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
                     end
                 end
