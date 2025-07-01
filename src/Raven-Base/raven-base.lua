@@ -1120,34 +1120,18 @@ closechat_logs_button.Activated:Connect(function()
         {Size = UDim2.fromScale(0,0)}
     )
 
-    local Frames = {}
-
-    for i,v in ipairs(chat_logs_scrolling_frame:GetChildren()) do
-        if v:IsA("Frame") and v.Name == "ChatLogFrame" then
-            Frames[v] = v.Visible
-            v.Visible = false
-        end
-    end
-
-    local ChildAdded = chat_logs_scrolling_frame.ChildAdded:Connect(function(child)
-        Frames[child] = child.Visible
-        child.Visible = false
-    end)
-
     BounceButton(closechat_logs_button, NormalCloseChatLogsButtonSize)
+
+    chat_logs_scrolling_frame.Visible = false
 
     CloseTween:Play()
     CloseTween.Completed:Wait()
 
+    chat_logs_scrolling_frame.Visible = true
+
     chat_logs_frame.Visible = false
 
-    ChildAdded:Disconnect()
-
     chat_logs_frame.Size = NormalChatLogsFrameSize
-
-    for i,v in pairs(Frames) do
-        i.Visible = v
-    end
 end)
 
 search_chat_logs_box:GetPropertyChangedSignal("Text"):Connect(function()
