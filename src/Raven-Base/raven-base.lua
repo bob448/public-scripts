@@ -1449,26 +1449,51 @@ AddCMD("addalias", "Adds an alias for a command if it does not exist.", {"alias"
 end)
 
 AddCMD("savealiases", "Saves both user-defined and built-in aliases", {}, {}, function(arguments)
-    if writefile and appendfile and isfile then
+    if writefile and appendfile and isfile and readfile then
         if not isfile("RAVEN_SAVED_ALIASES") then
             writefile("RAVEN_SAVED_ALIASES", "")
         end
 
+        local Contents: string = readfile("RAVEN_SAVED_ALIASES")
+        local ContentsLines = Contents:split("\n")
+
         for Name: string, CommandTable: CommandTable in pairs(Commands) do
             if #CommandTable.Aliases > 0 then
+                local IsAlreadyInFile = false
+                local FileLine = nil
+
+                for i,v in pairs(ContentsLines) do
+                    local Split = v:split("=")
+                    local Command = Split[1]
+
+                    if Split and #Split >= 1 then
+                        if Command == Name then
+                            IsAlreadyInFile = true
+                            FileLine = i
+                            break
+                        end
+                    end
+                end
+
+                if IsAlreadyInFile then
+                    table.remove(ContentsLines, FileLine)
+                end
+                
                 local Aliases = ""
 
                 for i, Alias: string in pairs(CommandTable.Aliases) do
-                    Aliases = Aliases..Alias..i ~= #CommandTable.Aliases and ";" or ""
+                    Aliases = Aliases..Alias..(i ~= #CommandTable.Aliases and ";" or "")
                 end
 
-                appendfile("RAVEN_SAVED_ALIASES", Name.."="..Aliases.."\n")
+                ContentsLines[#ContentsLines+1] = Name.."="..Aliases
             end
         end
 
+        writefile("RAVEN_SAVED_ALIASES", table.concat(ContentsLines, "\n"))
+
         Success("Saved aliases.")
     else
-        Error("Your exploit does not support writefile/appendfile.")
+        Error("Your exploit does not support writefile/appendfile/isfile/readfile.")
     end
 end)
 
@@ -1476,6 +1501,8 @@ AddCMD("clearsavedaliases", "Deletes the file which saved aliases are in.", {"de
     if delfile and isfile then
         if isfile("RAVEN_SAVED_ALIASES") then
             delfile("RAVEN_SAVED_ALIASES")
+
+            Success("Deleted saved aliases.")
         else
             Error("The file does not exist. This command might have already been called or you have never saved any aliases.")
         end
