@@ -19,6 +19,19 @@ local TextChatService = game:GetService("TextChatService")
 local TextChannels = TextChatService:WaitForChild("TextChannels")
 local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
 
+local function LoopThroughTables(...: {any?})
+    local Tables = {...}
+    local LoopThrough = {}
+
+    for _, Table in Tables do
+        if #Table and #Table > 0 then
+            table.move(Table, 1, #Table, 1, LoopThrough)
+        end
+    end
+
+    return LoopThrough
+end
+
 type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
 
 type RavenMod = {
@@ -69,7 +82,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.7
+Raven.VERSION = 1.8
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -822,6 +835,7 @@ Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose 
 end)
 
 local DeleteAuraCon = nil
+local DeleteAuraHighlights = {}
 
 Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
     if not DeleteAuraCon then
@@ -833,12 +847,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
 
                 for i, v: Player in ipairs(Players:GetPlayers()) do
                     if v.Character then
-                        local LoopThrough = {}
-                        local CharacterChildren = v.Character:GetChildren()
-                        local BackpackChildren = v.Backpack:GetChildren()
-
-                        table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
-                        table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
                         for _, v: Tool in pairs(LoopThrough) do
                             if v:IsA("Tool") and v.Name == "Delete" then
@@ -855,13 +864,25 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                     local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 then
-                            Brick = v
-                            break
+                        if v:IsA("BasePart") then
+                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
+                            if Distance <= 23 then
+                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
+                                    Brick = v
+                                end
+                            end
                         end
                     end
 
                     if Brick then
+                        local DeleteHighlight = Instance.new("Highlight", Brick)
+                        DeleteHighlight.Adornee = Brick
+                        DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
+                        DeleteHighlight.FillTransparency = .5
+                        DeleteHighlight.OutlineTransparency = 1
+
+                        DeleteAuraHighlights[#DeleteAuraHighlights+1] = DeleteHighlight
+
                         Remote:FireServer(
                             Brick,
                             Brick.Position
@@ -881,6 +902,14 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
         DeleteAuraCon:Disconnect()
         DeleteAuraCon = nil
 
+        for i,v in pairs(DeleteAuraHighlights) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(DeleteAuraHighlights)
+
         Raven.Notif:Success("Disabled delete aura.")
     else
         Raven.Notif:Error("Delete aura is already disabled.") 
@@ -888,6 +917,7 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
 end)
 
 local UnanchorAuraCon = nil
+local UnanchorAuraHighlights = {}
 
 Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
     if not UnanchorAuraCon then
@@ -899,12 +929,7 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
 
                 for i, v: Player in ipairs(Players:GetPlayers()) do
                     if v.Character then
-                        local LoopThrough = {}
-                        local CharacterChildren = v.Character:GetChildren()
-                        local BackpackChildren = v.Backpack:GetChildren()
-
-                        table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
-                        table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
                         for _, v: Tool in pairs(LoopThrough) do
                             if v:IsA("Tool") and v.Name == "Paint" then
@@ -921,13 +946,25 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                     local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 25 and v.Anchored then
-                            Brick = v
-                            break
+                        if v:IsA("BasePart") and v.Anchored then
+                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
+                            if Distance <= 23 then
+                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
+                                    Brick = v
+                                end
+                            end
                         end
                     end
 
                     if Brick then
+                        local UnanchorHighlight = Instance.new("Highlight", Brick)
+                        UnanchorHighlight.Adornee = Brick
+                        UnanchorHighlight.FillColor = Color3.new(1, 0.650980, 0.301960)
+                        UnanchorHighlight.FillTransparency = .5
+                        UnanchorHighlight.OutlineTransparency = 1
+
+                        UnanchorAuraHighlights[#UnanchorAuraHighlights+1] = UnanchorHighlight
+
                         Remote:FireServer(
                             Brick,
                             Enum.NormalId.Top,
@@ -937,6 +974,9 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                             "anchor",
                             ""
                         )
+
+                        task.wait(.3)
+                        UnanchorHighlight:Destroy()
                     end
                 end
             end
@@ -952,6 +992,14 @@ Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, {}, function(arg
         UnanchorAuraCon:Disconnect()
         UnanchorAuraCon = nil
 
+        for i,v in pairs(UnanchorAuraHighlights) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(UnanchorAuraHighlights)
+
         Raven.Notif:Success("Disabled unanchor aura.")
     else
         Raven.Notif:Error("Unanchor aura is already disabled.") 
@@ -963,19 +1011,6 @@ Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"c
         RBXSystem:SendAsync(table.concat(arguments, " "))
     end
 end)
-
-local function LoopThroughTables(...: {any?})
-    local Tables = {...}
-    local LoopThrough = {}
-
-    for _, Table in Tables do
-        if #Table and #Table > 0 then
-            table.move(Table, 1, #Table, 1, LoopThrough)
-        end
-    end
-
-    return LoopThrough
-end
 
 local BuildCircle = false
 
