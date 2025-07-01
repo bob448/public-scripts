@@ -69,7 +69,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.3
+Raven.VERSION = 1.4
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
