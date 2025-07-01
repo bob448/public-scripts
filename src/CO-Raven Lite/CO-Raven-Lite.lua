@@ -984,6 +984,7 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
+        Increase = math.clamp(1, 90)
 
         Raven.Notif:Success("Started building a circle.")
 
@@ -1036,6 +1037,7 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
         Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or Radius * 0.16666
+        Increase = math.clamp(1, 90)
 
         Raven.Notif:Success("Started building a sphere.")
 
