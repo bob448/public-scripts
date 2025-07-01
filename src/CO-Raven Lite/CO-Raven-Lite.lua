@@ -1192,7 +1192,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         local HasEnlighten = {}
 
         for i,v in pairs(Targets) do
-            if v and v.Team ~= Teams.Chosen then
+            if v and v.Team ~= Teams.Chosen and v ~= LocalPlayer then
                 HasEnlighten[#HasEnlighten+1] = v
             end
         end
