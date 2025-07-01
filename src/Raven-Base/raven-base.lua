@@ -1917,6 +1917,215 @@ AddCMD("jp", "Changes your jumppower.", {"power"}, function(arguments)
     end
 end)
 
+local Invisible = {}
+Invisible.InvisibleHighlights = {}
+
+
+AddCMD("invisible", "Makes your character invisible to others", {}, function(arguments)
+    if not Invisible.Enabled then
+        local Character: Model? = LocalPlayer.Character
+        local Root: BasePart? = Character:FindFirstChild("HumanoidRootPart")
+        local Humanoid: Humanoid? = Character:FindFirstChildWhichIsA("Humanoid")
+        local Torso: BasePart? = Humanoid.RigType == Enum.HumanoidRigType.R15 and Character:FindFirstChild("UpperTorso")
+        local LowerTorso: BasePart? = Humanoid.RigType == Enum.HumanoidRigType.R15 and Character:FindFirstChild("LowerTorso")
+
+        if Root and Humanoid and Humanoid.Health > 0 then
+            if Humanoid.RigType == Enum.HumanoidRigType.R15 and (not Torso or not LowerTorso) then
+                Error("Couldn't find torso.")
+                return
+            end
+
+            Invisible.Enabled = true
+
+            Root.Archivable = true
+
+            local OGCFrame = Root.CFrame
+
+            Root.CFrame = CFrame.new(0, 9e9, 0)
+            task.wait(.1)
+            Root.Anchored = true
+
+            Root.Parent = GetCoreGui()
+            Invisible.InvisibleRoot = Root
+
+            task.wait()
+
+            local CRoot: BasePart = Root:Clone()
+            CRoot.Parent = Character
+            CRoot.Anchored = false
+
+            Invisible.InvisibleCRoot = CRoot
+            Invisible.InvisibleCharacter = Character
+
+            task.wait()
+
+            Character:PivotTo(OGCFrame)
+
+            if Humanoid.RigType == Enum.HumanoidRigType.R15 then
+                local AlignPosition = Instance.new("AlignPosition", CRoot)
+                AlignPosition.RigidityEnabled = true
+                AlignPosition.ReactionForceEnabled = true
+
+                local AlignOrientation = Instance.new("AlignOrientation", Torso)
+                AlignOrientation.RigidityEnabled = true
+
+                local Attachment = Instance.new("Attachment", Torso)
+                local Attachment2 = Instance.new("Attachment", CRoot)
+
+                Invisible.TorsoForce = AlignPosition
+                Invisible.TorsoAttachment = Attachment
+                Invisible.CRootAttachment = Attachment2
+
+                AlignPosition.Attachment0 = Attachment
+                AlignPosition.Attachment1 = Attachment2
+
+                AlignOrientation.Attachment0 = Attachment
+                AlignOrientation.Attachment1 = Attachment2
+
+                Invisible.TorsoOrientation = AlignOrientation
+
+                Invisible.TorsoHeartbeat = RunService.Heartbeat:Connect(function()
+                    if Invisible.Enabled and Character.Parent then
+                        for i,v in ipairs(Character:GetDescendants()) do
+                            if v ~= CRoot and v:IsA("BasePart") then
+                                v.CanCollide = false
+                            end
+                        end
+                        AlignPosition.Position = CRoot.Position + Vector3.new(0, LowerTorso.Size.Y, 0)
+                        AlignOrientation.CFrame = CRoot.CFrame
+                    end
+                end)
+            end
+
+            for _, v: BasePart | Decal in ipairs(Character:GetDescendants()) do
+                if v:IsA("BasePart") and v ~= CRoot then
+                    v.Transparency = .5
+                    
+                    local Highlight = Instance.new("Highlight", v)
+                    Invisible.InvisibleHighlights[#Invisible.InvisibleHighlights+1] = Highlight
+                    
+                    Highlight.Adornee = v
+                    Highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+                    Highlight.OutlineTransparency = 0
+                    Highlight.OutlineColor = Color3.new(0.423529, 0.384314, 1)
+                    Highlight.FillTransparency = 1
+                end
+            end
+
+            local CharacterAdded; CharacterAdded = LocalPlayer.CharacterAdded:Connect(function()
+                Invisible.Enabled = false
+
+                if Invisible.InvisibleCRoot then
+                    Invisible.InvisibleCRoot:Destroy()
+                    Invisible.InvisibleCRoot = nil
+                end
+                if Invisible.InvisibleRoot then
+                    Invisible.InvisibleRoot:Destroy()
+                    Invisible.InvisibleRoot = nil
+                end
+                if Invisible.InvisibleCharacter then
+                    Invisible.InvisibleCharacter = nil
+                end
+                if Invisible.TorsoAttachment then
+                    Invisible.TorsoAttachment = nil
+                end
+                if Invisible.CRootAttachment then
+                    Invisible.CRootAttachment = nil
+                end
+                if Invisible.TorsoForce then
+                    Invisible.TorsoForce = nil
+                end
+                if Invisible.TorsoOrientation then
+                    Invisible.TorsoOrientation = nil
+                end
+                if Invisible.TorsoHeartbeat then
+                    Invisible.TorsoHeartbeat:Disconnect()
+                    Invisible.TorsoHeartbeat = nil
+                end
+                
+                table.clear(Invisible.InvisibleHighlights)
+
+                CharacterAdded:Disconnect()
+            end)
+
+            Invisible.CharacterAdded = CharacterAdded
+
+            Success("Turned on invisibility.")
+        else
+            Error("Couldn't find root, humanoid, or humanoid is dead.")
+        end
+    else
+        Error("You're already invisible. Try running the command \"visible\".")
+    end
+end)
+
+AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
+    if Invisible.Enabled then
+        local Goto = nil
+        if Invisible.InvisibleCRoot then
+            Goto = Invisible.InvisibleCRoot.CFrame
+            Invisible.InvisibleCRoot:Destroy()
+            Invisible.InvisibleCRoot = nil
+        end
+        if Invisible.TorsoAttachment then
+            Invisible.TorsoAttachment:Destroy()
+            Invisible.TorsoAttachment = nil
+        end
+        if Invisible.TorsoForce then
+            Invisible.TorsoForce:Destroy()
+            Invisible.TorsoForce = nil
+        end
+        if Invisible.TorsoHeartbeat then
+            Invisible.TorsoHeartbeat:Disconnect()
+            Invisible.TorsoHeartbeat = nil
+        end
+        if Invisible.TorsoOrientation then
+            Invisible.TorsoOrientation:Destroy()
+            Invisible.TorsoOrientation = nil
+        end
+        if Invisible.CRootAttachment then
+            Invisible.CRootAttachment:Destroy()
+            Invisible.CRootAttachment = nil
+        end
+
+        if Invisible.InvisibleRoot and Invisible.InvisibleCharacter then
+            Invisible.InvisibleRoot.Parent = Invisible.InvisibleCharacter
+            Invisible.InvisibleRoot.CFrame = Goto or CFrame.new(0,0,0)
+            task.wait()
+
+            Invisible.InvisibleRoot.Anchored = false
+        end
+
+        if Invisible.InvisibleCharacter then
+            for i,v in ipairs(Invisible.InvisibleCharacter:GetDescendants()) do
+                if v:IsA("BasePart") and v ~= Invisible.InvisibleRoot then
+                    v.Transparency = 0
+                end
+            end
+        end
+
+        Invisible.InvisibleRoot = nil
+        Invisible.InvisibleCharacter = nil
+
+        for _,v in pairs(Invisible.InvisibleHighlights) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(Invisible.InvisibleHighlights)
+
+        if Invisible.CharacterAdded then
+            Invisible.CharacterAdded:Disconnect()
+            Invisible.CharacterAdded = nil
+        end
+
+        Invisible.Enabled = false
+    else
+        Error("Invisible is already off.")
+    end
+end)
+
 local LoopWSCon = nil
 local LoopJPCon = nil
 
