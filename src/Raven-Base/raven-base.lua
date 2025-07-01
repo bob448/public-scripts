@@ -975,14 +975,15 @@ local Commands = {}
 
 module.Commands = Commands
 
-type CommandTable = {Function: ({string?}) -> (any?), Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
 
-local function AddCMD(name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?))
+local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
     if not Commands[name:lower()] then
         local Table: CommandTable = {}
         Table.Function = func
         Table.Description = description
         Table.Arguments = arguments
+        Table.Aliases = aliases
 
         Commands[name:lower()] = Table
     else
@@ -998,6 +999,12 @@ local function GetCMD(name: string)
     for Name, Table in pairs(Commands) do
         if name == Name then
             return Table
+        else
+            for _, Alias in pairs(Table.Aliases) do
+                if Alias == name then
+                    return Table
+                end
+            end
         end
     end
     
@@ -1008,11 +1015,11 @@ function module:GetCMD(...)
     return GetCMD(...)
 end
 
-local function ReplaceCMD(name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?))
+local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
     if Commands[name:lower()] then
         Commands[name:lower()] = nil
 
-        AddCMD(name, description, arguments, func)
+        AddCMD(name, description, arguments, aliases, func)
     else
         Error("Could not replace command \""..name.."\". Command does not exist.")
     end
@@ -1279,10 +1286,18 @@ local function AutoCompleteCommand(data: string)
     else
         local Shortest: string? = nil
 
-        for Name: string, _ in pairs(Commands) do
+        for Name: string, Table: CommandTable in pairs(Commands) do
             if Name:sub(1, Command:len()) == Command then
                 if Shortest and (Name:len() < Shortest:len()) or Shortest == nil then
                     Shortest = Name
+                end
+            else
+                for _, Alias in pairs(Table.Aliases) do
+                    if Alias:sub(1, Command:len()) == Command then
+                        if Shortest and (Alias:len() < Shortest:len()) or Shortest == nil then
+                            Shortest = Alias
+                        end
+                    end
                 end
             end
         end
@@ -1333,7 +1348,7 @@ command_box.FocusLost:Connect(function(enterPressed, _)
             Arguments = {}
         end
 
-        local Table: CommandTable = Commands[Command:lower()]
+        local Table: CommandTable = GetCMD(Command)
 
         local Succ, Err = pcall(Table.Function, Arguments)
 
@@ -1343,22 +1358,22 @@ command_box.FocusLost:Connect(function(enterPressed, _)
     end
 end)
 
-AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, function(arguments)
+AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, {}, function(arguments)
     DebugMode = true
 end)
 
-AddCMD("debugoff", "Turns off debug mode.", {}, function(arguments)
+AddCMD("debugoff", "Turns off debug mode.", {}, {}, function(arguments)
     DebugMode = false
 end)
 
-AddCMD("test", "A test command used in development of Raven.", {}, function(arguments)
+AddCMD("test", "A test command used in development of Raven.", {"testalias"}, {}, function(arguments)
     for i,v in pairs(arguments) do
         Debug("Argument "..i..": "..v)
     end
     Success("Successfully ran the test command!")
 end)
 
-AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
+AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_)
     commands_frame.Visible = true
 
     for _,v: Instance in ipairs(commands_scrolling_frame:GetChildren()) do
@@ -1384,7 +1399,17 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, function(_)
             Arguments = "None"
         end
 
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments
+        local Aliases = ""
+
+        for i, arg in pairs(Table.Aliases) do
+            Aliases = Aliases..arg..(i ~= #Table.Aliases and "," or "")
+        end
+
+        if Aliases:len() == 0 then
+            Aliases = "None"
+        end
+
+        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases
     end
 end)
 
@@ -1412,7 +1437,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
-AddCMD("setopenbind", "Sets the key to open Raven and focus on the command box.", {"key/none"}, function(arguments)
+AddCMD("setopenbind", "Sets the key to open Raven and focus on the command box.", {}, {"key/none"}, function(arguments)
     local Key = arguments[1]
 
     local Keycodes = Enum.KeyCode:GetEnumItems()
@@ -1433,7 +1458,7 @@ AddCMD("setopenbind", "Sets the key to open Raven and focus on the command box."
     end
 end)
 
-AddCMD("saveopenbind", "Saves the open bind to a file.", {}, function(arguments)
+AddCMD("saveopenbind", "Saves the open bind to a file.", {}, {}, function(arguments)
     if writefile then
         writefile("RAVEN_OPENBIND", OpenBind or "")
 
@@ -1443,11 +1468,11 @@ AddCMD("saveopenbind", "Saves the open bind to a file.", {}, function(arguments)
     end
 end)
 
-AddCMD("keycodes", "Shows all available keycodes.", {}, function(arguments)
+AddCMD("keycodes", "Shows all available keycodes.", {}, {}, function(arguments)
     Output(Enum.KeyCode:GetEnumItems())
 end)
 
-AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
+AddCMD("clearnotifs","Clears all notifications", {}, {}, function(arguments)
     for _,v in ipairs(notifications_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "NotificationFrame" then
             local Status = v:FindFirstChild("StatusFrame")
@@ -1460,7 +1485,7 @@ AddCMD("clearnotifs","Clears all notifications", {}, function(arguments)
     end
 end)
 
-AddCMD("findplayer", "Finds a player based on a key or keys.", {"key"}, function(arguments)
+AddCMD("findplayer", "Finds a player based on a key or keys.", {}, {"key"}, function(arguments)
     local Found = FindPlayers(unpack(arguments))
 
     for _,v in pairs(Found) do
@@ -1468,7 +1493,7 @@ AddCMD("findplayer", "Finds a player based on a key or keys.", {"key"}, function
     end
 end)
 
-AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}, function(arguments)
+AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}, {}, function(arguments)
     local Selectors = {}
 
     for Name, _ in pairs(PlayerSelectors) do
@@ -1478,7 +1503,7 @@ AddCMD("getselectors", "Gets all player selectors and displays it in a GUI.", {}
     Output(Selectors)
 end)
 
-AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(arguments)
+AddCMD("tptool", "A tool that teleports you to your mouse.", {}, {}, function(arguments)
 	local Tool: Tool = Instance.new("Tool", LocalPlayer.Backpack)
 	Tool.RequiresHandle = false
 	Tool.Name = "Teleport"
@@ -1553,7 +1578,7 @@ AddCMD("tptool", "A tool that teleports you to your mouse.", {}, function(argume
 	end)
 end)
 
-AddCMD("reset", "Sets the Humanoid state to Dead.", {}, function(arguments)
+AddCMD("reset", "Sets the Humanoid state to Dead.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
@@ -1564,7 +1589,7 @@ AddCMD("reset", "Sets the Humanoid state to Dead.", {}, function(arguments)
     end
 end)
 
-AddCMD("view", "Views a player.", {"player"}, function(arguments)
+AddCMD("view", "Views a player.", {}, {"player"}, function(arguments)
     local Player = arguments and arguments[1]
     local Targets = Player and FindPlayers(Player)
     local Target = Targets and Targets[1]
@@ -1579,7 +1604,7 @@ AddCMD("view", "Views a player.", {"player"}, function(arguments)
     end
 end)
 
-AddCMD("unview", "Sets the camera to your Humanoid.", {}, function(arguments)
+AddCMD("unview", "Sets the camera to your Humanoid.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
@@ -1588,7 +1613,7 @@ AddCMD("unview", "Sets the camera to your Humanoid.", {}, function(arguments)
     end
 end)
 
-AddCMD("rejoin", "Rejoins the game.", {}, function(arguments)
+AddCMD("rejoin", "Rejoins the game.", {}, {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
 
@@ -1601,7 +1626,7 @@ AddCMD("rejoin", "Rejoins the game.", {}, function(arguments)
     end
 end)
 
-AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, function(arguments)
+AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
 
@@ -1613,7 +1638,7 @@ AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, fun
     end
 end)
 
-AddCMD("god", "Disables the Dead state of the Humanoid. May not work in some games.", {}, function(arguments)
+AddCMD("god", "Disables the Dead state of the Humanoid. May not work in some games.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
@@ -1623,7 +1648,7 @@ AddCMD("god", "Disables the Dead state of the Humanoid. May not work in some gam
     end
 end)
 
-AddCMD("ungod", "Enables the Dead state of the Humanoid.", {}, function(arguments)
+AddCMD("ungod", "Enables the Dead state of the Humanoid.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChild("Humanoid")
 
@@ -1633,11 +1658,11 @@ AddCMD("ungod", "Enables the Dead state of the Humanoid.", {}, function(argument
     end
 end)
 
-AddCMD("exit", "Exits the game.", {}, function(arguments)
+AddCMD("exit", "Exits the game.", {}, {}, function(arguments)
     game:Shutdown()
 end)
 
-AddCMD("goto", "Goes to a player.", {"player"}, function(arguments)
+AddCMD("goto", "Goes to a player.", {}, {"player"}, function(arguments)
     local Targets = arguments and FindPlayers(unpack(arguments))
 
     if Targets and #Targets >= 1 then
@@ -1821,7 +1846,7 @@ local function InitEsp(player: Player, character: Model)
     end)
 end
 
-AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {"player"}, function(arguments)
+AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {}, {"player"}, function(arguments)
     local Targets = arguments and FindPlayers(unpack(arguments))
 
     if Targets and #Targets > 0 then
@@ -1843,7 +1868,7 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {"p
     end
 end)
 
-AddCMD("unesp", "Disables ESP", {}, function(arguments)
+AddCMD("unesp", "Disables ESP", {}, {}, function(arguments)
     for Player, Table in pairs(EspPlayers) do
         if Player then
             DestroyEspPlayer(Player)
@@ -1861,7 +1886,7 @@ end)
 
 local NoclipCon = nil
 
-AddCMD("noclip", "Noclips your character.", {}, function(arguments)
+AddCMD("noclip", "Noclips your character.", {}, {}, function(arguments)
     if not NoclipCon then
         NoclipCon = RunService.Heartbeat:Connect(function()
             local Character = LocalPlayer.Character
@@ -1881,7 +1906,7 @@ AddCMD("noclip", "Noclips your character.", {}, function(arguments)
     end
 end)
 
-AddCMD("clip", "Stops noclipping.", {}, function(arguments)
+AddCMD("clip", "Stops noclipping.", {}, {}, function(arguments)
     if NoclipCon then
         NoclipCon:Disconnect()
         NoclipCon = nil
@@ -1898,7 +1923,7 @@ AddCMD("clip", "Stops noclipping.", {}, function(arguments)
     end
 end)
 
-AddCMD("ws", "Changes your walkspeed.", {"speed"}, function(arguments)
+AddCMD("ws", "Changes your walkspeed.", {}, {"speed"}, function(arguments)
     local Speed = arguments[1] and tonumber(arguments[1]) or 16
 
     local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
@@ -1908,7 +1933,7 @@ AddCMD("ws", "Changes your walkspeed.", {"speed"}, function(arguments)
     end
 end)
 
-AddCMD("jp", "Changes your jumppower.", {"power"}, function(arguments)
+AddCMD("jp", "Changes your jumppower.", {}, {"power"}, function(arguments)
     local Power = arguments[1] and tonumber(arguments[1]) or 50
 
     local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
@@ -1922,7 +1947,7 @@ local Invisible = {}
 Invisible.InvisibleHighlights = {}
 
 
-AddCMD("invisible", "Makes your character invisible to others", {}, function(arguments)
+AddCMD("invisible", "Makes your character invisible to others", {}, {}, function(arguments)
     if not Invisible.Enabled then
         local Character: Model? = LocalPlayer.Character
         local Root: BasePart? = Character:FindFirstChild("HumanoidRootPart")
@@ -2082,7 +2107,7 @@ AddCMD("invisible", "Makes your character invisible to others", {}, function(arg
     end
 end)
 
-AddCMD("visible", "Makes your character visible again.", {}, function(arguments)
+AddCMD("visible", "Makes your character visible again.", {}, {}, function(arguments)
     if Invisible.Enabled then
         local Goto = nil
         if Invisible.InvisibleCRoot then
@@ -2160,7 +2185,7 @@ end)
 local LoopWSCon = nil
 local LoopJPCon = nil
 
-AddCMD("loopws","Changes your walkspeed constantly.", {"speed"}, function(arguments)
+AddCMD("loopws","Changes your walkspeed constantly.", {}, {"speed"}, function(arguments)
     local Speed = arguments[1] and tonumber(arguments[1]) or 30
 
     if not LoopWSCon then
@@ -2176,7 +2201,7 @@ AddCMD("loopws","Changes your walkspeed constantly.", {"speed"}, function(argume
     end
 end)
 
-AddCMD("loopjp","Changes your jumppower constantly.", {"power"}, function(arguments)
+AddCMD("loopjp","Changes your jumppower constantly.", {}, {"power"}, function(arguments)
     local Power = arguments[1] and tonumber(arguments[1]) or 30
     
     if not LoopJPCon then
@@ -2192,7 +2217,7 @@ AddCMD("loopjp","Changes your jumppower constantly.", {"power"}, function(argume
     end
 end)
 
-AddCMD("unloopws", "Stops changing your walkspeed.", {}, function(arguments)
+AddCMD("unloopws", "Stops changing your walkspeed.", {}, {}, function(arguments)
     if LoopWSCon then
         LoopWSCon:Disconnect()
         LoopWSCon = nil
@@ -2201,7 +2226,7 @@ AddCMD("unloopws", "Stops changing your walkspeed.", {}, function(arguments)
     end
 end)
 
-AddCMD("unloopjp", "Stops changing your jumppower.", {}, function(arguments)
+AddCMD("unloopjp", "Stops changing your jumppower.", {}, {}, function(arguments)
     if LoopJPCon then
         LoopJPCon:Disconnect()
         LoopJPCon = nil
@@ -2222,7 +2247,7 @@ local CoreGuis = {
     ["health"] = Enum.CoreGuiType.Health
 }
 
-AddCMD("enablecore", "Enables a coregui", {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
+AddCMD("enablecore", "Enables a coregui", {}, {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
     local Type = arguments[1] and CoreGuis[arguments[1]]
 
     if Type and Type ~= -1 then
@@ -2242,7 +2267,7 @@ AddCMD("enablecore", "Enables a coregui", {"gui (backpack/reset/playerlist/all/e
     end
 end)
 
-AddCMD("disablecore", "Disables a coregui", {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
+AddCMD("disablecore", "Disables a coregui", {}, {"gui (backpack/reset/playerlist/all/emotes/selfview/captures/health/chat)"}, function(arguments)
     local Type = arguments[1] and CoreGuis[arguments[1]]
 
     if Type and Type ~= -1 then
@@ -2264,7 +2289,7 @@ end)
 
 local ChatLogsCon = nil
 
-AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, function(arguments)
+AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, function(arguments)
     if not ChatLogsCon then
         local Succ, Err = pcall(function()
             ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
@@ -2282,7 +2307,7 @@ AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, func
     end
 end)
 
-AddCMD("unchatlogs", "Stop recording chatlogs.", {}, function(arguments)
+AddCMD("unchatlogs", "Stop recording chatlogs.", {}, {}, function(arguments)
     if ChatLogsCon then
         ChatLogsCon:Disconnect()
         ChatLogsCon = nil
@@ -2294,7 +2319,7 @@ end)
 
 local FlyHeartbeatCon = nil
 
-AddCMD("fly", "Activates fly.", {"speed/none"}, function(arguments)
+AddCMD("fly", "Activates fly.", {}, {"speed/none"}, function(arguments)
     if not FlyHeartbeatCon then
         local Speed = arguments[1] and tonumber(arguments[1]) or 20
 
@@ -2366,7 +2391,7 @@ AddCMD("fly", "Activates fly.", {"speed/none"}, function(arguments)
     end
 end)
 
-AddCMD("unfly", "Deactivates fly.", {}, function(arguments)
+AddCMD("unfly", "Deactivates fly.", {}, {}, function(arguments)
     if FlyHeartbeatCon then
         FlyHeartbeatCon:Disconnect()
         FlyHeartbeatCon = nil
@@ -2392,12 +2417,12 @@ AddCMD("unfly", "Deactivates fly.", {}, function(arguments)
     end
 end)
 
-AddCMD("stun", "Enables platformstand.", {}, function(arguments)
+AddCMD("stun", "Enables platformstand.", {}, {}, function(arguments)
     local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
     if Humanoid then Humanoid.PlatformStand = true end
 end)
 
-AddCMD("unstun", "Disables platformstand.", {}, function(arguments)
+AddCMD("unstun", "Disables platformstand.", {}, {}, function(arguments)
     local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
     if Humanoid then Humanoid.PlatformStand = false end
 end)
@@ -2410,7 +2435,7 @@ DO NOT PUT ANY COMMANDS PAST THIS POINT (except for loadmodule)
 
 ]]
 
-AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folder of your exploit)", {"name"}, function(arguments)
+AddCMD("loadmodule", "Loads a Raven module. (A lua script in the workspace folder of your exploit)", {}, {"name"}, function(arguments)
     if isfile and readfile then
         local Name = arguments[1]
 
