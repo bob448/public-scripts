@@ -71,7 +71,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.2
+Raven.VERSION = 1.3
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -957,5 +957,11 @@ Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, function(argumen
         Raven.Notif:Success("Disabled unanchor aura.")
     else
         Raven.Notif:Error("Unanchor aura is already disabled.") 
+    end
+end)
+
+Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {"command"}, function(arguments)
+    if #arguments > 0 then
+        RBXSystem:SendAsync(table.concat(arguments, " "))
     end
 end)
