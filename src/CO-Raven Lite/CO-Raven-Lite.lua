@@ -1141,25 +1141,34 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
     local Targets = Raven.Player:FindPlayers(unpack(arguments))
 
     if #Targets > 0 then
-        local HasEnlighten = false
+        local HasEnlighten = {}
+
+        for i,v in pairs(Targets) do
+            if v and v.Team ~= Teams.Chosen then
+                HasEnlighten[#HasEnlighten+1] = v
+            end
+        end
 
         local Names = {}
-        for i,v in pairs(Targets) do if v then Names[#Names+1] = v.Name end end
+        for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
 
         RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
 
         task.wait(.1)
 
-        while HasEnlighten do
-            task.wait(.2)
+        while #HasEnlighten > 0 do
+            task.wait(.1)
 
             for i,v in pairs(Targets) do
-                if v and v.Character then
+                local HasEnlightenIndex = table.find(HasEnlighten, v)
+                if v and v.Character and HasEnlightenIndex then
                     table.clear(Names)
-                    for i,v in pairs(Targets) do if v then Names[#Names+1] = v.Name end end
+                    for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") and v.Team ~= Teams.Chosen then
                         RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
+                    else
+                        table.remove(HasEnlighten, HasEnlightenIndex)
                     end
                 end
             end
