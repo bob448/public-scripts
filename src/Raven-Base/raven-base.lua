@@ -1873,6 +1873,8 @@ AddCMD("noclip", "Noclips your character.", {}, function(arguments)
                 end
             end
         end)
+
+        Success("Turned noclip on.")
     else
         Error("Noclip is already on.")
     end
@@ -1888,6 +1890,8 @@ AddCMD("clip", "Stops noclipping.", {}, function(arguments)
         if Root then
             Root.CanCollide = true
         end
+
+        Success("Turned noclip off.")
     else
         Error("Noclip is already off.")
     end
