@@ -977,13 +977,13 @@ local function LoopThroughTables(...: {any?})
     return LoopThrough
 end
 
-Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=24)","increase"}, function(arguments)
+Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root then
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
-        Radius = Radius > 24 and 24 or Radius
-        local Increase = arguments[2] and tonumber(arguments[2]) or 3
+        Radius = math.clamp(Radius, 1, 23)
+        local Increase = arguments[2] and tonumber(arguments[2]) or 4
 
         Raven.Notif:Success("Started building a circle.")
 
@@ -1029,12 +1029,12 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
     end
 end)
 
-Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=24)","increase"}, function(arguments)
+Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root then
         local Radius = arguments[1] and tonumber(arguments[1]) or 10
-        Radius = math.clamp(Radius, 1, 24)
+        Radius = math.clamp(Radius, 1, 23)
         local Increase = arguments[2] and tonumber(arguments[2]) or 4
 
         Raven.Notif:Success("Started building a sphere.")
