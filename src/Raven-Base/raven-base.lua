@@ -1951,9 +1951,7 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {},
     if Targets and #Targets > 0 then
         for _,Target: Player in pairs(Targets) do
             if PlayerHasEsp(Target) then
-                for Part, _ in pairs(EspPlayers[Target].Parts) do
-                    DestroyEspPart(Part, Target)
-                end
+                DestroyEspPlayer(Target)
             end
             
             if Target.Character then
