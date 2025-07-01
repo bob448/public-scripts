@@ -4,7 +4,7 @@
 -- A Chosen One Script.
 
 if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
-    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/main/src/Raven-Base/raven-base.lua")))
+    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/Raven-Base/raven-base.lua")))
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
@@ -19,7 +19,7 @@ local TextChatService = game:GetService("TextChatService")
 local TextChannels = TextChatService:WaitForChild("TextChannels")
 local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
 
-type CommandTable = {Function: ({string?}) -> (any?), Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
 
 type RavenMod = {
     Name: string,
@@ -49,9 +49,9 @@ type RavenMod = {
         SetDebugMode: (boolean) -> ()
     },
     Commands: {},
-    AddCMD: (name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    AddCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
     GetCMD: (name: string) -> (CommandTable),
-    ReplaceCMD: (name: string, description: string, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    ReplaceCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
     Output: {
         ClearOutput: () -> (),
         OutputData: (data: {any?}) -> ()
@@ -73,7 +73,7 @@ Raven.VERSION = 1.7
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
-Raven:AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, function(arguments)
+Raven:AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, {}, function(arguments)
     if not AntiFreezeCon then
         local NoReset = false
 
@@ -107,7 +107,7 @@ Raven:AddCMD("antifreeze", "Tries to avoid freeze by enlighten or admin.", {}, f
     end
 end)
 
-Raven:AddCMD("unantifreeze", "Turns off antifreeze.", {}, function(arguments)
+Raven:AddCMD("unantifreeze", "Turns off antifreeze.", {}, {}, function(arguments)
     if AntiFreezeCon then
         AntiFreezeCon:Disconnect()
         AntiFreezeCon = nil
@@ -120,7 +120,7 @@ end)
 
 local AntiBringCon: RBXScriptConnection? = nil
 
-Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances traveled.", {}, function(arguments)
+Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances traveled.", {}, {}, function(arguments)
     if not AntiBringCon then
         local Movements: {CFrame?} = {}
         local Disable = false
@@ -164,7 +164,7 @@ Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances travele
     end
 end)
 
-Raven:AddCMD("unantibring", "Turns off antibring.", {}, function(arguments)
+Raven:AddCMD("unantibring", "Turns off antibring.", {}, {}, function(arguments)
     if AntiBringCon then
         AntiBringCon:Disconnect()
         AntiBringCon = nil
@@ -640,7 +640,7 @@ local function ToBool(str: string)
     return str == "true"
 end
 
-Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {"handle (true/false)"}, function(arguments)
+Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {}, {"handle (true/false)"}, function(arguments)
     local Character = LocalPlayer.Character
     local HasHandle = arguments[1] and ToBool(arguments[1]) or arguments[1] == nil
 
@@ -656,7 +656,7 @@ Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack."
     end
 end)
 
-Raven:AddCMD("unclientbkit", "Removes the client-sided build tools from your character/backpack", {}, function(arguments)
+Raven:AddCMD("unclientbkit", "Removes the client-sided build tools from your character/backpack", {}, {}, function(arguments)
     for i,v in pairs(ClientBkitTools) do
         if v and v.Parent then
             v:Destroy()
@@ -679,7 +679,7 @@ local BreakBkitTools = {
 
 local BreakBkitPlayers = {}
 
-Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they exhaust.", {"player"}, function(arguments)
+Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they exhaust.", {}, {"player"}, function(arguments)
     local Targets = arguments and Raven.Player:FindPlayers(unpack(arguments))
 
     for i,v in pairs(Targets) do
@@ -712,7 +712,7 @@ Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they
     end
 end)
 
-Raven:AddCMD("unbreakbkit", "Stops spamming remotes.", {}, function(arguments)
+Raven:AddCMD("unbreakbkit", "Stops spamming remotes.", {}, {}, function(arguments)
     for i,v in pairs(BreakBkitPlayers) do
         if v.Heartbeat then
             v.Heartbeat:Disconnect()
@@ -726,7 +726,7 @@ end)
 
 local PermAdminCon = nil
 
-Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten is in your backpack or character.", {}, function(arguments)
+Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten is in your backpack or character.", {}, {}, function(arguments)
     if not PermAdminCon then
         PermAdminCon = RunService.RenderStepped:Connect(function()
             local Character = LocalPlayer.Character
@@ -744,7 +744,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
     end
 end)
 
-Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, function(arguments)
+Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
     if Character then
@@ -758,7 +758,7 @@ Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, function(arguments)
+Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
     if Character then
@@ -772,7 +772,7 @@ Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("disablefly", "Disables built in fly.", {}, function(arguments)
+Raven:AddCMD("disablefly", "Disables built in fly.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
     if Character then
@@ -782,7 +782,7 @@ Raven:AddCMD("disablefly", "Disables built in fly.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("enablefly", "Enables built in fly.", {}, function(arguments)
+Raven:AddCMD("enablefly", "Enables built in fly.", {}, {}, function(arguments)
     local Character = LocalPlayer.Character
 
     if Character then
@@ -792,7 +792,7 @@ Raven:AddCMD("enablefly", "Enables built in fly.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
+Raven:AddCMD("unblind", "Unblinds you.", {}, {}, function(arguments)
     local BlindGUI = LocalPlayer.PlayerGui:FindFirstChild("Blind")
     local Blur = Lighting:FindFirstChild("Blur")
 
@@ -804,7 +804,7 @@ Raven:AddCMD("unblind", "Unblinds you.", {}, function(arguments)
     end
 end)
 
-Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", {}, function(arguments)
+Raven:AddCMD("antiafk", "Deletes the System remote, making it so you can't lose time while unfocused.", {}, {}, function(arguments)
     local System: RemoteEvent = ReplicatedStorage:FindFirstChild("System")
 
     if System then
@@ -823,7 +823,7 @@ end)
 
 local DeleteAuraCon = nil
 
-Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, function(arguments)
+Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
     if not DeleteAuraCon then
         DeleteAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -876,7 +876,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, funct
     end
 end)
 
-Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, function(arguments)
+Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments)
     if DeleteAuraCon then
         DeleteAuraCon:Disconnect()
         DeleteAuraCon = nil
@@ -889,7 +889,7 @@ end)
 
 local UnanchorAuraCon = nil
 
-Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, function(arguments)
+Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
     if not UnanchorAuraCon then
         UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -947,7 +947,7 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, f
     end
 end)
 
-Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, function(arguments)
+Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, {}, function(arguments)
     if UnanchorAuraCon then
         UnanchorAuraCon:Disconnect()
         UnanchorAuraCon = nil
@@ -958,7 +958,7 @@ Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, function(argumen
     end
 end)
 
-Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {"command"}, function(arguments)
+Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
     if #arguments > 0 then
         RBXSystem:SendAsync(table.concat(arguments, " "))
     end
@@ -979,7 +979,7 @@ end
 
 local BuildCircle = false
 
-Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
+Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root and not BuildCircle then
@@ -1046,7 +1046,7 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {"radius (max=
     end
 end)
 
-Raven:AddCMD("uncircle", "Stops building a circle if you are.", {}, function(arguments)
+Raven:AddCMD("uncircle", "Stops building a circle if you are.", {}, {}, function(arguments)
     if BuildCircle then
         BuildCircle = false
 
@@ -1058,7 +1058,7 @@ end)
 
 local BuildSphere = false
 
-Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=23)","increase"}, function(arguments)
+Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if Root and not BuildSphere then
@@ -1127,7 +1127,7 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {"radius (max=
     end
 end)
 
-Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, function(arguments)
+Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, {}, function(arguments)
     if BuildSphere then
         BuildSphere = false
 
@@ -1137,7 +1137,7 @@ Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, function(arg
     end
 end)
 
-Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then clearinvs them)", {"player"}, function(arguments)
+Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then clearinvs them)", {}, {"player"}, function(arguments)
     local Targets = Raven.Player:FindPlayers(unpack(arguments))
 
     if #Targets > 0 then
