@@ -4,7 +4,7 @@
 -- A Chosen One Script.
 
 if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
-    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/main/src/Raven-Base/raven-base.lua")))
+    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/Raven-Base/raven-base.lua")))
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
@@ -19,7 +19,7 @@ local TextChatService = game:GetService("TextChatService")
 local TextChannels = TextChatService:WaitForChild("TextChannels")
 local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
 
-type CommandTable = {Function: ({string?}) -> (any?), Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
 
 type RavenMod = {
     Name: string,

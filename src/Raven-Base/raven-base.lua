@@ -1083,11 +1083,16 @@ close_output_button.Activated:Connect(function()
 
     BounceButton(close_output_button, NormalCloseOutputButtonSize)
 
+    search_output_box.Text = ""
+    search_output_box.Interactable = false
+
     CloseTween:Play()
     CloseTween.Completed:Wait()
 
     outputs_frame.Visible = false
     outputs_frame.Size = NormalOutputsFrameSize
+
+    search_output_box.Interactable = true
 end)
 
 search_output_box:GetPropertyChangedSignal("Text"):Connect(function()
@@ -1135,6 +1140,8 @@ closechat_logs_button.Activated:Connect(function()
     BounceButton(closechat_logs_button, NormalCloseChatLogsButtonSize)
 
     chat_logs_scrolling_frame.Visible = false
+    search_chat_logs_box.Text = ""
+    search_chat_logs_box.Interactable = false
 
     CloseTween:Play()
     CloseTween.Completed:Wait()
@@ -1144,6 +1151,8 @@ closechat_logs_button.Activated:Connect(function()
     chat_logs_frame.Visible = false
 
     chat_logs_frame.Size = NormalChatLogsFrameSize
+
+    search_chat_logs_box.Interactable = true
 end)
 
 search_chat_logs_box:GetPropertyChangedSignal("Text"):Connect(function()
@@ -1266,11 +1275,16 @@ closecommands_button.Activated:Connect(function(_, _)
 
     task.spawn(BounceButton, closecommands_button, CloseCommandsButtonNormalSize)
 
+    search_commands_box.Text = ""
+    search_commands_box.Interactable = false
+
     CloseTween:Play()
     CloseTween.Completed:Wait()
 
     commands_frame.Visible = false
     commands_frame.Size = CommandFrameNormalSize
+
+    search_commands_box.Interactable = true
 end)
 
 local function AutoCompleteCommand(data: string)
