@@ -1171,11 +1171,11 @@ chat_logs_scrolling_frame.ChildAdded:Connect(function(child)
         local Text: TextLabel = child:WaitForChild("ChatLogLabel")
 
         if Text and search_chat_logs_box.Text:len() > 0 and Text.Text:lower():find(search_chat_logs_box.Text:lower()) then
-            v.Visible = true
+            child.Visible = true
         elseif Text and search_chat_logs_box.Text:len() > 0 then
-            v.Visible = false
+            child.Visible = false
         else
-            v.Visible = true
+            child.Visible = true
         end
     end
 end)
@@ -1897,6 +1897,7 @@ end)
 AddCMD("clip", "Stops noclipping.", {}, function(arguments)
     if NoclipCon then
         NoclipCon:Disconnect()
+        NoclipCon = nil
 
         local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -1966,6 +1967,7 @@ end)
 AddCMD("unloopws", "Stops changing your walkspeed.", {}, function(arguments)
     if LoopWSCon then
         LoopWSCon:Disconnect()
+        LoopWSCon = nil
     else
         Error("LoopWS is already off.")
     end
@@ -1974,6 +1976,7 @@ end)
 AddCMD("unloopjp", "Stops changing your jumppower.", {}, function(arguments)
     if LoopJPCon then
         LoopJPCon:Disconnect()
+        LoopJPCon = nil
     else
         Error("LoopJP is already off.")
     end
@@ -2054,10 +2057,121 @@ end)
 AddCMD("unchatlogs", "Stop recording chatlogs.", {}, function(arguments)
     if ChatLogsCon then
         ChatLogsCon:Disconnect()
+        ChatLogsCon = nil
         ClearChatLogs()
     else
         Error("Chatlogs are already disabled.")
     end
+end)
+
+local FlyHeartbeatCon = nil
+
+AddCMD("fly", "Activates fly.", {"speed/none"}, function(arguments)
+    if not FlyHeartbeatCon then
+        local Speed = arguments[1] and tonumber(arguments[1]) or 5
+
+        FlyHeartbeatCon = RunService.Heartbeat:Connect(function(delta)
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local Humanoid: Humanoid? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+            if Root and Humanoid then
+                Humanoid.PlatformStand = true
+                
+                local AlignPosition = Root:FindFirstChild("RAVEN_FLY") or Instance.new("AlignPosition", Root)
+                local AlignOrientation = Root:FindFirstChild("RAVEN_FLY_GYRO") or Instance.new("AlignOrientation", Root)
+
+                if AlignPosition.Name ~= "RAVEN_FLY" then
+                    AlignPosition.Name = "RAVEN_FLY"
+
+                    AlignPosition.MaxVelocity = math.huge
+                    AlignPosition.MaxAxesForce = Vector3.new(math.huge, math.huge, math.huge)
+                    AlignPosition.MaxForce = math.huge
+
+                    AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+                    AlignPosition.Responsiveness = Speed
+                end
+
+                if not AlignPosition.Attachment0 then
+                    AlignPosition.Attachment0 = Instance.new("Attachment", Root)
+                    AlignPosition.Attachment0.Name = "RAVEN_FLY_ATTACHMENT"
+                end
+
+                local Camera = workspace.CurrentCamera
+
+                if AlignOrientation ~= "RAVEN_FLY_GYRO" then
+                    AlignOrientation.Name = "RAVEN_FLY_GYRO"
+
+                    AlignOrientation.MaxAngularVelocity = math.huge
+                    AlignOrientation.MaxTorque = math.huge
+                    
+                    AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                    AlignOrientation.Responsiveness = 15
+                end
+
+                if not AlignOrientation.Attachment0 then
+                    AlignOrientation.Attachment0 = Instance.new("Attachment", Root)
+                    AlignOrientation.Attachment0.Name = "RAVEN_FLY_ATTACHMENT"
+                end
+
+                AlignOrientation.CFrame = Camera.CFrame
+
+                local Rotation = Camera.CFrame.Rotation
+                local Direction = Rotation:VectorToObjectSpace(Humanoid.MoveDirection * Speed)
+
+                AlignPosition.Position = Root.Position
+
+                if Direction.Magnitude ~= 0 then
+                    AlignPosition.Position += Rotation:VectorToWorldSpace(
+                        Vector3.new(Direction.X, 0, Direction.Z).Unit * Direction.Magnitude
+                    )
+                end
+
+                if Humanoid.Jump then
+                    AlignPosition.Position += Camera.CFrame.UpVector * Speed
+                end
+            end
+        end)
+
+        Success("Enabled fly.")
+    else
+        Error("Fly is already enabled.")
+    end
+end)
+
+AddCMD("unfly", "Deactivates fly.", {}, function(arguments)
+    if FlyHeartbeatCon then
+        FlyHeartbeatCon:Disconnect()
+        FlyHeartbeatCon = nil
+
+        local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Humanoid then
+            Humanoid.PlatformStand = false
+        end
+
+        if Root then
+            for i, v: Instance in ipairs(Root:GetChildren()) do
+                if v.Name == "RAVEN_FLY_GYRO" or v.Name == "RAVEN_FLY" or v.Name == "RAVEN_FLY_ATTACHMENT" then
+                    v:Destroy()
+                end
+            end
+        end
+
+        Success("Disabled fly.")
+    else
+        Error("Fly is already disabled")
+    end
+end)
+
+AddCMD("stun", "Enables platformstand.", {}, function(arguments)
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+    if Humanoid then Humanoid.PlatformStand = true end
+end)
+
+AddCMD("unstun", "Disables platformstand.", {}, function(arguments)
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+    if Humanoid then Humanoid.PlatformStand = false end
 end)
 
 --[[
