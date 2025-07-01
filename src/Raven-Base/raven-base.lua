@@ -2068,7 +2068,7 @@ local FlyHeartbeatCon = nil
 
 AddCMD("fly", "Activates fly.", {"speed/none"}, function(arguments)
     if not FlyHeartbeatCon then
-        local Speed = arguments[1] and tonumber(arguments[1]) or 5
+        local Speed = arguments[1] and tonumber(arguments[1]) or 20
 
         FlyHeartbeatCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
