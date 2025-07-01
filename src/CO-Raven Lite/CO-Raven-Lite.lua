@@ -699,7 +699,7 @@ Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they
         if v and v.Character then
             BreakBkitPlayers[v] = {}
 
-            BreakBkitPlayers[v].Heartbeat = RunService.Heartbeat:Connect(function(_)
+            BreakBkitPlayers[v].RenderStepped = RunService.RenderStepped:Connect(function(_)
                 if v.Character then
                     local LoopThrough = {}
                     local CharacterChildren = v.Character:GetChildren()
@@ -727,8 +727,8 @@ end)
 
 Raven:AddCMD("unbreakbkit", "Stops spamming remotes.", {}, {}, function(arguments)
     for i,v in pairs(BreakBkitPlayers) do
-        if v.Heartbeat then
-            v.Heartbeat:Disconnect()
+        if v.RenderStepped then
+            v.RenderStepped:Disconnect()
         end
     end
     
@@ -839,6 +839,8 @@ local DeleteAuraHighlights = {}
 
 Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
     if not DeleteAuraCon then
+        local Queue = {}
+
         DeleteAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -860,36 +862,48 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                 end
 
                 if #Remotes > 0 then
-                    local Brick = nil
-                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
-
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") then
-                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
-                            if Distance <= 23 then
-                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
-                                    Brick = v
-                                end
-                            end
+                        if #Queue > 10 then
+                            break
+                        end
+                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
+                            Queue[#Queue+1] = v
                         end
                     end
 
-                    if Brick then
-                        local DeleteHighlight = Instance.new("Highlight", Brick)
-                        DeleteHighlight.Adornee = Brick
-                        DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
-                        DeleteHighlight.FillTransparency = .5
-                        DeleteHighlight.OutlineTransparency = 1
+                    if #Queue > 0 then
+                        for i, Brick in pairs(Queue) do
+                            if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 then
+                                if not DeleteAuraHighlights[Brick] then
+                                    local DeleteHighlight = Instance.new("Highlight", Brick)
+                                    DeleteHighlight.Adornee = Brick
+                                    DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
+                                    DeleteHighlight.FillTransparency = .5
+                                    DeleteHighlight.OutlineTransparency = 1
 
-                        DeleteAuraHighlights[#DeleteAuraHighlights+1] = DeleteHighlight
+                                    DeleteAuraHighlights[Brick] = DeleteHighlight
+                                end
 
-                        Remote:FireServer(
-                            Brick,
-                            Brick.Position
-                        )
+                                local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
-                        task.wait(.3)
-                        DeleteHighlight:Destroy()
+                                Remote:FireServer(
+                                    Brick,
+                                    Brick.Position
+                                )
+
+                                task.spawn(function()
+                                    task.wait(.3)
+                                    if not Brick.Parent then
+                                        Queue[i] = nil
+                                    else
+                                        DeleteAuraHighlights[Brick]:Destroy()
+                                        DeleteAuraHighlights[Brick] = nil
+                                    end
+                                end)
+                            else
+                                Queue[i] = nil
+                            end
+                        end
                     end
                 end
             end
@@ -905,7 +919,7 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
         DeleteAuraCon:Disconnect()
         DeleteAuraCon = nil
 
-        for i,v in pairs(DeleteAuraHighlights) do
+        for _, v in pairs(DeleteAuraHighlights) do
             if v and v.Parent then
                 v:Destroy()
             end
@@ -924,6 +938,8 @@ local UnanchorAuraHighlights = {}
 
 Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
     if not UnanchorAuraCon then
+        local Queue = {}
+
         UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -945,41 +961,49 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                 end
 
                 if #Remotes > 0 then
-                    local Brick = nil
-                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
-
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") and v.Anchored then
-                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
-                            if Distance <= 23 then
-                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
-                                    Brick = v
-                                end
-                            end
+                        if #Queue > 10 then
+                            break
+                        end
+                        if v:IsA("BasePart") and v.Anchored and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
+                            Queue[#Queue+1] = v
                         end
                     end
 
-                    if Brick then
-                        local UnanchorHighlight = Instance.new("Highlight", Brick)
-                        UnanchorHighlight.Adornee = Brick
-                        UnanchorHighlight.FillColor = Color3.new(1, 0.650980, 0.301960)
-                        UnanchorHighlight.FillTransparency = .5
-                        UnanchorHighlight.OutlineTransparency = 1
+                    if #Queue > 0 then
+                        for i, Brick in pairs(Queue) do
+                            if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 and Brick.Anchored then
+                                if not UnanchorAuraHighlights[Brick] then
+                                    local UnanchorHighlight = Instance.new("Highlight", Brick)
+                                    UnanchorHighlight.Adornee = Brick
+                                    UnanchorHighlight.FillColor = Color3.new(1, 0.772549, 0.376470)
+                                    UnanchorHighlight.FillTransparency = .5
+                                    UnanchorHighlight.OutlineTransparency = 1
 
-                        UnanchorAuraHighlights[#UnanchorAuraHighlights+1] = UnanchorHighlight
+                                    UnanchorAuraHighlights[Brick] = UnanchorHighlight
+                                end
 
-                        Remote:FireServer(
-                            Brick,
-                            Enum.NormalId.Top,
-                            Brick.Position,
-                            "material",
-                            Brick.Color,
-                            "anchor",
-                            ""
-                        )
+                                local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
-                        task.wait(.3)
-                        UnanchorHighlight:Destroy()
+                                Remote:FireServer(
+                                    Brick,
+                                    Enum.NormalId.Top,
+                                    Brick.Position,
+                                    "material",
+                                    Brick.Color,
+                                    "anchor",
+                                    ""
+                                )
+
+                                task.spawn(function()
+                                    task.wait(.3)
+                                    UnanchorAuraHighlights[Brick]:Destroy()
+                                    UnanchorAuraHighlights[Brick] = nil
+                                end)
+                            else
+                                Queue[i] = nil
+                            end
+                        end
                     end
                 end
             end
