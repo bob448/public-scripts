@@ -1790,8 +1790,15 @@ end)
 AddCMD("rejoin", "Rejoins the game.", {}, {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
+    local Succ
+    local Err
 
-    local Succ, Err = TeleportService:TeleportToPlaceInstance(PlaceId, JobId)
+    if #Players:GetPlayers() > 1 and game.PrivateServerOwnerId == 0 then
+        Succ, Err = pcall(function() TeleportService:TeleportToPlaceInstance(PlaceId, JobId) end)
+    else
+        Succ, Err = pcall(function() TeleportService:Teleport(game.PlaceId) end)
+        LocalPlayer:Kick()
+    end
 
     if not Succ and Err ~= nil and tostring(Err) then
         Error("Error: "..Err)

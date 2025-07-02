@@ -1735,6 +1735,33 @@ confirm_selection_button.Activated:Connect(function()
     end
 end)
 
+local function IsSign(brick: Part)
+    return table.find(brick:GetTags(), "Sign") ~= nil
+end
+
+local function IsBrick(part: Part)
+    return part:IsDescendantOf(workspace.Bricks)
+end
+
+local SaveBlocksSerializeFunctions = {
+    ["CFrame"] = function(prop: CFrame)
+        return "X:"..prop.X.."Y:"..prop.Y.."Z"..prop.Z
+    end,
+    ["Vector3"] = function(prop: Vector3)
+        return "X:"..prop.X.."Y:"..prop.Y.."Z"..prop.Z
+    end,
+    ["EnumItem"] = function(prop: EnumItem)
+        return "M:"..prop.Value
+    end,
+    ["boolean"] = function(prop: boolean)
+        return "B:"..(prop == true and "true" or "false")
+    end
+}
+
+local function SaveBlocksSerializeProperty(prop)
+    return SaveBlocksSerializeFunctions[typeof(prop)](prop)
+end
+
 Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}, {"file name"}, function(arguments)
     if not SaveBlocks.Selecting then
         if writefile then
@@ -1822,7 +1849,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                     if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         local Mouse = LocalPlayer:GetMouse()
 
-                        if Mouse.Target and not Mouse.Target:IsA("Terrain") and Mouse.Target.Name ~= "Beach" then
+                        if Mouse.Target and IsBrick(Mouse.Target) then
                             if not Pos1 then
                                 Pos1Brick = Instance.new("Part", workspace)
                                 Pos1Brick.Anchored = true
@@ -1898,9 +1925,39 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                 else
                     DestroyAll()
 
-                    -- Raven.Notif:Success("Saving blocks to \""..FileName.."\"..")
+                    Raven.Notif:Success("Saving blocks to \""..FileName.."\"..")
 
-                    Raven.Notif:Error("This function has not been implemented yet.")
+                    local Parts = workspace:GetPartBoundsInBox(SelectionCFrame, SelectionSize)
+                    local ContentsLines = {}
+
+                    for i,v: Part in pairs(Parts) do
+                        local Line = ""
+                        local Sign = IsSign(v)
+                        local Text = ""
+
+                        if Sign then
+                            local Input = v:FindFirstChild("Input")
+
+                            if Input then
+                                local Label: TextBox = Input:FindFirstChild("Label")
+                                if Label then Text = Label.Text end
+                            else
+                                continue -- this is the base of a sign, don't save
+                            end
+                        end
+
+                        Line = Line.."CFRAME:"..SaveBlocksSerializeProperty(v.CFrame)
+                        ..";SIZE:"..SaveBlocksSerializeProperty(v.Size)
+                        ..";MAT:"..SaveBlocksSerializeProperty(v.Material)
+                        ..";SIGN:"..SaveBlocksSerializeProperty(IsSign(v))
+                        ..";TEXT:"..Text
+
+                        ContentsLines[#ContentsLines+1] = Line
+                    end
+
+                    writefile(FileName, table.concat(ContentsLines, "\n"))
+
+                    Raven.Notif:Success("Saved selected bricks to file \""..FileName.."\"\n in workspace folder.")
                 end
             else
                 Raven.Notif:Error("No filename supplied.")
