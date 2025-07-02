@@ -1364,7 +1364,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                 local HasEnlightenIndex = table.find(HasEnlighten, v)
                 if v and v.Parent and v.Character and HasEnlightenIndex then
                     table.clear(Names)
-                    for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-1).."." end end
+                    for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, v.Name:len()-3).."." end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
                         Raven.Player:Say("clearinv "..table.concat(Names, " "), true)
@@ -1374,5 +1374,63 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                 end
             end
         end
+    end
+end)
+
+local AbuseCon = nil
+local AbuseCommands = {
+    "reset",
+    "glitch",
+    "freeze",
+    "jail",
+    "mute",
+    "blind",
+    "myopic",
+    "curse",
+    "oof",
+    "r6",
+    "food"
+}
+
+Raven:AddCMD("abuse", "Spams commands on a player or group of players.", {}, {"player"}, function(arguments)
+    if not AbuseCon then
+        local Targets = Raven.Player:FindPlayers(unpack(arguments))
+
+        if #Targets > 0 then
+            AbuseCon = RunService.Heartbeat:Connect(function()
+                local Command = AbuseCommands[math.random(1, #AbuseCommands)]
+
+                local Names = {}
+                for i,v in pairs(Targets) do
+                    if v and v.Parent then
+                        Names[#Names+1] = v.Name:sub(1, v.Name:len()-3).."."
+                    else
+                        for _, Player in ipairs(Players:GetPlayers()) do
+                            if Player.Name == v.Name then
+                                Targets[i] = Player
+                                break
+                            end
+                        end
+                    end
+                end
+
+                if #Names > 0 then
+                    Raven.Player:Say(Command.." "..table.concat(Names, " "), true)
+                end
+            end)
+        end
+    else
+        Raven.Notif:Error("Abuse is already enabled. Try running \"unabuse\".") 
+    end
+end)
+
+Raven:AddCMD("unabuse", "Stops spamming commands.", {}, {}, function(arguments)
+    if AbuseCon then
+        AbuseCon:Disconnect()
+        AbuseCon = nil
+
+        Raven.Notif:Success("Disabled abuse.")
+    else
+        Raven.Notif:Error("Abuse is already disabled.")
     end
 end)
