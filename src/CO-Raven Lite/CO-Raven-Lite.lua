@@ -1496,3 +1496,134 @@ Raven:AddCMD("unabuse", "Stops spamming commands.", {}, {}, function(arguments)
         Raven.Notif:Error("Abuse is already disabled.")
     end
 end)
+
+local Trap = {}
+Trap.Enabled = false
+Trap.Task = nil
+Trap.Players = {}
+Trap.Previews = {}
+
+local function GetTrapOffsetPositions(Humanoid: Humanoid)
+    return {
+        Vector3.new(0, -Humanoid.HipHeight, -4),
+        Vector3.new(0, -Humanoid.HipHeight, 4),
+        Vector3.new(0, Humanoid.HipHeight, -4),
+        Vector3.new(0, Humanoid.HipHeight, 4),
+        Vector3.new(0, Humanoid.HipHeight, 0),
+        Vector3.new(-4, -Humanoid.HipHeight, 0),
+        Vector3.new(4, Humanoid.HipHeight, 0),
+        Vector3.new(4, -Humanoid.HipHeight, 0),
+        Vector3.new(4, Humanoid.HipHeight, 0)
+    }
+end
+
+Raven:AddCMD("trap", "Traps a player.", {}, {"player"}, function(arguments)
+    local Targets = Raven.Player:FindPlayers(unpack(arguments))
+
+    for i,v in pairs(Targets) do
+        if not table.find(Trap.Players, v) then
+            table.insert(Trap.Players, v)
+
+            Raven.Notif:Success("Added "..v.Name.." to the trap list. Make sure to go close to them so the blocks can be built.")
+        end
+    end
+
+    if not Trap.Task then
+        Trap.Enabled = true
+
+        Trap.Task = task.spawn(function()
+            local Queue = {}
+
+            while Trap.Enabled do
+                task.wait()
+
+                local Remotes = {}
+
+                for i,v: Player in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        for i,Tool: Tool in pairs(LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())) do
+                            if Tool:IsA("Tool") and Tool.Name == "Build" then
+                                local Remote = GetRemoteFromTool(Tool)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
+                        end
+                    end
+                end
+
+                for i, Target in pairs(Trap.Players) do
+                    local Root: BasePart? = Target.Character and Target.Character:FindFirstChild("HumanoidRootPart")
+                    local Humanoid: Humanoid? = Target.Character and Target.Character:FindFirstChildWhichIsA("Humanoid")
+
+                    if Root and Humanoid then
+                        local Offsets = GetTrapOffsetPositions(Humanoid)
+
+                        for i,v in pairs(Offsets) do
+                            local BlockCFrame = Root.Position + v
+                            Queue[#Queue+1] = BlockCFrame
+                        end
+                    end
+                end
+
+                if #Remotes > 0 then
+                    for i,v in pairs(Queue) do
+                        if i > 15 then
+                            break
+                        end
+
+                        local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
+
+                        local Preview = Instance.new("Part", workspace)
+                        Preview.Anchored = true
+                        Preview.Color = Color3.new(0.309803, 0.788235, 0.325490)
+                        Preview.Transparency = .9
+                        Preview.CanCollide = false
+                        Preview.CanQuery = false
+                        Preview.CanTouch = false
+                        Preview.Position = v
+                        Preview.Size = Vector3.new(4,4,4)
+
+                        Trap.Previews[#Trap.Previews+1] = Preview
+
+                        Remote:FireServer(
+                            workspace.Terrain,
+                            Enum.NormalId.Top,
+                            v,
+                            "normal"
+                        )
+
+                        task.spawn(function()
+                            task.wait(.3)
+                            Preview:Destroy()
+                            table.remove(Queue, i)
+                        end)
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+Raven:AddCMD("untrap", "Stops trapping.", {}, {}, function(arguments)
+    if Trap.Enabled then
+        Trap.Enabled = false
+
+        if Trap.Task then
+            task.cancel(Trap.Task)
+            Trap.Task = nil
+        end
+
+        for i,v in pairs(Trap.Previews) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(Trap.Previews)
+        table.clear(Trap.Players)
+
+        Raven.Notif:Success("Disabled trap.")
+    else
+        Raven.Notif:Error("Trap is already disabled.")
+    end
+end)
