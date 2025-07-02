@@ -2400,6 +2400,8 @@ AddCMD("loopws","Changes your walkspeed constantly.", {}, {"speed"}, function(ar
                 Humanoid.WalkSpeed = Speed
             end
         end)
+
+        Success("Enabled loopws.")
     else
         Error("LoopWS is already on. Try running \"unloopws\".")
     end
@@ -2416,6 +2418,8 @@ AddCMD("loopjp","Changes your jumppower constantly.", {}, {"power"}, function(ar
                 Humanoid.JumpPower = Power
             end
         end)
+
+        Success("Enabled loopjp.")
     else
         Error("LoopJP is already on. Try running \"unloopjp\".")
     end
@@ -2425,6 +2429,8 @@ AddCMD("unloopws", "Stops changing your walkspeed.", {}, {}, function(arguments)
     if LoopWSCon then
         LoopWSCon:Disconnect()
         LoopWSCon = nil
+
+        Success("Disabled loopws.")
     else
         Error("LoopWS is already off.")
     end
@@ -2434,6 +2440,8 @@ AddCMD("unloopjp", "Stops changing your jumppower.", {}, {}, function(arguments)
     if LoopJPCon then
         LoopJPCon:Disconnect()
         LoopJPCon = nil
+
+        Success("Disabled loopjp.")
     else
         Error("LoopJP is already off.")
     end
