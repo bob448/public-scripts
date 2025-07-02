@@ -758,6 +758,7 @@ end)
 Raven:AddCMD("unpermadmin", "Stops pemradmin.", {}, {}, function(arguments)
     if PermAdminCon then
         PermAdminCon:Disconnect()
+        PermAdminCon = nil
 
         Raven.Notif:Success("Stopped permadmin.")
     else
@@ -1064,7 +1065,7 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (
 
         local Queue = 0
 
-        for i=1,7 do
+        for i=1,5 do
             for i=-180+Increase, 180-Increase, Increase do
                 if not BuildCircle then
                     return
@@ -1152,14 +1153,14 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
 
         local Queue = 0
 
-        for i=1, 10 do
+        for i=1, 7 do
             for y=-90+Increase, 90-Increase, Increase do
                 for x=0, 360-Increase, Increase do
                     if not BuildSphere then
                         return
                     end
 
-                    if Queue > 10 then
+                    if Queue > 15 then
                         RunService.Heartbeat:Wait()
                         Queue = 0
                     end
@@ -1212,6 +1213,119 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
         BuildSphere = false
     elseif BuildSphere then
         Raven.Notif:Error("You are already building a sphere.")
+    end
+end)
+
+local BuildAuraCon = nil
+local BuildAuraPreviews = {}
+
+Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions within the distance limit.", {}, {}, function(arguments)
+    if not BuildAuraCon then
+        local Queue = {}
+
+        BuildAuraCon = RunService.Heartbeat:Connect(function()
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                local Remotes = {}
+
+                for i,v: Player in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        for i,v: Tool in pairs(LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())) do
+                            if v:IsA("Tool") and (v.Name == "Build" or v.Name == "Sign") then
+                                local Remote = GetRemoteFromTool(v)
+
+                                if Remote then Remotes[#Remotes+1] = {v.Name, Remote} end
+                            end
+                        end
+                    end
+                end
+
+                if #Remotes > 0 then
+                    local RemoteTable = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
+                    local Remote = RemoteTable[2]
+
+                    for _=1, 15 do
+                        if #Queue > 15 then
+                            break
+                        end
+                        Queue[#Queue+1] = Root.Position + Vector3.new(math.random(-23,23),math.random(-23,23),math.random(-23,23))
+                    end
+
+                    for i, Position in pairs(Queue) do
+                        local PreviewBrick = Instance.new("Part", workspace)
+                        PreviewBrick.Anchored = true
+                        PreviewBrick.Transparency = .5
+                        PreviewBrick.Material = Enum.Material.SmoothPlastic
+
+                        local Highlight = Instance.new("Highlight", PreviewBrick)
+                        Highlight.Adornee = PreviewBrick
+                        Highlight.FillTransparency = .5
+                        Highlight.OutlineTransparency = 1
+
+                        BuildAuraPreviews[#BuildAuraPreviews+1] = PreviewBrick
+
+                        if RemoteTable[1] == "Build" then
+                            local Roll = math.random(0,2) == 0 and "detailed" or "normal"
+                            Highlight.FillColor = Color3.new(0.309803, 0.788235, 0.325490)
+
+                            Remote:FireServer(
+                                workspace.Terrain,
+                                Enum.NormalId.Top,
+                                Position,
+                                Roll
+                            )
+
+                            if Roll == "detailed" then
+                                PreviewBrick.Size = Vector3.new(1,1,1)
+                            else
+                                PreviewBrick.Size = Vector3.new(4,4,4)
+                            end
+                        else
+                            Highlight.FillColor = Color3.new(0.788235, 0.564705, 0.309803)
+
+                            PreviewBrick.Size = Vector3.new(4,4,4)
+
+                            Remote:FireServer(
+                                workspace.Terrain,
+                                Enum.NormalId.Top,
+                                Position
+                            )
+                        end
+                        
+                        task.spawn(function()
+                            task.wait(.3)
+                            table.remove(Queue, i)
+
+                            PreviewBrick:Destroy()
+                        end)
+                    end
+                end
+            end
+        end)
+
+        Raven.Notif:Success("Turned on buildaura.")
+    else
+        Raven.Notif:Error("Buildaura is already on. Try running \"unbuildaura\".")
+    end
+end)
+
+Raven:AddCMD("unbuildaura", "Stops building blocks.", {}, {}, function(arguments)
+    if BuildAuraCon then
+        BuildAuraCon:Disconnect()
+        BuildAuraCon = nil
+
+        for i,v in pairs(BuildAuraPreviews) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(BuildAuraPreviews)
+
+        Raven.Notif:Success("Buildaura has been turned off")
+    else
+        Raven.Notif:Error("Buildaura is already off.")
     end
 end)
 
