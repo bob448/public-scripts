@@ -139,7 +139,7 @@ confirm_selection_button.BorderColor3 = Color3.new(0, 0, 0)
 confirm_selection_button.BorderSizePixel = 0
 confirm_selection_button.Position = UDim2.new(0.5, 0, 0.748196244, 0)
 confirm_selection_button.Size = UDim2.new(0, 200, 0, 24)
-confirm_selection_button.Visible = true
+confirm_selection_button.Visible = false
 confirm_selection_button.Name = "ConfirmSelectionButton"
 confirm_selection_button.Parent = RavenGUI
 
@@ -1753,49 +1753,66 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                 local Pos1Brick = nil
                 local Pos2Brick = nil
 
-                local Pos1SelectionBox = Instance.new("SelectionBox")
-                Pos1SelectionBox.LineThickness = 0.05000000074505806
-                Pos1SelectionBox.SurfaceColor3 = Color3.new(1, 0.890196, 0.501960)
+                local Pos1SelectionBox = Instance.new("SelectionBox", ReplicatedStorage)
+                Pos1SelectionBox.LineThickness = 0.05
+                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.517647, 1, 0.501960)
                 Pos1SelectionBox.SurfaceTransparency = 0.5
-                Pos1SelectionBox.Color3 = Color3.new(1, 0.890196, 0.501960)
+                Pos1SelectionBox.Color3 = Color3.new(0.517647, 1, 0.501960)
                 Pos1SelectionBox.Visible = true
-                Pos1SelectionBox.Name = "Preview"
-                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+                Pos1SelectionBox.Name = "Preview1"
 
-                local Pos2SelectionBox = Instance.new("SelectionBox")
-                Pos1SelectionBox.LineThickness = 0.05000000074505806
-                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.501960, 0.501960, 1)
-                Pos1SelectionBox.SurfaceTransparency = 0.5
-                Pos1SelectionBox.Color3 = Color3.new(0.501960, 0.501960, 1)
-                Pos1SelectionBox.Visible = true
-                Pos1SelectionBox.Name = "Preview"
-                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+                local Pos2SelectionBox = Instance.new("SelectionBox", ReplicatedStorage)
+                Pos2SelectionBox.LineThickness = 0.05
+                Pos2SelectionBox.SurfaceColor3 = Color3.new(0.909803, 0.372549, 0.372549)
+                Pos2SelectionBox.SurfaceTransparency = 0.5
+                Pos2SelectionBox.Color3 = Color3.new(0.909803, 0.372549, 0.372549)
+                Pos2SelectionBox.Visible = true
+                Pos2SelectionBox.Name = "Preview2"
 
                 local SelectionBrick = nil
-                local SelectionBrickBox = Instance.new("SelectionBox")
-                Pos1SelectionBox.LineThickness = 0.05000000074505806
-                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.501960, 1, 0.584313)
-                Pos1SelectionBox.SurfaceTransparency = 0.5
-                Pos1SelectionBox.Color3 = Color3.new(0.501960, 1, 0.584313)
-                Pos1SelectionBox.Visible = true
-                Pos1SelectionBox.Name = "Preview"
-                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+                local SelectionBrickBox = Instance.new("SelectionBox", ReplicatedStorage)
+                SelectionBrickBox.LineThickness = 0.05
+                SelectionBrickBox.SurfaceColor3 = Color3.new(0.501960, 0.827450, 1)
+                SelectionBrickBox.SurfaceTransparency = 0.5
+                SelectionBrickBox.Color3 = Color3.new(0.501960, 0.827450, 1)
+                SelectionBrickBox.Visible = true
+                SelectionBrickBox.Name = "Preview"
 
                 local SelectionCFrame, SelectionSize = nil, nil
 
-                local function DestroyAll()
+                local function ReinitializeAll()
+                    Pos1SelectionBox.Parent = ReplicatedStorage
+                    Pos2SelectionBox.Parent = ReplicatedStorage
+
                     Pos1Brick:Destroy()
                     Pos2Brick:Destroy()
-
-                    Pos1SelectionBox.Parent = Raven:GetCoreGui()
-                    Pos2SelectionBox.Parent = Raven:GetCoreGui()
 
                     Pos1SelectionBox.Adornee = nil
                     Pos2SelectionBox.Adornee = nil
 
-                    SelectionBrick:Destroy()
-                    SelectionBrickBox.Parent = Raven:GetCoreGui()
+                    SelectionBrickBox.Parent = ReplicatedStorage
                     SelectionBrickBox.Adornee = nil
+                    SelectionBrick:Destroy()
+
+                    Pos1 = nil
+                    Pos2 = nil
+                end
+
+                local function DestroyAll()
+                    if Pos1Brick then
+                        Pos1Brick:Destroy()
+                    end
+                    if Pos2Brick then
+                        Pos2Brick:Destroy()
+                    end
+
+                    Pos1SelectionBox:Destroy()
+                    Pos2SelectionBox:Destroy()
+
+                    if SelectionBrick then
+                        SelectionBrick:Destroy()
+                    end
+                    SelectionBrickBox:Destroy()
 
                     Pos1 = nil
                     Pos2 = nil
@@ -1805,12 +1822,16 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                     if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         local Mouse = LocalPlayer:GetMouse()
 
-                        if Mouse.Target then
+                        if Mouse.Target and not Mouse.Target:IsA("Terrain") and Mouse.Target.Name ~= "Beach" then
                             if not Pos1 then
                                 Pos1Brick = Instance.new("Part", workspace)
                                 Pos1Brick.Anchored = true
                                 Pos1Brick.Transparency = 1
                                 Pos1Brick.Size = Mouse.Target.Size
+                                Pos1Brick.CFrame = Mouse.Target.CFrame
+                                Pos1Brick.CanCollide = false
+                                Pos1Brick.CanQuery = false
+                                Pos1Brick.CanTouch = false
 
                                 Pos1SelectionBox.Parent = Pos1Brick
                                 Pos1SelectionBox.Adornee = Pos1Brick
@@ -1822,6 +1843,9 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 Pos2Brick.Transparency = 1
                                 Pos2Brick.Size = Mouse.Target.Size
                                 Pos2Brick.CFrame = Mouse.Target.CFrame
+                                Pos2Brick.CanCollide = false
+                                Pos2Brick.CanQuery = false
+                                Pos2Brick.CanTouch = false
 
                                 Pos2SelectionBox.Parent = Pos2Brick
                                 Pos2SelectionBox.Adornee = Pos2Brick
@@ -1843,6 +1867,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 local Model = Instance.new("Model", workspace)
                                 Pos2Brick.Parent = Model
                                 Pos1Brick.Parent = Model
+                                Model.PrimaryPart = Pos1Brick
 
                                 SelectionCFrame, SelectionSize = Model:GetBoundingBox()
 
@@ -1851,7 +1876,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
 
                                 confirm_selection_button.Visible = true
                             else
-                                DestroyAll()
+                                ReinitializeAll()
                                 confirm_selection_button.Visible = false
                                 SaveBlocksClickedfunction(input, gameProcessed)
                             end
