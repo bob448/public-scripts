@@ -795,6 +795,8 @@ end
 
 local function ToggleButtonPressed(_inputObject, _clickCount)
     if toggle_button.Interactable then
+        GuiOpen = not GuiOpen
+
         local SizeTween = TweenService:Create(
             toggle_button,
             TweenInfo.new(.1),
@@ -804,7 +806,7 @@ local function ToggleButtonPressed(_inputObject, _clickCount)
         SizeTween:Play()
         click:Play()
 
-        if GuiOpen then
+        if not GuiOpen then
             toggle_button.Text = "V"
         else
             toggle_button.Text = "Ʌ"
@@ -820,7 +822,7 @@ local function ToggleButtonPressed(_inputObject, _clickCount)
 
         SizeTween:Play()
 
-        if GuiOpen then
+        if not GuiOpen then
             TweenService:Create(
                 main_frame,
                 TweenInfo.new(1, Enum.EasingStyle.Exponential),
@@ -833,8 +835,6 @@ local function ToggleButtonPressed(_inputObject, _clickCount)
                 {["Position"] = OpenPosition}
             ):Play()
         end
-
-        GuiOpen = not GuiOpen
     end
 end
 
@@ -1554,6 +1554,7 @@ AddCMD("clearsavedaliases", "Deletes the file which saved aliases are in.", {"de
 end)
 
 local OpenBind = nil
+local LastOpenedWithBind = nil
 
 function module:SetOpenBind(key: string?)
     OpenBind = key
@@ -1568,11 +1569,24 @@ UserInputService.InputBegan:Connect(function(input, processed)
                 command_box:CaptureFocus()
                 task.wait()
                 command_box.Text = ""
+
+                LastOpenedWithBind = tick()
             else
                 command_box:CaptureFocus()
                 task.wait()
                 command_box.Text = ""
             end
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if OpenBind and LastOpenedWithBind then
+        if tick() >= LastOpenedWithBind and not command_box:IsFocused() and GuiOpen then
+            task.spawn(ToggleButtonPressed)
+            LastOpenedWithBind = nil
+        elseif command_box:IsFocused() and tick() >= LastOpenedWithBind and GuiOpen then
+            LastOpenedWithBind = tick()
         end
     end
 end)
