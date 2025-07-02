@@ -49,7 +49,7 @@ local function GetCoreGui()
 end
 
 function module:GetCoreGui()
-    GetCoreGui()
+    return GetCoreGui()
 end
 
 do
@@ -76,11 +76,18 @@ local function AnimateGradient(uigradient: UIGradient, speed: number)
     end)
 end
 
+module.Gui = {}
+function module.Gui:AnimateGradient(...)
+    return AnimateGradient(...)
+end
+
 local Mobile = UserInputService.TouchEnabled
 
 RunService.Heartbeat:Connect(function(delta)
     Mobile = UserInputService.TouchEnabled
 end)
+
+module.IsMobile = Mobile
 
 function Draggable(dragframe,mainframe)
 	local dragging=false
@@ -123,6 +130,10 @@ function Draggable(dragframe,mainframe)
 			end
 		end
 	end)
+end
+
+function module.Gui:Draggable(...)
+    return Draggable(...)
 end
 
 local raven = Instance.new("ScreenGui")
@@ -793,6 +804,10 @@ local function BounceButton(button: TextButton | ImageButton, OgSize: UDim2)
     BounceTween.Completed:Wait()
 end
 
+function module.Gui:BounceButton(...)
+    return BounceButton(...)
+end
+
 local function ToggleButtonPressed(_inputObject, _clickCount)
     if toggle_button.Interactable then
         GuiOpen = not GuiOpen
@@ -900,32 +915,36 @@ local function Notify(data: string, status: Color3?, time: number?)
     Status.BackgroundColor3 = status or Statuses.Info
     Status.BackgroundTransparency = 1
 
-    local OpenTween = TweenService:Create(
-        Notif,
-        TweenInfo.new(.5),
-        {["Size"] = notification_frame.Size, ["BackgroundTransparency"] = 0}
-    )
+    task.spawn(function()
+        local OpenTween = TweenService:Create(
+            Notif,
+            TweenInfo.new(.5),
+            {["Size"] = notification_frame.Size, ["BackgroundTransparency"] = 0}
+        )
 
-    TweenService:Create(
-        Status,
-        TweenInfo.new(.5),
-        {["BackgroundTransparency"] = 0}
-    ):Play()
+        TweenService:Create(
+            Status,
+            TweenInfo.new(.5),
+            {["BackgroundTransparency"] = 0}
+        ):Play()
 
-    TweenService:Create(
-        Text,
-        TweenInfo.new(.3),
-        {["TextTransparency"] = 0}
-    ):Play()
+        TweenService:Create(
+            Text,
+            TweenInfo.new(.3),
+            {["TextTransparency"] = 0}
+        ):Play()
 
-    OpenTween:Play()
-    OpenTween.Completed:Wait()
+        OpenTween:Play()
+        OpenTween.Completed:Wait()
 
-    task.wait(time or 4)
+        task.wait(time or 4)
 
-    if not Notif or not Notif.Parent then return end
+        if not Notif or not Notif.Parent then return end
 
-    CloseNotification(Notif, Status, Text)
+        CloseNotification(Notif, Status, Text)
+    end)
+
+    return {Notif, Status, Text}
 end
 
 function module.Notif:Notify(...)
@@ -945,25 +964,25 @@ function module.Debug:SetDebugMode(value: boolean)
 end
 
 local function Error(data: string, time: number?)
-    task.spawn(Notify, data, Statuses.Error, time)
+    return Notify(data, Statuses.Error, time)
 end
 
 local function Warn(data: string, time: number?)
-    task.spawn(Notify, data, Statuses.Warning, time)
+    return Notify(data, Statuses.Warning, time)
 end
 
 local function Info(data: string, time: number?)
-    task.spawn(Notify, data, nil, time)
+    return Notify(data, nil, time)
 end
 
 local function Debug(data: string, time: number?)
     if DebugMode then
-        task.spawn(Notify, data, Statuses.Debug, time)
+        return Notify(data, Statuses.Debug, time)
     end
 end
 
 local function Success(data: string, time: number?)
-    task.spawn(Notify, data, Statuses.Success, time)
+    return Notify(data, Statuses.Success, time)
 end
 
 function module.Notif:Error(...)
@@ -1087,7 +1106,7 @@ end
 module.Output = {}
 
 function module.Output:ClearOutput()
-    ClearOutput()
+    return ClearOutput()
 end
 
 local function Output(data: {any?})

@@ -4,7 +4,7 @@
 -- A Chosen One Script.
 
 if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
-    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/Raven-Base/raven-base.lua")))
+    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/main/src/Raven-Base/raven-base.lua")))
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
@@ -15,6 +15,7 @@ local Teams = game:GetService("Teams")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TextChatService = game:GetService("TextChatService")
+local UserInputService = game:GetService("UserInputService")
 
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
@@ -75,12 +76,86 @@ type RavenMod = {
     },
     Command: {
         AutoCompleteCommand: (data: string) -> (string?)
-    }
+    },
+    Gui: {
+        Draggable: (mainframe: any, dragframe: any) -> (),
+        AnimateGradient: (uigradient: UIGradient, speed: number) -> (RBXScriptConnection),
+        BounceButton: (button: TextButton | ImageButton, OgSize: UDim2) -> ()
+    },
+    IsMobile: boolean
 }
 
-local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
+local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/dev/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
 Raven.VERSION = 1.9
+
+local RavenGUI = Raven:GetCoreGui():WaitForChild("Raven")
+
+local cancel_selection_button = Instance.new("TextButton")
+cancel_selection_button.Font = Enum.Font.Arial
+cancel_selection_button.Text = "Cancel"
+cancel_selection_button.TextColor3 = Color3.new(1, 1, 1)
+cancel_selection_button.TextScaled = true
+cancel_selection_button.TextSize = 14
+cancel_selection_button.TextStrokeColor3 = Color3.new(1, 0, 0)
+cancel_selection_button.TextStrokeTransparency = 0.5
+cancel_selection_button.TextWrapped = true
+cancel_selection_button.AnchorPoint = Vector2.new(0.5, 0)
+cancel_selection_button.BackgroundColor3 = Color3.new(0, 0, 0)
+cancel_selection_button.BorderColor3 = Color3.new(0, 0, 0)
+cancel_selection_button.BorderSizePixel = 0
+cancel_selection_button.Position = UDim2.new(0.5, 0, 0.803030312, 0)
+cancel_selection_button.Size = UDim2.new(0, 200, 0, 24)
+cancel_selection_button.Visible = false
+cancel_selection_button.Name = "CancelSelectionButton"
+cancel_selection_button.Parent = RavenGUI
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = cancel_selection_button
+
+local animated_close_gradient = Instance.new("UIGradient")
+animated_close_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_close_gradient.Name = "AnimatedCloseGradient"
+animated_close_gradient.Parent = uistroke
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = cancel_selection_button
+
+local confirm_selection_button = Instance.new("TextButton")
+confirm_selection_button.Font = Enum.Font.Arial
+confirm_selection_button.Text = "Confirm"
+confirm_selection_button.TextColor3 = Color3.new(1, 1, 1)
+confirm_selection_button.TextScaled = true
+confirm_selection_button.TextSize = 14
+confirm_selection_button.TextStrokeColor3 = Color3.new(0.145098, 0.67451, 0)
+confirm_selection_button.TextStrokeTransparency = 0.5
+confirm_selection_button.TextWrapped = true
+confirm_selection_button.AnchorPoint = Vector2.new(0.5, 0)
+confirm_selection_button.BackgroundColor3 = Color3.new(0, 0, 0)
+confirm_selection_button.BorderColor3 = Color3.new(0, 0, 0)
+confirm_selection_button.BorderSizePixel = 0
+confirm_selection_button.Position = UDim2.new(0.5, 0, 0.748196244, 0)
+confirm_selection_button.Size = UDim2.new(0, 200, 0, 24)
+confirm_selection_button.Visible = true
+confirm_selection_button.Name = "ConfirmSelectionButton"
+confirm_selection_button.Parent = RavenGUI
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = confirm_selection_button
+
+local animated_confirm_gradient = Instance.new("UIGradient")
+animated_confirm_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_confirm_gradient.Name = "AnimatedConfirmGradient"
+animated_confirm_gradient.Parent = uistroke
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = confirm_selection_button
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -1625,5 +1700,190 @@ Raven:AddCMD("untrap", "Stops trapping.", {}, {}, function(arguments)
         Raven.Notif:Success("Disabled trap.")
     else
         Raven.Notif:Error("Trap is already disabled.")
+    end
+end)
+
+local SaveBlocks = {}
+SaveBlocks.Selecting = false
+SaveBlocks.CancelSelecting = false
+SaveBlocks.Click = nil
+
+local CancelSelectionOgSize = cancel_selection_button.Size
+local ConfirmSelectionOgSize = confirm_selection_button.Size
+
+cancel_selection_button.Activated:Connect(function()
+    if SaveBlocks.Selecting then
+        Raven.Gui:BounceButton(cancel_selection_button, CancelSelectionOgSize)
+
+        cancel_selection_button.Visible = false
+
+        SaveBlocks.CancelSelecting = true
+        SaveBlocks.Selecting = false
+    else
+        cancel_selection_button.Visible = false 
+    end
+end)
+
+confirm_selection_button.Activated:Connect(function()
+    if SaveBlocks.Selecting then
+        Raven.Gui:BounceButton(confirm_selection_button, ConfirmSelectionOgSize)
+        confirm_selection_button.Visible = false
+
+        SaveBlocks.Selecting = false
+    else
+        confirm_selection_button.Visible = false 
+    end
+end)
+
+Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}, {"file name"}, function(arguments)
+    if not SaveBlocks.Selecting then
+        if writefile then
+            local FileName: string? = arguments[1]
+
+            if FileName then
+                SaveBlocks.Selecting = true
+
+                local GetPos = require(ReplicatedStorage:WaitForChild("GetPos"))
+
+                cancel_selection_button.Visible = true
+
+                local Pos1 = nil
+                local Pos2 = nil
+
+                local Pos1Brick = nil
+                local Pos2Brick = nil
+
+                local Pos1SelectionBox = Instance.new("SelectionBox")
+                Pos1SelectionBox.LineThickness = 0.05000000074505806
+                Pos1SelectionBox.SurfaceColor3 = Color3.new(1, 0.890196, 0.501960)
+                Pos1SelectionBox.SurfaceTransparency = 0.5
+                Pos1SelectionBox.Color3 = Color3.new(1, 0.890196, 0.501960)
+                Pos1SelectionBox.Visible = true
+                Pos1SelectionBox.Name = "Preview"
+                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+
+                local Pos2SelectionBox = Instance.new("SelectionBox")
+                Pos1SelectionBox.LineThickness = 0.05000000074505806
+                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.501960, 0.501960, 1)
+                Pos1SelectionBox.SurfaceTransparency = 0.5
+                Pos1SelectionBox.Color3 = Color3.new(0.501960, 0.501960, 1)
+                Pos1SelectionBox.Visible = true
+                Pos1SelectionBox.Name = "Preview"
+                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+
+                local SelectionBrick = nil
+                local SelectionBrickBox = Instance.new("SelectionBox")
+                Pos1SelectionBox.LineThickness = 0.05000000074505806
+                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.501960, 1, 0.584313)
+                Pos1SelectionBox.SurfaceTransparency = 0.5
+                Pos1SelectionBox.Color3 = Color3.new(0.501960, 1, 0.584313)
+                Pos1SelectionBox.Visible = true
+                Pos1SelectionBox.Name = "Preview"
+                Pos1SelectionBox.Parent = Raven:GetCoreGui()
+
+                local SelectionCFrame, SelectionSize = nil, nil
+
+                local function DestroyAll()
+                    Pos1Brick:Destroy()
+                    Pos2Brick:Destroy()
+
+                    Pos1SelectionBox.Parent = Raven:GetCoreGui()
+                    Pos2SelectionBox.Parent = Raven:GetCoreGui()
+
+                    Pos1SelectionBox.Adornee = nil
+                    Pos2SelectionBox.Adornee = nil
+
+                    SelectionBrick:Destroy()
+                    SelectionBrickBox.Parent = Raven:GetCoreGui()
+                    SelectionBrickBox.Adornee = nil
+
+                    Pos1 = nil
+                    Pos2 = nil
+                end
+
+                local function SaveBlocksClickedfunction(input, gameProcessed)
+                    if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                        local Mouse = LocalPlayer:GetMouse()
+
+                        if Mouse.Target then
+                            if not Pos1 then
+                                Pos1Brick = Instance.new("Part", workspace)
+                                Pos1Brick.Anchored = true
+                                Pos1Brick.Transparency = 1
+                                Pos1Brick.Size = Mouse.Target.Size
+
+                                Pos1SelectionBox.Parent = Pos1Brick
+                                Pos1SelectionBox.Adornee = Pos1Brick
+
+                                Pos1 = Mouse.Target.CFrame
+                            elseif not Pos2 then
+                                Pos2Brick = Instance.new("Part", workspace)
+                                Pos2Brick.Anchored = true
+                                Pos2Brick.Transparency = 1
+                                Pos2Brick.Size = Mouse.Target.Size
+                                Pos2Brick.CFrame = Mouse.Target.CFrame
+
+                                Pos2SelectionBox.Parent = Pos2Brick
+                                Pos2SelectionBox.Adornee = Pos2Brick
+
+                                Pos2 = Mouse.Target.CFrame
+
+                                SelectionBrick = Instance.new("Part", workspace)
+                                SelectionBrick.Transparency = 1
+                                SelectionBrick.Anchored = true
+                                SelectionBrick.CanCollide = false
+                                SelectionBrick.CanQuery = false
+                                SelectionBrick.CanTouch = false
+
+                                SelectionBrickBox.Parent = SelectionBrick
+                                SelectionBrickBox.Adornee = SelectionBrick
+
+                                SelectionBrick.Transparency = 1
+
+                                local Model = Instance.new("Model", workspace)
+                                Pos2Brick.Parent = Model
+                                Pos1Brick.Parent = Model
+
+                                SelectionCFrame, SelectionSize = Model:GetBoundingBox()
+
+                                SelectionBrick.CFrame = SelectionCFrame
+                                SelectionBrick.Size = SelectionSize
+
+                                confirm_selection_button.Visible = true
+                            else
+                                DestroyAll()
+                                confirm_selection_button.Visible = false
+                                SaveBlocksClickedfunction(input, gameProcessed)
+                            end
+                        end
+                    end
+                end
+
+                SaveBlocks.Click = UserInputService.InputBegan:Connect(SaveBlocksClickedfunction)
+
+                repeat task.wait() until not SaveBlocks.Selecting
+
+                confirm_selection_button.Visible = false
+                cancel_selection_button.Visible = false
+
+                SaveBlocks.Click:Disconnect()
+
+                if SaveBlocks.CancelSelecting then
+                    DestroyAll()
+                else
+                    DestroyAll()
+
+                    -- Raven.Notif:Success("Saving blocks to \""..FileName.."\"..")
+
+                    Raven.Notif:Error("This function has not been implemented yet.")
+                end
+            else
+                Raven.Notif:Error("No filename supplied.")
+            end
+        else
+            Raven.Notif:Error("Your executor does not support writefile.")
+        end
+    else
+        Raven.Notif:Error("You are already selecting blocks to save.")
     end
 end)
