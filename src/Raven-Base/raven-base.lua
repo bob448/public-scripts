@@ -1008,6 +1008,8 @@ local function Say(message: string, hidden: boolean?)
     end
 end
 
+module.Player = {}
+
 function module.Player:Say(...)
     return Say(...)
 end
@@ -1246,7 +1248,6 @@ local PlayerSelectors = {
     end
 }
 
-module.Player = {}
 module.Player.PlayerSelectors = PlayerSelectors
 
 local function FindPlayers(...: string): {Player?}
@@ -2044,7 +2045,7 @@ AddCMD("spam", "Spams a message every specified interval", {}, {"hidden (true/fa
     local Hidden = ToBool(arguments[1])
     local Interval = arguments[2] and tonumber(arguments[2])
     local Message = {}
-    table.move(arguments, 2, #arguments, 1, Message)
+    table.move(arguments, 3, #arguments, 1, Message)
 
     if Interval and #Message > 0 then
         Message = table.concat(Message, " ")
