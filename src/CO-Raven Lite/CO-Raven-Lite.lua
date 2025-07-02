@@ -16,9 +16,6 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TextChatService = game:GetService("TextChatService")
 
-local TextChannels = TextChatService:WaitForChild("TextChannels")
-local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
-
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
     local LoopThrough = {}
@@ -73,7 +70,8 @@ type RavenMod = {
         PlayerSelectors: {
             () -> ({Player?})
         },
-        FindPlayers: () -> ({Player?})
+        FindPlayers: () -> ({Player?}),
+        Say: (message: string, hidden: boolean?) -> ()
     },
     Command: {
         AutoCompleteCommand: (data: string) -> (string?)
@@ -746,7 +744,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
 
             if Character and LocalPlayer.Team ~= Teams.Chosen then
                 if Character:FindFirstChild("The Arkenstone") or LocalPlayer.Backpack:FindFirstChild("The Arkenstone") then
-                    RBXSystem:SendAsync("reset me")
+                    Raven.Player:Say("reset me", true)
                 end
             end
         end)
@@ -1035,7 +1033,7 @@ end)
 
 Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
     if #arguments > 0 then
-        RBXSystem:SendAsync(table.concat(arguments, " "))
+        Raven.Player:Say(table.concat(arguments, " "), true)
     end
 end)
 
@@ -1232,7 +1230,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         local Names = {}
         for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
 
-        RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
+        Raven.Player:Say("enlighten "..table.concat(Names, " "), true)
 
         task.wait(.1)
 
@@ -1246,7 +1244,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                     for i,v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
-                        RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
+                        Raven.Player:Say("clearinv "..table.concat(Names, " "), true)
                     else
                         table.remove(HasEnlighten, HasEnlightenIndex)
                     end

@@ -1008,6 +1008,10 @@ local function Say(message: string, hidden: boolean?)
     end
 end
 
+function module.Player:Say(...)
+    return Say(...)
+end
+
 local Commands = {}
 
 module.Commands = Commands
