@@ -30,8 +30,8 @@ local RBXSystem: TextChannel? = nil
 task.spawn(function()
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         TextChannels = TextChatService:WaitForChild("TextChannels")
-        RBXGeneral = TextChatService:WaitForChild("RBXGeneral")
-        RBXSystem = TextChatService:WaitForChild("RBXSystem")
+        RBXGeneral = TextChannels:WaitForChild("RBXGeneral")
+        RBXSystem = TextChannels:WaitForChild("RBXSystem")
     end
 end)
 
@@ -1000,7 +1000,7 @@ local function Say(message: string, hidden: boolean?)
             Error("SayMessageRequest not found in ReplicatedStorage.")
         end
     else
-        if RBXGeneral and not hidden or hidden and RBXSystem then
+        if not hidden and RBXGeneral or hidden and RBXSystem then
             (hidden and RBXSystem or RBXGeneral):SendAsync(message)
         else
             Error("Couldn't find RBXGeneral/RBXSystem.")
