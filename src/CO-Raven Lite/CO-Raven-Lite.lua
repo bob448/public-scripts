@@ -82,7 +82,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.8
+Raven.VERSION = 1.9
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -863,7 +863,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
 
                 if #Remotes > 0 then
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if #Queue > 10 then
+                        if #Queue > 25 then
                             break
                         end
                         if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
@@ -962,7 +962,7 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
 
                 if #Remotes > 0 then
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if #Queue > 10 then
+                        if #Queue > 5 then
                             break
                         end
                         if v:IsA("BasePart") and v.Anchored and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
@@ -1054,49 +1054,58 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (
 
         BuildCircle = true
 
-        for i=-180+Increase, 180-Increase, Increase do
-            if not BuildCircle then
-                return
-            end
+        local Queue = 0
 
-            RunService.Heartbeat:Wait()
+        for i=1,7 do
+            for i=-180+Increase, 180-Increase, Increase do
+                if not BuildCircle then
+                    return
+                end
 
-            local Remotes = {}
-            
-            for _, v in ipairs(Players:GetPlayers()) do
-                if v.Character then
-                    local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+                if Queue > 3 then
+                    RunService.Heartbeat:Wait()
+                    Queue = 0
+                end
 
-                    for _, tool: Tool in pairs(LoopThrough) do
-                        if tool:IsA("Tool") and tool.Name == "Build" then
-                            local Remote = GetRemoteFromTool(tool)
+                local Remotes = {}
+                
+                for _, v in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
-                            if Remote then Remotes[#Remotes+1] = Remote end
+                        for _, tool: Tool in pairs(LoopThrough) do
+                            if tool:IsA("Tool") and tool.Name == "Build" then
+                                local Remote = GetRemoteFromTool(tool)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
                         end
                     end
                 end
-            end
 
-            if #Remotes > 0 and Root and Root.Parent then
-                local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(0, math.rad(i), 0) * CFrame.new(0, 0, -Radius)
-                local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+                if #Remotes > 0 and Root and Root.Parent then
+                    local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(0, math.rad(i), 0) * CFrame.new(0, 0, -Radius)
+                    local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
 
-                Remote:FireServer(
-                    workspace.Terrain,
-                    Enum.NormalId.Top,
-                    CFrame.Position,
-                    "detailed"
-                )
-            elseif #Remotes == 0 then
-                Raven.Notif:Error("Stopped. Couldn't find a build remote.")
-                BuildCircle = false
+                    Queue += 1
 
-                return
-            else
-                Raven.Notif:Error("Couldn't find HumanoidRootPart.")
-                BuildCircle = false
+                    Remote:FireServer(
+                        workspace.Terrain,
+                        Enum.NormalId.Top,
+                        CFrame.Position,
+                        "detailed"
+                    )
+                elseif #Remotes == 0 then
+                    Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                    BuildCircle = false
 
-                return
+                    return
+                else
+                    Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                    BuildCircle = false
+
+                    return
+                end
             end
         end
 
@@ -1133,50 +1142,59 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
 
         BuildSphere = true
 
-        for y=-90+Increase, 90-Increase, Increase do
-            for x=0, 360-Increase, Increase do
-                if not BuildSphere then
-                    return
-                end
+        local Queue = 0
 
-                RunService.RenderStepped:Wait()
+        for i=1, 10 do
+            for y=-90+Increase, 90-Increase, Increase do
+                for x=0, 360-Increase, Increase do
+                    if not BuildSphere then
+                        return
+                    end
 
-                local Remotes = {}
-                
-                for _, v in ipairs(Players:GetPlayers()) do
-                    if v.Character then
-                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+                    if Queue > 15 then
+                        RunService.Heartbeat:Wait()
+                        Queue = 0
+                    end
 
-                        for _, tool: Tool in pairs(LoopThrough) do
-                            if tool:IsA("Tool") and tool.Name == "Build" then
-                                local Remote = GetRemoteFromTool(tool)
+                    local Remotes = {}
+                    
+                    for _, v in ipairs(Players:GetPlayers()) do
+                        if v.Character then
+                            local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
-                                if Remote then Remotes[#Remotes+1] = Remote end
+                            for _, tool: Tool in pairs(LoopThrough) do
+                                if tool:IsA("Tool") and tool.Name == "Build" then
+                                    local Remote = GetRemoteFromTool(tool)
+
+                                    if Remote then Remotes[#Remotes+1] = Remote end
+                                end
                             end
                         end
                     end
-                end
 
-                if #Remotes > 0 and Root and Root.Parent then
-                    local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(math.rad(y), math.rad(x), 0) * CFrame.new(0, 0, -Radius)
-                    local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+                    if #Remotes > 0 and Root and Root.Parent then
+                        local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(math.rad(y), math.rad(x), 0) * CFrame.new(0, 0, -Radius)
+                        local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
 
-                    Remote:FireServer(
-                        workspace.Terrain,
-                        Enum.NormalId.Top,
-                        CFrame.Position,
-                        "detailed"
-                    )
-                elseif #Remotes == 0 then
-                    Raven.Notif:Error("Stopped. Couldn't find a build remote.")
-                    BuildSphere = false
+                        Queue += 1
 
-                    return
-                else
-                    Raven.Notif:Error("Couldn't find HumanoidRootPart.")
-                    BuildSphere = false
+                        Remote:FireServer(
+                            workspace.Terrain,
+                            Enum.NormalId.Top,
+                            CFrame.Position,
+                            "detailed"
+                        )
+                    elseif #Remotes == 0 then
+                        Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                        BuildSphere = false
 
-                    return
+                        return
+                    else
+                        Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                        BuildSphere = false
+
+                        return
+                    end
                 end
             end
         end
