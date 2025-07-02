@@ -1049,6 +1049,7 @@ Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"c
 end)
 
 local BuildCircle = false
+local CirclePreviews = {}
 
 Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1098,12 +1099,33 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (
 
                     Queue += 1
 
+                    local PreviewPart = Instance.new("Part", workspace)
+                    PreviewPart.Anchored = true
+                    PreviewPart.CanQuery = false
+                    PreviewPart.CanTouch = false
+                    PreviewPart.CanCollide = false
+                    PreviewPart.Color = Color3.new(0.309803, 0.788235, 0.325490)
+                    PreviewPart.Size = Vector3.new(1,1,1)
+                    PreviewPart.Transparency = .9
+                    PreviewPart.Material = Enum.Material.SmoothPlastic
+
+                    PreviewPart.CFrame = CFrame
+
+                    CirclePreviews[#CirclePreviews+1] = PreviewPart
+
                     Remote:FireServer(
                         workspace.Terrain,
                         Enum.NormalId.Top,
                         CFrame.Position,
                         "detailed"
                     )
+
+                    task.spawn(function()
+                        task.wait(.3)
+                        if PreviewPart.Parent then
+                            PreviewPart:Destroy()
+                        end
+                    end)
                 elseif #Remotes == 0 then
                     Raven.Notif:Error("Stopped. Couldn't find a build remote.")
                     BuildCircle = false
@@ -1130,6 +1152,14 @@ Raven:AddCMD("uncircle", "Stops building a circle if you are.", {}, {}, function
     if BuildCircle then
         BuildCircle = false
 
+        for i,v in pairs(CirclePreviews) do
+            if v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(CirclePreviews)
+
         Raven.Notif:Success("Stopped building a circle.")
     else
         Raven.Notif:Error("You are not building a circle.")
@@ -1137,6 +1167,7 @@ Raven:AddCMD("uncircle", "Stops building a circle if you are.", {}, {}, function
 end)
 
 local BuildSphere = false
+local SpherePreviews = {}
 
 Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (max=23)","increase"}, function(arguments)
     local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -1187,12 +1218,33 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
 
                         Queue += 1
 
+                        local PreviewPart = Instance.new("Part", workspace)
+                        PreviewPart.Anchored = true
+                        PreviewPart.CanQuery = false
+                        PreviewPart.CanTouch = false
+                        PreviewPart.CanCollide = false
+                        PreviewPart.Color = Color3.new(0.309803, 0.788235, 0.325490)
+                        PreviewPart.Size = Vector3.new(1,1,1)
+                        PreviewPart.Transparency = .9
+                        PreviewPart.Material = Enum.Material.SmoothPlastic
+
+                        PreviewPart.CFrame = CFrame
+
+                        SpherePreviews[#SpherePreviews+1] = PreviewPart
+
                         Remote:FireServer(
                             workspace.Terrain,
                             Enum.NormalId.Top,
                             CFrame.Position,
                             "detailed"
                         )
+
+                        task.spawn(function()
+                            task.wait(.3)
+                            if PreviewPart.Parent then
+                                PreviewPart:Destroy()
+                            end
+                        end)
                     elseif #Remotes == 0 then
                         Raven.Notif:Error("Stopped. Couldn't find a build remote.")
                         BuildSphere = false
@@ -1213,6 +1265,24 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
         BuildSphere = false
     elseif BuildSphere then
         Raven.Notif:Error("You are already building a sphere.")
+    end
+end)
+
+Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, {}, function(arguments)
+    if BuildSphere then
+        BuildSphere = false
+
+        for i,v in pairs(SpherePreviews) do
+            if v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(SpherePreviews)
+
+        Raven.Notif:Success("Stopped building a sphere.")
+    else
+        Raven.Notif:Error("You are not building a sphere.")
     end
 end)
 
@@ -1325,16 +1395,6 @@ Raven:AddCMD("unbuildaura", "Stops building blocks.", {}, {}, function(arguments
         Raven.Notif:Success("Buildaura has been turned off")
     else
         Raven.Notif:Error("Buildaura is already off.")
-    end
-end)
-
-Raven:AddCMD("unsphere", "Stops building a sphere if you are.", {}, {}, function(arguments)
-    if BuildSphere then
-        BuildSphere = false
-
-        Raven.Notif:Success("Stopped building a sphere.")
-    else
-        Raven.Notif:Error("You are not building a sphere.")
     end
 end)
 
