@@ -13,7 +13,6 @@ local module = {}
 module.Name = "Raven"
 module.VERSION = -1
 
-local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local _CoreGui = game:GetService("CoreGui")
@@ -23,6 +22,18 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local TextChatService = game:GetService("TextChatService")
+local TextChannels
+local RBXGeneral: TextChannel? = nil
+local RBXSystem: TextChannel? = nil
+
+task.spawn(function()
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        TextChannels = TextChatService:WaitForChild("TextChannels")
+        RBXGeneral = TextChannels:WaitForChild("RBXGeneral")
+        RBXSystem = TextChannels:WaitForChild("RBXSystem")
+    end
+end)
 
 local ClosedPosition = UDim2.new(.5, 0, 0, -244)
 local OpenPosition = UDim2.new(.5, 0, 0, 4)
@@ -971,6 +982,38 @@ function module.Notif:Success(...)
     return Success(...)
 end
 
+local function ToBool(str: string?)
+    return str == "true"
+end
+
+local function Say(message: string, hidden: boolean?)
+    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        local DefaultChatSystemChatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        local SayMessageRequest = DefaultChatSystemChatEvents and DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+
+        if SayMessageRequest then
+            SayMessageRequest:FireServer(
+                message,
+                "System"
+            )
+        else
+            Error("SayMessageRequest not found in ReplicatedStorage.")
+        end
+    else
+        if not hidden and RBXGeneral or hidden and RBXSystem then
+            (hidden and RBXSystem or RBXGeneral):SendAsync(message)
+        else
+            Error("Couldn't find RBXGeneral/RBXSystem.")
+        end
+    end
+end
+
+module.Player = {}
+
+function module.Player:Say(...)
+    return Say(...)
+end
+
 local Commands = {}
 
 module.Commands = Commands
@@ -1205,7 +1248,6 @@ local PlayerSelectors = {
     end
 }
 
-module.Player = {}
 module.Player.PlayerSelectors = PlayerSelectors
 
 local function FindPlayers(...: string): {Player?}
@@ -1994,6 +2036,41 @@ AddCMD("unfreeze", "Unanchors your root.", {"unfr"}, {}, function(arguments)
 
     if Root then
         Root.Anchored = false
+    end
+end)
+
+local Spam = false
+
+AddCMD("spam", "Spams a message every specified interval", {}, {"hidden (true/false)","interval","message"}, function(arguments)
+    local Hidden = ToBool(arguments[1])
+    local Interval = arguments[2] and tonumber(arguments[2])
+    local Message = {}
+    table.move(arguments, 3, #arguments, 1, Message)
+
+    if Interval and #Message > 0 then
+        Message = table.concat(Message, " ")
+
+        Spam = true
+
+        while Spam do
+            task.wait(Interval)
+
+            Say(Message, Hidden)
+        end
+    elseif not Interval then
+        Error("No interval (number) supplied.")
+    elseif #Message == 0 then
+        Error("No message supplied.")
+    end
+end)
+
+AddCMD("unspam", "Stops spamming.", {}, {}, function(arguments)
+    if Spam then
+        Spam = false
+
+        Success("Stopped spamming.")
+    else
+        Error("You are not spamming.")
     end
 end)
 

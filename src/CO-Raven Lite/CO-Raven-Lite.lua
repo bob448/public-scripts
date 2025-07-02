@@ -16,9 +16,6 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TextChatService = game:GetService("TextChatService")
 
-local TextChannels = TextChatService:WaitForChild("TextChannels")
-local RBXSystem: TextChannel = TextChannels:WaitForChild("RBXSystem")
-
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
     local LoopThrough = {}
@@ -73,7 +70,8 @@ type RavenMod = {
         PlayerSelectors: {
             () -> ({Player?})
         },
-        FindPlayers: () -> ({Player?})
+        FindPlayers: () -> ({Player?}),
+        Say: (message: string, hidden: boolean?) -> ()
     },
     Command: {
         AutoCompleteCommand: (data: string) -> (string?)
@@ -82,7 +80,7 @@ type RavenMod = {
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
-Raven.VERSION = 1.8
+Raven.VERSION = 1.9
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -699,7 +697,7 @@ Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they
         if v and v.Character then
             BreakBkitPlayers[v] = {}
 
-            BreakBkitPlayers[v].Heartbeat = RunService.Heartbeat:Connect(function(_)
+            BreakBkitPlayers[v].RenderStepped = RunService.RenderStepped:Connect(function(_)
                 if v.Character then
                     local LoopThrough = {}
                     local CharacterChildren = v.Character:GetChildren()
@@ -727,8 +725,8 @@ end)
 
 Raven:AddCMD("unbreakbkit", "Stops spamming remotes.", {}, {}, function(arguments)
     for i,v in pairs(BreakBkitPlayers) do
-        if v.Heartbeat then
-            v.Heartbeat:Disconnect()
+        if v.RenderStepped then
+            v.RenderStepped:Disconnect()
         end
     end
     
@@ -746,7 +744,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
 
             if Character and LocalPlayer.Team ~= Teams.Chosen then
                 if Character:FindFirstChild("The Arkenstone") or LocalPlayer.Backpack:FindFirstChild("The Arkenstone") then
-                    RBXSystem:SendAsync("reset me")
+                    Raven.Player:Say("reset me", true)
                 end
             end
         end)
@@ -849,6 +847,8 @@ local DeleteAuraHighlights = {}
 
 Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
     if not DeleteAuraCon then
+        local Queue = {}
+
         DeleteAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -870,36 +870,48 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                 end
 
                 if #Remotes > 0 then
-                    local Brick = nil
-                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
-
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") then
-                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
-                            if Distance <= 23 then
-                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
-                                    Brick = v
-                                end
-                            end
+                        if #Queue > 25 then
+                            break
+                        end
+                        if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
+                            Queue[#Queue+1] = v
                         end
                     end
 
-                    if Brick then
-                        local DeleteHighlight = Instance.new("Highlight", Brick)
-                        DeleteHighlight.Adornee = Brick
-                        DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
-                        DeleteHighlight.FillTransparency = .5
-                        DeleteHighlight.OutlineTransparency = 1
+                    if #Queue > 0 then
+                        for i, Brick in pairs(Queue) do
+                            if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 then
+                                if not DeleteAuraHighlights[Brick] then
+                                    local DeleteHighlight = Instance.new("Highlight", Brick)
+                                    DeleteHighlight.Adornee = Brick
+                                    DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
+                                    DeleteHighlight.FillTransparency = .5
+                                    DeleteHighlight.OutlineTransparency = 1
 
-                        DeleteAuraHighlights[#DeleteAuraHighlights+1] = DeleteHighlight
+                                    DeleteAuraHighlights[Brick] = DeleteHighlight
+                                end
 
-                        Remote:FireServer(
-                            Brick,
-                            Brick.Position
-                        )
+                                local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
-                        task.wait(.3)
-                        DeleteHighlight:Destroy()
+                                Remote:FireServer(
+                                    Brick,
+                                    Brick.Position
+                                )
+
+                                task.spawn(function()
+                                    task.wait(.3)
+                                    if not Brick.Parent then
+                                        Queue[i] = nil
+                                    else
+                                        DeleteAuraHighlights[Brick]:Destroy()
+                                        DeleteAuraHighlights[Brick] = nil
+                                    end
+                                end)
+                            else
+                                Queue[i] = nil
+                            end
+                        end
                     end
                 end
             end
@@ -915,7 +927,7 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
         DeleteAuraCon:Disconnect()
         DeleteAuraCon = nil
 
-        for i,v in pairs(DeleteAuraHighlights) do
+        for _, v in pairs(DeleteAuraHighlights) do
             if v and v.Parent then
                 v:Destroy()
             end
@@ -934,6 +946,8 @@ local UnanchorAuraHighlights = {}
 
 Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
     if not UnanchorAuraCon then
+        local Queue = {}
+
         UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
@@ -955,41 +969,49 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                 end
 
                 if #Remotes > 0 then
-                    local Brick = nil
-                    local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
-
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if v:IsA("BasePart") and v.Anchored then
-                            local Distance = LocalPlayer:DistanceFromCharacter(v.Position)
-                            if Distance <= 23 then
-                                if Brick and Distance < LocalPlayer:DistanceFromCharacter(Brick.Position) or not Brick then
-                                    Brick = v
-                                end
-                            end
+                        if #Queue > 5 then
+                            break
+                        end
+                        if v:IsA("BasePart") and v.Anchored and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
+                            Queue[#Queue+1] = v
                         end
                     end
 
-                    if Brick then
-                        local UnanchorHighlight = Instance.new("Highlight", Brick)
-                        UnanchorHighlight.Adornee = Brick
-                        UnanchorHighlight.FillColor = Color3.new(1, 0.650980, 0.301960)
-                        UnanchorHighlight.FillTransparency = .5
-                        UnanchorHighlight.OutlineTransparency = 1
+                    if #Queue > 0 then
+                        for i, Brick in pairs(Queue) do
+                            if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 and Brick.Anchored then
+                                if not UnanchorAuraHighlights[Brick] then
+                                    local UnanchorHighlight = Instance.new("Highlight", Brick)
+                                    UnanchorHighlight.Adornee = Brick
+                                    UnanchorHighlight.FillColor = Color3.new(1, 0.772549, 0.376470)
+                                    UnanchorHighlight.FillTransparency = .5
+                                    UnanchorHighlight.OutlineTransparency = 1
 
-                        UnanchorAuraHighlights[#UnanchorAuraHighlights+1] = UnanchorHighlight
+                                    UnanchorAuraHighlights[Brick] = UnanchorHighlight
+                                end
 
-                        Remote:FireServer(
-                            Brick,
-                            Enum.NormalId.Top,
-                            Brick.Position,
-                            "material",
-                            Brick.Color,
-                            "anchor",
-                            ""
-                        )
+                                local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
 
-                        task.wait(.3)
-                        UnanchorHighlight:Destroy()
+                                Remote:FireServer(
+                                    Brick,
+                                    Enum.NormalId.Top,
+                                    Brick.Position,
+                                    "material",
+                                    Brick.Color,
+                                    "anchor",
+                                    ""
+                                )
+
+                                task.spawn(function()
+                                    task.wait(.3)
+                                    UnanchorAuraHighlights[Brick]:Destroy()
+                                    UnanchorAuraHighlights[Brick] = nil
+                                end)
+                            else
+                                Queue[i] = nil
+                            end
+                        end
                     end
                 end
             end
@@ -1021,7 +1043,7 @@ end)
 
 Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
     if #arguments > 0 then
-        RBXSystem:SendAsync(table.concat(arguments, " "))
+        Raven.Player:Say(table.concat(arguments, " "), true)
     end
 end)
 
@@ -1040,49 +1062,58 @@ Raven:AddCMD("circle", "Creates a circle out of detailed parts.", {}, {"radius (
 
         BuildCircle = true
 
-        for i=-180+Increase, 180-Increase, Increase do
-            if not BuildCircle then
-                return
-            end
+        local Queue = 0
 
-            RunService.Heartbeat:Wait()
+        for i=1,7 do
+            for i=-180+Increase, 180-Increase, Increase do
+                if not BuildCircle then
+                    return
+                end
 
-            local Remotes = {}
-            
-            for _, v in ipairs(Players:GetPlayers()) do
-                if v.Character then
-                    local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+                if Queue > 3 then
+                    RunService.Heartbeat:Wait()
+                    Queue = 0
+                end
 
-                    for _, tool: Tool in pairs(LoopThrough) do
-                        if tool:IsA("Tool") and tool.Name == "Build" then
-                            local Remote = GetRemoteFromTool(tool)
+                local Remotes = {}
+                
+                for _, v in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
-                            if Remote then Remotes[#Remotes+1] = Remote end
+                        for _, tool: Tool in pairs(LoopThrough) do
+                            if tool:IsA("Tool") and tool.Name == "Build" then
+                                local Remote = GetRemoteFromTool(tool)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
                         end
                     end
                 end
-            end
 
-            if #Remotes > 0 and Root and Root.Parent then
-                local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(0, math.rad(i), 0) * CFrame.new(0, 0, -Radius)
-                local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+                if #Remotes > 0 and Root and Root.Parent then
+                    local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(0, math.rad(i), 0) * CFrame.new(0, 0, -Radius)
+                    local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
 
-                Remote:FireServer(
-                    workspace.Terrain,
-                    Enum.NormalId.Top,
-                    CFrame.Position,
-                    "detailed"
-                )
-            elseif #Remotes == 0 then
-                Raven.Notif:Error("Stopped. Couldn't find a build remote.")
-                BuildCircle = false
+                    Queue += 1
 
-                return
-            else
-                Raven.Notif:Error("Couldn't find HumanoidRootPart.")
-                BuildCircle = false
+                    Remote:FireServer(
+                        workspace.Terrain,
+                        Enum.NormalId.Top,
+                        CFrame.Position,
+                        "detailed"
+                    )
+                elseif #Remotes == 0 then
+                    Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                    BuildCircle = false
 
-                return
+                    return
+                else
+                    Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                    BuildCircle = false
+
+                    return
+                end
             end
         end
 
@@ -1119,50 +1150,59 @@ Raven:AddCMD("sphere", "Creates a sphere out of detailed parts.", {}, {"radius (
 
         BuildSphere = true
 
-        for y=-90+Increase, 90-Increase, Increase do
-            for x=0, 360-Increase, Increase do
-                if not BuildSphere then
-                    return
-                end
+        local Queue = 0
 
-                RunService.RenderStepped:Wait()
+        for i=1, 10 do
+            for y=-90+Increase, 90-Increase, Increase do
+                for x=0, 360-Increase, Increase do
+                    if not BuildSphere then
+                        return
+                    end
 
-                local Remotes = {}
-                
-                for _, v in ipairs(Players:GetPlayers()) do
-                    if v.Character then
-                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+                    if Queue > 15 then
+                        RunService.Heartbeat:Wait()
+                        Queue = 0
+                    end
 
-                        for _, tool: Tool in pairs(LoopThrough) do
-                            if tool:IsA("Tool") and tool.Name == "Build" then
-                                local Remote = GetRemoteFromTool(tool)
+                    local Remotes = {}
+                    
+                    for _, v in ipairs(Players:GetPlayers()) do
+                        if v.Character then
+                            local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
 
-                                if Remote then Remotes[#Remotes+1] = Remote end
+                            for _, tool: Tool in pairs(LoopThrough) do
+                                if tool:IsA("Tool") and tool.Name == "Build" then
+                                    local Remote = GetRemoteFromTool(tool)
+
+                                    if Remote then Remotes[#Remotes+1] = Remote end
+                                end
                             end
                         end
                     end
-                end
 
-                if #Remotes > 0 and Root and Root.Parent then
-                    local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(math.rad(y), math.rad(x), 0) * CFrame.new(0, 0, -Radius)
-                    local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
+                    if #Remotes > 0 and Root and Root.Parent then
+                        local CFrame = Root.CFrame * CFrame.fromEulerAnglesYXZ(math.rad(y), math.rad(x), 0) * CFrame.new(0, 0, -Radius)
+                        local Remote = Remotes[#Remotes>1 and math.random(1, #Remotes) or 1]
 
-                    Remote:FireServer(
-                        workspace.Terrain,
-                        Enum.NormalId.Top,
-                        CFrame.Position,
-                        "detailed"
-                    )
-                elseif #Remotes == 0 then
-                    Raven.Notif:Error("Stopped. Couldn't find a build remote.")
-                    BuildSphere = false
+                        Queue += 1
 
-                    return
-                else
-                    Raven.Notif:Error("Couldn't find HumanoidRootPart.")
-                    BuildSphere = false
+                        Remote:FireServer(
+                            workspace.Terrain,
+                            Enum.NormalId.Top,
+                            CFrame.Position,
+                            "detailed"
+                        )
+                    elseif #Remotes == 0 then
+                        Raven.Notif:Error("Stopped. Couldn't find a build remote.")
+                        BuildSphere = false
 
-                    return
+                        return
+                    else
+                        Raven.Notif:Error("Couldn't find HumanoidRootPart.")
+                        BuildSphere = false
+
+                        return
+                    end
                 end
             end
         end
@@ -1200,7 +1240,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         local Names = {}
         for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-1).."." end end
 
-        RBXSystem:SendAsync("enlighten "..table.concat(Names, " "))
+        Raven.Player:Say("enlighten "..table.concat(Names, " "), true)
 
         task.wait(.1)
 
@@ -1214,7 +1254,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                     for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-1).."." end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
-                        RBXSystem:SendAsync("clearinv "..table.concat(Names, " "))
+                        Raven.Player:Say("clearinv "..table.concat(Names, " "), true)
                     else
                         table.remove(HasEnlighten, HasEnlightenIndex)
                     end
