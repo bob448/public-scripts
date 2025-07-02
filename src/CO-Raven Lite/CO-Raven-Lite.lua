@@ -1257,6 +1257,7 @@ Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions 
                         PreviewBrick.Anchored = true
                         PreviewBrick.Transparency = .5
                         PreviewBrick.Material = Enum.Material.SmoothPlastic
+                        PreviewBrick.Position = Position
 
                         local Highlight = Instance.new("Highlight", PreviewBrick)
                         Highlight.Adornee = PreviewBrick
