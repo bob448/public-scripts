@@ -884,11 +884,12 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                         for i, Brick in pairs(Queue) do
                             if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 then
                                 if not DeleteAuraHighlights[Brick] then
-                                    local DeleteHighlight = Instance.new("Highlight", Brick)
+                                    local DeleteHighlight = Instance.new("Highlight")
                                     DeleteHighlight.Adornee = Brick
                                     DeleteHighlight.FillColor = Color3.new(1, 0.301960, 0.301960)
                                     DeleteHighlight.FillTransparency = .5
                                     DeleteHighlight.OutlineTransparency = 1
+                                    DeleteHighlight.Parent = Brick
 
                                     DeleteAuraHighlights[Brick] = DeleteHighlight
                                 end
@@ -983,11 +984,12 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                         for i, Brick in pairs(Queue) do
                             if Brick and LocalPlayer:DistanceFromCharacter(Brick.Position) <= 23 and Brick.Anchored then
                                 if not UnanchorAuraHighlights[Brick] then
-                                    local UnanchorHighlight = Instance.new("Highlight", Brick)
+                                    local UnanchorHighlight = Instance.new("Highlight")
                                     UnanchorHighlight.Adornee = Brick
                                     UnanchorHighlight.FillColor = Color3.new(1, 0.772549, 0.376470)
                                     UnanchorHighlight.FillTransparency = .5
                                     UnanchorHighlight.OutlineTransparency = 1
+                                    UnanchorHighlight.Parent = Brick
 
                                     UnanchorAuraHighlights[Brick] = UnanchorHighlight
                                 end
