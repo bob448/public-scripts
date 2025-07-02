@@ -1255,20 +1255,18 @@ Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions 
                     for i, Position in pairs(Queue) do
                         local PreviewBrick = Instance.new("Part", workspace)
                         PreviewBrick.Anchored = true
-                        PreviewBrick.Transparency = .5
-                        PreviewBrick.Material = Enum.Material.SmoothPlastic
+                        PreviewBrick.Transparency = .9
+                        PreviewBrick.Material = workspace.Terrain.Material
                         PreviewBrick.Position = Position
-
-                        local Highlight = Instance.new("Highlight", PreviewBrick)
-                        Highlight.Adornee = PreviewBrick
-                        Highlight.FillTransparency = .5
-                        Highlight.OutlineTransparency = 1
+                        PreviewBrick.CanCollide = false
+                        PreviewBrick.CanTouch = false
+                        PreviewBrick.CanQuery = false
 
                         BuildAuraPreviews[#BuildAuraPreviews+1] = PreviewBrick
 
                         if RemoteTable[1] == "Build" then
                             local Roll = math.random(0,2) == 0 and "detailed" or "normal"
-                            Highlight.FillColor = Color3.new(0.309803, 0.788235, 0.325490)
+                            PreviewBrick.Color = Color3.new(0.309803, 0.788235, 0.325490)
 
                             Remote:FireServer(
                                 workspace.Terrain,
@@ -1283,7 +1281,7 @@ Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions 
                                 PreviewBrick.Size = Vector3.new(4,4,4)
                             end
                         else
-                            Highlight.FillColor = Color3.new(0.788235, 0.564705, 0.309803)
+                            PreviewBrick.Color = Color3.new(0.788235, 0.564705, 0.309803)
 
                             PreviewBrick.Size = Vector3.new(4,4,4)
 
