@@ -1245,8 +1245,8 @@ Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions 
                     local RemoteTable = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
                     local Remote = RemoteTable[2]
 
-                    for _=1, 15 do
-                        if #Queue > 15 then
+                    for _=1, 10 do
+                        if #Queue > 10 then
                             break
                         end
                         Queue[#Queue+1] = Root.Position + Vector3.new(math.random(-23,23),math.random(-23,23),math.random(-23,23))
