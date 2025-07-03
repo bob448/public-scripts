@@ -2293,7 +2293,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
                         end
                     end)
 
-                    Raven.Notif:Success("Started loading blocks. Remember to get close enough to the yellow parts so it can be built/painted.")
+                    Raven.Notif:Success("Started loading blocks.")
                 else
                     Raven.Notif:Error("No parts found in file.") 
                 end
