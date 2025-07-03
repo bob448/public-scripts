@@ -8,6 +8,7 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
+local HttpService = game:GetService("HttpService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -511,11 +512,11 @@ Activated["Build"] = function(tool: Tool)
 
     if Remote and Mouse.Target and tool.Preview.Adornee then
         Remote:FireServer(
-                Mouse.Target,
-                Mouse.TargetSurface,
-                Mouse.Hit.Position,
-                Button.Text
-            )
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position,
+            Button.Text
+        )
     elseif not Remote then
         Raven.Notif:Error("No build remote found.")
     end
@@ -1745,16 +1746,18 @@ end
 
 local SaveBlocksSerializeFunctions = {
     ["CFrame"] = function(prop: CFrame)
-        return "X:"..prop.X.."Y:"..prop.Y.."Z"..prop.Z
+        return {
+            X = prop.X,
+            Y = prop.Y,
+            Z = prop.Z
+        }
     end,
     ["Vector3"] = function(prop: Vector3)
-        return "X:"..prop.X.."Y:"..prop.Y.."Z"..prop.Z
-    end,
-    ["EnumItem"] = function(prop: EnumItem)
-        return "M:"..prop.Value
-    end,
-    ["boolean"] = function(prop: boolean)
-        return "B:"..(prop == true and "true" or "false")
+        return {
+            X = prop.X,
+            Y = prop.Y,
+            Z = prop.Z
+        }
     end
 }
 
@@ -1762,9 +1765,22 @@ local function SaveBlocksSerializeProperty(prop)
     return SaveBlocksSerializeFunctions[typeof(prop)](prop)
 end
 
+local function GetLowerLeftCorner(part: Part)
+    local LeftLowerFrontCorner = -part.Size/2
+    return LeftLowerFrontCorner + Vector3.new(.5, .5, .5)
+end
+
+local function BrickIsNormalSize(brick: Part)
+    return brick.Size.X == 4 and brick.Size.Y == 4 and brick.Size.Z == 4
+end
+
+local function BrickIsDetailedSize(brick: Part)
+    return brick.Size.X == 1 and brick.Size.Y == 1 and brick.Size.Z == 1
+end
+
 Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}, {"file name"}, function(arguments)
     if not SaveBlocks.Selecting then
-        if writefile then
+        if writefile and makefolder and isfolder then
             local FileName: string? = arguments[1]
 
             if FileName then
@@ -1849,7 +1865,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                     if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         local Mouse = LocalPlayer:GetMouse()
 
-                        if Mouse.Target and IsBrick(Mouse.Target) then
+                        if Mouse.Target and IsBrick(Mouse.Target) and Mouse.Target.Anchored then
                             if not Pos1 then
                                 Pos1Brick = Instance.new("Part", workspace)
                                 Pos1Brick.Anchored = true
@@ -1928,10 +1944,14 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                     Raven.Notif:Success("Saving blocks to \""..FileName.."\"..")
 
                     local Parts = workspace:GetPartBoundsInBox(SelectionCFrame, SelectionSize)
-                    local ContentsLines = {}
+
+                    local JsonTable = {}
 
                     for i,v: Part in pairs(Parts) do
-                        local Line = ""
+                        if not IsBrick(v) then
+                            continue
+                        end
+
                         local Sign = IsSign(v)
                         local Text = ""
 
@@ -1946,16 +1966,43 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                             end
                         end
 
-                        Line = Line.."CFRAME:"..SaveBlocksSerializeProperty(v.CFrame)
-                        ..";SIZE:"..SaveBlocksSerializeProperty(v.Size)
-                        ..";MAT:"..SaveBlocksSerializeProperty(v.Material)
-                        ..";SIGN:"..SaveBlocksSerializeProperty(IsSign(v))
-                        ..";TEXT:"..Text
+                        if not BrickIsNormalSize(v) and not BrickIsDetailedSize(v) then
+                            local LowerLeftCorner = GetLowerLeftCorner(v)
 
-                        ContentsLines[#ContentsLines+1] = Line
+                            for x=0, v.Size.X - 1, 1 do
+                                for y=0, v.Size.Y - 1, 1 do
+                                    for z=0, v.Size.Z - 1, 1 do
+                                        local Offset = Vector3.new(x,y,z)
+                                        local NewCFrame = v.CFrame * CFrame.new(LowerLeftCorner + Offset)
+
+                                        JsonTable[#JsonTable+1] = {
+                                            CFrame = SaveBlocksSerializeProperty(NewCFrame),
+                                            Size = SaveBlocksSerializeProperty(Vector3.new(1,1,1)),
+                                            Material = v.Material.Value,
+                                            Color = v.Color:ToHex(),
+                                            Sign = Sign,
+                                            Text = Text
+                                        }
+                                    end
+                                end
+                            end
+                        else
+                            JsonTable[#JsonTable+1] = {
+                                CFrame = SaveBlocksSerializeProperty(v.CFrame),
+                                Size = SaveBlocksSerializeProperty(v.Size),
+                                Material = v.Material.Value,
+                                Color = v.Color:ToHex(),
+                                Sign = Sign,
+                                Text = Text
+                            }
+                        end
                     end
 
-                    writefile(FileName, table.concat(ContentsLines, "\n"))
+                    if not isfolder("CORAVEN_SAVED_BLOCKS") then
+                        makefolder("CORAVEN_SAVED_BLOCKS")
+                    end
+
+                    writefile("CORAVEN_SAVED_BLOCKS/"..FileName, HttpService:JSONEncode(JsonTable))
 
                     Raven.Notif:Success("Saved selected bricks to file \""..FileName.."\"\n in workspace folder.")
                 end
@@ -1963,9 +2010,243 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                 Raven.Notif:Error("No filename supplied.")
             end
         else
-            Raven.Notif:Error("Your executor does not support writefile.")
+            Raven.Notif:Error("Your executor does not support writefile/isfolder/makefolder.")
         end
     else
         Raven.Notif:Error("You are already selecting blocks to save.")
+    end
+end)
+
+local LoadBlocks = {}
+LoadBlocks.Previews = {}
+LoadBlocks.BuildQueue = {}
+LoadBlocks.PaintQueue = {}
+LoadBlocks.BuiltParts = {}
+LoadBlocks.Loading = false
+LoadBlocks.Task = nil
+
+local _MatToChosenOneMat = {
+    [Enum.Material.Neon.Value] = "neon",
+    [Enum.Material.Metal.Value] = "metal",
+    [Enum.Material.Asphalt.Value] = "asphalt",
+    [Enum.Material.Concrete.Value] = "concrete",
+    [Enum.Material.Pavement.Value] = "pavement",
+    [Enum.Material.DiamondPlate.Value] = "steel",
+    [Enum.Material.Granite.Value] = "granite",
+    [Enum.Material.Marble.Value] = "marble",
+    [Enum.Material.Pebble.Value] = "pebble",
+    [Enum.Material.Slate.Value] = "stone",
+    [Enum.Material.Wood.Value] = "wood",
+    [Enum.Material.Glass.Value] = "glass",
+    [Enum.Material.Snow.Value] = "snow",
+    [Enum.Material.Grass.Value] = "grass",
+    [Enum.Material.WoodPlanks.Value] = "planks",
+    [Enum.Material.Ice.Value] = "ice",
+    [Enum.Material.Brick.Value] = "bricks",
+    [Enum.Material.CeramicTiles.Value] = "tiles",
+    [Enum.Material.Plastic.Value] = "plastic",
+    [Enum.Material.SmoothPlastic.Value] = "smooth"
+}
+
+local function MatToChosenOneMat(material: Enum.Material)
+    return _MatToChosenOneMat[material]
+end
+
+Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the specified center position.", {}, {"file","center x","center y","center z"}, function(arguments)
+    if readfile and isfile and isfolder then
+        local FileName = arguments[1]
+        local X,Y,Z = arguments[2] and tonumber(arguments[2]),arguments[3] and tonumber(arguments[3]),arguments[4] and tonumber(arguments[4])
+
+        if FileName and X and Y and Z then
+            if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
+                local Contents: string = readfile("CORAVEN_SAVED_BLOCKS/"..FileName)
+
+                local Json = HttpService:JSONDecode(Contents)
+
+                if #Json > 0 then
+                    for _, Part in pairs(Json) do
+                        local Preview = Instance.new("Part", workspace)
+                        local SelectionBox = Instance.new("SelectionBox", Preview)
+
+                        SelectionBox.Adornee = Preview
+                        SelectionBox.Transparency = 1
+                        SelectionBox.SurfaceTransparency = .5
+                        SelectionBox.SurfaceColor3 = Color3.fromRGB(150, 150, 150)
+
+                        LoadBlocks.Previews[#LoadBlocks.Previews+1] = Preview
+                        Preview.Anchored = true
+                        Preview.CanCollide = false
+                        Preview.CanQuery = false
+                        Preview.CanTouch = false
+
+                        Preview.CFrame = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z)
+                        Preview.Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z)
+                        Preview.Transparency = 1
+
+                        local UnserializedPart = {
+                            CFrame = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z),
+                            Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z),
+                            Material = Part.Material,
+                            Color = Part.Color,
+                            Sign = Part.Sign,
+                            Text = Part.Text
+                        }
+
+                        LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {SelectionBox, UnserializedPart}
+                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {nil, UnserializedPart}
+                    end
+
+                    LoadBlocks.Loading = true
+
+                    LoadBlocks.Task = task.spawn(function()
+                        local Building = true
+                        
+                        while LoadBlocks.Loading do
+                            task.wait()
+
+                            if #LoadBlocks.BuildQueue == 0 and not Building and #LoadBlocks.BuiltParts == 0 then
+                                if LoadBlocks.Loading then
+                                    Raven.Commands["unloadblocks"].Function()
+                                end
+                                break
+                            elseif #LoadBlocks.BuildQueue == 0 then
+                                Building = false
+                            end
+
+                            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                            if Root then
+                                local Remotes = {}
+                                Remotes.Build = {}
+                                Remotes.Paint = {}
+
+                                for i,v in ipairs(Players:GetPlayers()) do
+                                    if v.Character then
+                                        for _, Tool: Tool in pairs(LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())) do
+                                            if Tool:IsA("Tool") then
+                                                if Tool.Name == "Paint" or Tool.Name == "Build" then
+                                                    local Remote = GetRemoteFromTool(Tool)
+
+                                                    if Remote then
+                                                        table.insert(Remotes[Tool.Name], Remote)
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+
+                                if Building and #Remotes.Build > 0 or #Remotes.Paint > 0 then
+                                    local Table = Building and LoadBlocks.BuildQueue[1] or LoadBlocks.PaintQueue[1]
+
+                                    local SelectionBox = Table[1]
+                                    local Part = Table[2]
+
+                                    if LocalPlayer:DistanceFromCharacter(Part.CFrame.Position) <= 23 then
+                                        if Building then
+                                            SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
+                                        end
+
+                                        local Remote = Building and Remotes.Build[#Remotes.Build > 1 and math.random(1, #Remotes.Build) or 1]
+                                        or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
+
+                                        if Building then
+                                            Remote:FireServer(
+                                                workspace.Terrain,
+                                                Enum.NormalId.Top,
+                                                Part.CFrame.Position,
+                                                BrickIsNormalSize(Part) and "normal" or BrickIsDetailedSize(Part) and "detailed" or "detailed"
+                                            )
+
+                                            task.wait()
+
+                                            local Parts = workspace:GetPartBoundsInBox(Part.CFrame, Part.Size - Vector3.new(.1,.1,.1))
+
+                                            if #Parts > 0 then
+                                                local InCharacter = false
+                                                for i,v in pairs(Parts) do
+                                                    if v:IsDescendantOf(LocalPlayer.Character) then
+                                                        InCharacter = true
+                                                        break
+                                                    end
+                                                end
+
+                                                if InCharacter then
+                                                    continue
+                                                end
+
+                                                table.remove(LoadBlocks.BuildQueue, 1)
+
+                                                SelectionBox:Destroy()
+                                                table.remove(LoadBlocks.Previews, 1)
+
+                                                table.move(Parts, 1, #Parts, 1, LoadBlocks.BuiltParts)
+                                            end
+                                        else
+                                            Remote:FireServer(
+                                                LoadBlocks.BuiltParts[1],
+                                                Enum.NormalId.Top,
+                                                LoadBlocks.BuiltParts[1].Position,
+                                                "both \240\159\164\157",
+                                                Color3.fromHex(Part.Color),
+                                                MatToChosenOneMat(Part.Material),
+                                                ""
+                                            )
+
+                                            task.wait()
+
+                                            if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color:ToHex() == Part.Color then
+                                                table.remove(LoadBlocks.BuiltParts, 1)
+                                            end
+                                        end
+                                    elseif Building then
+                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(255,210,0)
+                                    end
+                                end
+                            end
+                        end
+                    end)
+
+                    Raven.Notif:Success("Started loading blocks. Remember to get close enough to the yellow parts so it can be built/painted.")
+                else
+                    Raven.Notif:Error("No parts found in file.") 
+                end
+            elseif not isfolder("CORAVEN_SAVED_BLOCKS") then
+                Raven.Notif:Error("You have not saved blocks yet.")
+            else
+                Raven.Notif:Error("That is not a file.")
+            end
+        elseif not FileName then
+            Raven.Notif:Error("No filename supplied.")
+        elseif not X or not Y or not Z then
+            Raven.Notif:Error("No center axes supplied (or they were not numbers).")
+        else
+            Raven.Notif:Error("You are already loading blocks.")
+        end
+    else
+        Raven.Notif:Error("Your executor does not support readfile/isfile/isfolder.")
+    end
+end)
+
+Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments)
+    if LoadBlocks.Loading then
+        LoadBlocks.Loading = false
+
+        task.wait()
+
+        for i,v in pairs(LoadBlocks.Previews) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(LoadBlocks.Previews)
+        table.clear(LoadBlocks.BuildQueue)
+        table.clear(LoadBlocks.PaintQueue)
+        table.clear(LoadBlocks.BuiltParts)
+
+        Raven.Notif:Success("Stopped loading blocks.")
+    else
+        Raven.Notif:Error("You are not loading blocks.") 
     end
 end)

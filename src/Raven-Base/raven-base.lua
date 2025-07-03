@@ -1793,7 +1793,7 @@ AddCMD("rejoin", "Rejoins the game.", {}, {}, function(arguments)
     local Succ
     local Err
 
-    if #Players:GetPlayers() > 1 and game.PrivateServerOwnerId == 0 then
+    if #Players:GetPlayers() > 1 then
         Succ, Err = pcall(function() TeleportService:TeleportToPlaceInstance(PlaceId, JobId) end)
     else
         Succ, Err = pcall(function() TeleportService:Teleport(game.PlaceId) end)
@@ -1816,6 +1816,29 @@ AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, {},
             "game.TeleportService:TeleportToPlaceInstance("..PlaceId..",\""..JobId.."\")"
         )
         Success("Copied rejoin code to clipboard!")
+    end
+end)
+
+AddCMD("copypos", "Copies the position of a player's root to your clipboard.", {"getpos"}, {"player"}, function(arguments)
+    if setclipboard then
+        local Targets = FindPlayers(arguments[1])
+
+        if #Targets >= 1 then
+            local Target = Targets[1]
+            local Root: BasePart? = Target.Character and Target.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                setclipboard(Root.Position.X.." "..Root.Position.Y.." "..Root.Position.Z)
+
+                Success("Copied position to clipboard.")
+            else
+                Error("Couldn't find player's character/root.")
+            end
+        else
+            Error("Couldn't find player.")
+        end
+    else
+        Error("Your executor does not support setclipboard.")
     end
 end)
 
