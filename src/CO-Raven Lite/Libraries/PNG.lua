@@ -71,8 +71,8 @@ unfilter.Parent = modules
 
 --// Modules
 
-local modules = {
-	[png] = function(script: Instance)
+local Scripts = {
+	[png] = function()
 		---------------------------------------------------------------------------------------------
 		-- @ CloneTrooper1019, 2019
 		---------------------------------------------------------------------------------------------
@@ -86,8 +86,8 @@ local modules = {
 		local PNG = {}
 		PNG.__index = PNG
 		
-		local chunks = script.Chunks
-		local modules = script.Modules
+		local chunks = chunks
+		local modules = modules
 		
 		local Deflate = require(modules.Deflate)
 		local Unfilter = require(modules.Unfilter)
@@ -1207,4 +1207,4 @@ local modules = {
 	end
 }
 
-return modules.png(png)
+return Scripts["png"]()

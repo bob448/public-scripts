@@ -2344,7 +2344,7 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
     local ImageFileName = arguments[1]
     local SaveFileName = arguments[2]
 
-    local PNGLIB = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/CO-Raven%20Lite/Libraries/PNG.lua"))()
+    local PNGLIB = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/dev/src/CO-Raven%20Lite/Libraries/PNG.lua"))()
 
     if ImageFileName and SaveFileName then
         if isfile and readfile and writefile and isfolder and makefolder then
@@ -2385,6 +2385,12 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                             }
                         end
                     end
+
+                    if not isfolder("CORAVEN_SAVED_BLOCKS") then
+                        makefolder("CORAVEN_SAVED_BLOCKS")
+                    end
+
+                    writefile("CORAVEN_SAVED_BLOCKS/"..SaveFileName, HttpService:JSONEncode(JsonTable))
                 elseif not isfile(ImageFileName) then
                     Raven.Notif:Error("The passed image file name is not a file.")
                 end
