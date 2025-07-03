@@ -2319,6 +2319,11 @@ Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments
         table.clear(LoadBlocks.PaintQueue)
         table.clear(LoadBlocks.BuiltParts)
 
+        if workspace.CurrentCamera and LocalPlayer.Character then
+            local Humanoid = LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if Humanoid then workspace.CurrentCamera.CameraSubject = Humanoid end
+        end
+
         Raven.Notif:Success("Stopped loading blocks.")
     else
         Raven.Notif:Error("You are not loading blocks.") 
