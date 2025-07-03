@@ -2092,8 +2092,13 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
     if readfile and isfile and isfolder then
         local FileName = arguments[1]
         local XOffset = arguments[2] and tonumber(arguments[2]) or 0
-        local YOffset = arguments[3] and tonumber(arguments[3]) or 0 
+        local YOffset = arguments[3] and tonumber(arguments[3]) or 0
         local ZOffset = arguments[4] and tonumber(arguments[4]) or 0
+
+        if XOffset % 4 ~= 0 or YOffset % 4 ~= 0 or ZOffset % 4 ~= 0 then
+            Raven.Notif:Error("Error: Offsets must be multiples of four. (offsets should be like 4,8,12, etc.)")
+            return
+        end
 
         if FileName then
             if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
