@@ -2136,8 +2136,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                             Toxic = Part.Toxic
                         }
 
-                        LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {SelectionBox, UnserializedPart}
-                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {PaintPreviewBox, UnserializedPart}
+                        LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {Preview, SelectionBox, UnserializedPart}
+                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {nil, PaintPreviewBox, UnserializedPart}
                     end
 
                     LoadBlocks.Loading = true
@@ -2195,7 +2195,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
 
                                     local SelectionBox = Table[1]
                                     local Part = Table[2]
-                                    local Preview = Table[3]
+                                    local Preview = Table[1]
 
                                     SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
 
@@ -2256,7 +2256,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
 
                                         Root.CFrame = Part.CFrame * CFrame.new(0, 10, 0)
 
-                                        Camera.CameraSubject = Preview
+                                        Camera.CameraSubject = LoadBlocks.BuiltParts[1]
 
                                         Remote:FireServer(
                                             LoadBlocks.BuiltParts[1],
