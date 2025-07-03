@@ -1,78 +1,10 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- CloneTrooper1019 - MaximumADHD
-
-local png = Instance.new("ModuleScript")
-png.Name = "PNG"
-png.Parent = ReplicatedStorage
-
-local chunks = Instance.new("Folder")
-chunks.Name = "Chunks"
-chunks.Parent = png
-
-local iend = Instance.new("ModuleScript")
-iend.Name = "IEND"
-iend.Parent = chunks
-
-local bkgd = Instance.new("ModuleScript")
-bkgd.Name = "bKGD"
-bkgd.Parent = chunks
-
-local srgb = Instance.new("ModuleScript")
-srgb.Name = "sRGB"
-srgb.Parent = chunks
-
-local trns = Instance.new("ModuleScript")
-trns.Name = "tRNS"
-trns.Parent = chunks
-
-local ihdr = Instance.new("ModuleScript")
-ihdr.Name = "IHDR"
-ihdr.Parent = chunks
-
-local plte = Instance.new("ModuleScript")
-plte.Name = "PLTE"
-plte.Parent = chunks
-
-local time = Instance.new("ModuleScript")
-time.Name = "tIME"
-time.Parent = chunks
-
-local idat = Instance.new("ModuleScript")
-idat.Name = "IDAT"
-idat.Parent = chunks
-
-local gama = Instance.new("ModuleScript")
-gama.Name = "gAMA"
-gama.Parent = chunks
-
-local chrm = Instance.new("ModuleScript")
-chrm.Name = "cHRM"
-chrm.Parent = chunks
-
-local text = Instance.new("ModuleScript")
-text.Name = "tEXt"
-text.Parent = chunks
-
-local modules = Instance.new("Folder")
-modules.Name = "Modules"
-modules.Parent = png
-
-local binary_reader = Instance.new("ModuleScript")
-binary_reader.Name = "BinaryReader"
-binary_reader.Parent = modules
-
-local deflate = Instance.new("ModuleScript")
-deflate.Name = "Deflate"
-deflate.Parent = modules
-
-local unfilter = Instance.new("ModuleScript")
-unfilter.Name = "Unfilter"
-unfilter.Parent = modules
-
 --// Modules
 
-local Scripts = {
-	[png] = function()
+local Scripts
+
+Scripts = {
+	["png"] = function()
 		---------------------------------------------------------------------------------------------
 		-- @ CloneTrooper1019, 2019
 		---------------------------------------------------------------------------------------------
@@ -86,12 +18,11 @@ local Scripts = {
 		local PNG = {}
 		PNG.__index = PNG
 		
-		local chunks = chunks
-		local modules = modules
+		local modules = Scripts
 		
-		local Deflate = require(modules.Deflate)
-		local Unfilter = require(modules.Unfilter)
-		local BinaryReader = require(modules.BinaryReader)
+		local Deflate = modules.deflate()
+		local Unfilter = modules.unfilter()
+		local BinaryReader = modules.binary_reader()
 		
 		local function getBytesPerPixel(colorType)
 			if colorType == 0 or colorType == 3 then
@@ -220,10 +151,10 @@ local Scripts = {
 					CRC = crc;
 				}
 				
-				local handler = chunks:FindFirstChild(chunkType)
+				local handler = modules[chunkType:lower()]
 				
 				if handler then
-					handler = require(handler)
+					handler = handler()
 					handler(file, chunk)
 				end
 				
@@ -304,14 +235,14 @@ local Scripts = {
 		
 		return PNG
 	end,
-    [iend] = function()
+    ["iend"] = function()
 		local function IEND(file)
 			file.Reading = nil
 		end
 		
 		return IEND
 	end,
-    [bkgd] = function()
+    ["bkgd"] = function()
 		local function bKGD(file, chunk)
 			local data = chunk.Data
 			
@@ -336,7 +267,7 @@ local Scripts = {
 		
 		return bKGD
 	end,
-    [srgb] = function()
+    ["srgb"] = function()
 		local function sRGB(file, chunk)
 			local data = chunk.Data
 			file.RenderIntent = data:ReadByte()
@@ -344,7 +275,7 @@ local Scripts = {
 		
 		return sRGB
 	end,
-    [trns] = function()
+    ["trns"] = function()
 		local function tRNS(file, chunk)
 			local data = chunk.Data
 			
@@ -384,7 +315,7 @@ local Scripts = {
 		
 		return tRNS
 	end,
-    [ihdr] = function()
+    ["ihdr"] = function()
 		local function IHDR(file, chunk)
 			local data = chunk.Data
 			
@@ -404,7 +335,7 @@ local Scripts = {
 		
 		return IHDR
 	end,
-    [plte] = function()
+    ["plte"] = function()
 		local function PLTE(file, chunk)
 			if not file.Palette then
 				file.Palette = {}
@@ -451,7 +382,7 @@ local Scripts = {
 		
 		return tIME
 	end,
-    [idat] = function()
+    ["idat"] = function()
 		local function IDAT(file, chunk)
 			local crc = chunk.CRC
 			local hash = file.Hash or 0
@@ -465,7 +396,7 @@ local Scripts = {
 		
 		return IDAT
 	end,
-    [gama] = function()
+    ["gama"] = function()
 		local function gAMA(file, chunk)
 			local data = chunk.Data
 			local value = data:ReadUInt32()
@@ -474,7 +405,7 @@ local Scripts = {
 		
 		return gAMA
 	end,
-    [chrm] = function()
+    ["chrm"] = function()
 		local colors = {"White", "Red", "Green", "Blue"}
 		
 		local function cHRM(file, chunk)
@@ -496,7 +427,7 @@ local Scripts = {
 		
 		return cHRM
 	end,
-    [text] = function()
+    ["text"] = function()
 		local function tEXt(file, chunk)
 			local data = chunk.Data
 			local key, value = "", ""
@@ -517,7 +448,7 @@ local Scripts = {
 		
 		return tEXt
 	end,
-    [binary_reader] = function()
+    ["binary_reader"] = function()
 		local BinaryReader = {}
 		BinaryReader.__index = BinaryReader
 		
@@ -619,7 +550,7 @@ local Scripts = {
 		
 		return BinaryReader
 	end,
-    [deflate] = function()
+    ["deflate"] = function()
 		--[[
 		
 		LUA MODULE
@@ -1097,7 +1028,7 @@ local Scripts = {
 		
 		return Deflate
 	end,
-    [unfilter] = function()
+    ["unfilter"] = function()
 		local Unfilter = {}
 		
 		function Unfilter:None(scanline, pixels, bpp, row)
