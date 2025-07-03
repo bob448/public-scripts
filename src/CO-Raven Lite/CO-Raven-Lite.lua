@@ -2366,8 +2366,8 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
 
                     Raven.Notif:Success("Saving image to \""..SaveFileName.."\"..")
 
-                    for y = 0, Height do
-                        for x = 0, Width do
+                    for y = Height, 0, -1 do
+                        for x = Width, 0, -1 do
                             local Color, Alpha = Image:GetPixel(x, y)
 
                             if Alpha < 50 then
@@ -2375,7 +2375,7 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                             end
 
                             local Size = Vector3.new(4,4,4)
-                            local PixelPos = Vector3.new(x * Size.X - 2, y * Size.Y - 2, 2)
+                            local PixelPos = Vector3.new((Width - x) * Size.X - 2, (Height - y) * Size.Y - 2, 2)
 
                             local CF = CFrame.new(
                                 PixelPos
@@ -2384,7 +2384,7 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                             JsonTable[#JsonTable+1] = {
                                 CFrame = SaveBlocksSerializeProperty(CF),
                                 Size = SaveBlocksSerializeProperty(Size),
-                                Material = Enum.Material.SmoothPlastic,
+                                Material = Enum.Material.SmoothPlastic.Value,
                                 Color = SaveBlocksSerializeProperty(Color),
                                 Sign = false,
                                 Text = "",
