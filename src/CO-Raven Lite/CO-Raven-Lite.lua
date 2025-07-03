@@ -817,9 +817,13 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
     if not PermAdminCon then
         PermAdminCon = RunService.RenderStepped:Connect(function()
             local Character = LocalPlayer.Character
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 
-            if Character and LocalPlayer.Team ~= Teams.Chosen then
-                if Character:FindFirstChild("The Arkenstone") or LocalPlayer.Backpack:FindFirstChild("The Arkenstone") then
+            if Character and LocalPlayer.Team ~= Teams.Chosen and Humanoid then
+                local Arkenstone = Character:FindFirstChild("The Arkenstone") or LocalPlayer.Backpack:FindFirstChild("The Arkenstone")
+                if Arkenstone then
+                    Humanoid:EquipTool(Arkenstone)
+
                     Raven.Player:Say("reset me", true)
                 end
             end
