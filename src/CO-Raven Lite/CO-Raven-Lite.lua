@@ -2203,7 +2203,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                     or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
 
                                     if Building then
-                                        Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+                                        Root.CFrame = Part.CFrame * CFrame.new(0, 10, 0)
 
                                         Camera.CameraSubject = Preview
 
@@ -2254,7 +2254,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                             continue
                                         end
 
-                                        Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+                                        Root.CFrame = Part.CFrame * CFrame.new(0, 10, 0)
 
                                         Camera.CameraSubject = Preview
 
