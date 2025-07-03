@@ -1758,6 +1758,13 @@ local SaveBlocksSerializeFunctions = {
             Y = prop.Y,
             Z = prop.Z
         }
+    end,
+    ["Color3"] = function(prop: Color3)
+        return {
+            R = prop.R,
+            G = prop.G,
+            B = prop.B
+        }
     end
 }
 
@@ -1979,7 +1986,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                             CFrame = SaveBlocksSerializeProperty(NewCFrame),
                                             Size = SaveBlocksSerializeProperty(Vector3.new(1,1,1)),
                                             Material = v.Material.Value,
-                                            Color = v.Color:ToHex(),
+                                            Color = SaveBlocksSerializeProperty(v.Color),
                                             Sign = Sign,
                                             Text = Text
                                         }
@@ -1991,7 +1998,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 CFrame = SaveBlocksSerializeProperty(v.CFrame),
                                 Size = SaveBlocksSerializeProperty(v.Size),
                                 Material = v.Material.Value,
-                                Color = v.Color:ToHex(),
+                                Color = SaveBlocksSerializeProperty(v.Color),
                                 Sign = Sign,
                                 Text = Text
                             }
@@ -2087,7 +2094,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                             CFrame = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z),
                             Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z),
                             Material = Part.Material,
-                            Color = Part.Color,
+                            Color = Color3.new(Part.Color.R, Part.Color.G, Part.Color.B),
                             Sign = Part.Sign,
                             Text = Part.Text
                         }
@@ -2180,7 +2187,12 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                                 SelectionBox:Destroy()
                                                 table.remove(LoadBlocks.Previews, 1)
 
-                                                table.move(Parts, 1, #Parts, 1, LoadBlocks.BuiltParts)
+                                                for i,v in pairs(Parts) do
+                                                    if (Part.CFrame.Position - v.Position).Magnitude <= .5 then
+                                                        LoadBlocks.BuiltParts[#LoadBlocks.BuiltParts+1] = v
+                                                        break
+                                                    end
+                                                end
                                             end
                                         else
                                             Remote:FireServer(
@@ -2188,15 +2200,16 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                                 Enum.NormalId.Top,
                                                 LoadBlocks.BuiltParts[1].Position,
                                                 "both \240\159\164\157",
-                                                Color3.fromHex(Part.Color),
+                                                Part.Color,
                                                 MatToChosenOneMat(Part.Material),
                                                 ""
                                             )
 
                                             task.wait()
 
-                                            if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color:ToHex() == Part.Color then
+                                            if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color == Part.Color then
                                                 table.remove(LoadBlocks.BuiltParts, 1)
+                                                table.remove(LoadBlocks.PaintQueue, 1)
                                             end
                                         end
                                     elseif Building then
