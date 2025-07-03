@@ -2194,86 +2194,82 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                     local SelectionBox = Table[1]
                                     local Part = Table[2]
 
-                                    if LocalPlayer:DistanceFromCharacter(Part.CFrame.Position) <= 23 then
-                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
+                                    SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
 
-                                        local Remote = Building and Remotes.Build[#Remotes.Build > 1 and math.random(1, #Remotes.Build) or 1]
-                                        or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
+                                    local Remote = Building and Remotes.Build[#Remotes.Build > 1 and math.random(1, #Remotes.Build) or 1]
+                                    or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
 
-                                        if Building then
-                                            Root.CFrame = Part.CFrame
+                                    if Building then
+                                        Root.CFrame = Part.CFrame
 
-                                            Remote:FireServer(
-                                                workspace.Terrain,
-                                                Enum.NormalId.Top,
-                                                Part.CFrame.Position,
-                                                BrickIsNormalSize(Part) and "normal" or BrickIsDetailedSize(Part) and "detailed" or "detailed"
-                                            )
+                                        Remote:FireServer(
+                                            workspace.Terrain,
+                                            Enum.NormalId.Top,
+                                            Part.CFrame.Position,
+                                            BrickIsNormalSize(Part) and "normal" or BrickIsDetailedSize(Part) and "detailed" or "detailed"
+                                        )
 
-                                            task.wait()
+                                        task.wait()
 
-                                            local Parts = workspace:GetPartBoundsInBox(Part.CFrame, Part.Size - Vector3.new(.1,.1,.1))
+                                        local Parts = workspace:GetPartBoundsInBox(Part.CFrame, Part.Size - Vector3.new(.1,.1,.1))
 
-                                            if #Parts > 0 then
-                                                local InCharacter = false
-                                                for i,v in pairs(Parts) do
-                                                    if v:IsDescendantOf(LocalPlayer.Character) then
-                                                        InCharacter = true
-                                                        break
-                                                    end
-                                                end
-
-                                                if InCharacter then
-                                                    continue
-                                                end
-
-                                                table.remove(LoadBlocks.BuildQueue, 1)
-
-                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
-                                                SelectionBox:Destroy()
-
-                                                for i,v in pairs(Parts) do
-                                                    if (Part.CFrame.Position - v.Position).Magnitude <= .5 then
-                                                        LoadBlocks.BuiltParts[#LoadBlocks.BuiltParts+1] = v
-                                                        break
-                                                    end
+                                        if #Parts > 0 then
+                                            local InCharacter = false
+                                            for i,v in pairs(Parts) do
+                                                if v:IsDescendantOf(LocalPlayer.Character) then
+                                                    InCharacter = true
+                                                    break
                                                 end
                                             end
-                                        else
-                                            if not LoadBlocks.BuiltParts[1] or not LoadBlocks.BuiltParts[1].Parent then
-                                                table.remove(LoadBlocks.BuiltParts, 1)
-                                                table.remove(LoadBlocks.PaintQueue, 1)
 
-                                                SelectionBox:Destroy()
-                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
-
+                                            if InCharacter then
                                                 continue
                                             end
 
-                                            Root.CFrame = Part.CFrame
+                                            table.remove(LoadBlocks.BuildQueue, 1)
 
-                                            Remote:FireServer(
-                                                LoadBlocks.BuiltParts[1],
-                                                Enum.NormalId.Top,
-                                                LoadBlocks.BuiltParts[1].Position,
-                                                "both \240\159\164\157",
-                                                Part.Color,
-                                                Part.Toxic and "toxic" or MatToChosenOneMat(Part.Material),
-                                                ""
-                                            )
+                                            table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+                                            SelectionBox:Destroy()
 
-                                            task.wait()
-
-                                            if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color == Part.Color then
-                                                SelectionBox:Destroy()
-                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
-
-                                                table.remove(LoadBlocks.BuiltParts, 1)
-                                                table.remove(LoadBlocks.PaintQueue, 1)
+                                            for i,v in pairs(Parts) do
+                                                if (Part.CFrame.Position - v.Position).Magnitude <= .5 then
+                                                    LoadBlocks.BuiltParts[#LoadBlocks.BuiltParts+1] = v
+                                                    break
+                                                end
                                             end
                                         end
                                     else
-                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(255,210,0)
+                                        if not LoadBlocks.BuiltParts[1] or not LoadBlocks.BuiltParts[1].Parent then
+                                            table.remove(LoadBlocks.BuiltParts, 1)
+                                            table.remove(LoadBlocks.PaintQueue, 1)
+
+                                            SelectionBox:Destroy()
+                                            table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+
+                                            continue
+                                        end
+
+                                        Root.CFrame = Part.CFrame
+
+                                        Remote:FireServer(
+                                            LoadBlocks.BuiltParts[1],
+                                            Enum.NormalId.Top,
+                                            LoadBlocks.BuiltParts[1].Position,
+                                            "both \240\159\164\157",
+                                            Part.Color,
+                                            Part.Toxic and "toxic" or MatToChosenOneMat(Part.Material),
+                                            ""
+                                        )
+
+                                        task.wait()
+
+                                        if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color == Part.Color then
+                                            SelectionBox:Destroy()
+                                            table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+
+                                            table.remove(LoadBlocks.BuiltParts, 1)
+                                            table.remove(LoadBlocks.PaintQueue, 1)
+                                        end
                                     end
                                 end
                             end
