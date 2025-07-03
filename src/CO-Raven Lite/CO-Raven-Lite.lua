@@ -2070,7 +2070,7 @@ end
 -- to do:
 --[[
 add paint previews
-implement the center argument, find some way to move the blocks based on the center. (maybe get the difference between the center and the part by doing center - part.Position and then doing part.Position - difference)
+implement the center argument, find some way to move the blocks based on the center. (maybe get the difference between the center and the part by doing part.Position - center and then doing part.Position - difference)
 
 ]]
 
