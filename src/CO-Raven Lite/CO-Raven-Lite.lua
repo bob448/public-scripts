@@ -2087,11 +2087,6 @@ local function MatToChosenOneMat(material: Enum.Material)
     return _MatToChosenOneMat[material]
 end
 
--- to do:
---[[
-add paint previews
-]]
-
 Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(arguments)
     if readfile and isfile and isfolder then
         local FileName = arguments[1]
