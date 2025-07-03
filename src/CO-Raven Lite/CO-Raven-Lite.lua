@@ -2188,7 +2188,9 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                     end
                                 end
 
-                                if Building and #Remotes.Build > 0 or #Remotes.Paint > 0 then
+                                local Camera = workspace.CurrentCamera
+
+                                if Building and #Remotes.Build > 0 or #Remotes.Paint > 0 and Camera then
                                     local Table = Building and LoadBlocks.BuildQueue[1] or LoadBlocks.PaintQueue[1]
 
                                     local SelectionBox = Table[1]
@@ -2200,7 +2202,9 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                     or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
 
                                     if Building then
-                                        Root.CFrame = Part.CFrame
+                                        Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+
+                                        Camera.CameraSubject = Part
 
                                         Remote:FireServer(
                                             workspace.Terrain,
@@ -2249,7 +2253,9 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                             continue
                                         end
 
-                                        Root.CFrame = Part.CFrame
+                                        Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+
+                                        Camera.CameraSubject = Part
 
                                         Remote:FireServer(
                                             LoadBlocks.BuiltParts[1],
