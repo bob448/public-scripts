@@ -2339,3 +2339,14 @@ Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments
         Raven.Notif:Error("You are not loading blocks.") 
     end
 end)
+
+Raven:AddCMD("loadimage", "Loads an image file and then converts it into a loadblocks compatible JSON, then saves it to the specified file name.", {}, {"image file", "save file name"}, function(arguments)
+    local ImageFileName = arguments[1]
+    local SaveFileName = arguments[2]
+
+    local PNGLIB = loadstring()
+
+    if ImageFileName and SaveFileName then
+        
+    end
+end)
