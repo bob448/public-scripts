@@ -1207,8 +1207,4 @@ local modules = {
 	end
 }
 
-local Module = {}
-Module.modules = modules
-Module.PNG = png
-
-return Module
+return modules.png(png)
