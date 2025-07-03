@@ -1730,6 +1730,7 @@ confirm_selection_button.Activated:Connect(function()
         Raven.Gui:BounceButton(confirm_selection_button, ConfirmSelectionOgSize)
         confirm_selection_button.Visible = false
 
+        SaveBlocks.CancelSelecting = false
         SaveBlocks.Selecting = false
     else
         confirm_selection_button.Visible = false 
