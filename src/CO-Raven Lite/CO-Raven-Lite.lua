@@ -1876,13 +1876,23 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                     if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         local Mouse = LocalPlayer:GetMouse()
 
-                        if Mouse.Target and IsBrick(Mouse.Target) and Mouse.Target.Anchored then
+                        if Mouse.Target and Mouse.Target.Anchored then
                             if not Pos1 then
+                                local Size = Mouse.Target.Size
+                                local CF = Mouse.Target.CFrame
+
+                                if Mouse.Target:IsA("Terrain") or Mouse.Target.Name == "Beach" then
+                                    Size = Vector3.new(4,4,4)
+                                    local NewPos = GetPos("Dig", Size, Enum.NormalId.Top, Mouse.Hit.Position)
+
+                                    CF = CFrame.new(NewPos)
+                                end
+
                                 Pos1Brick = Instance.new("Part", workspace)
                                 Pos1Brick.Anchored = true
                                 Pos1Brick.Transparency = 1
-                                Pos1Brick.Size = Mouse.Target.Size
-                                Pos1Brick.CFrame = Mouse.Target.CFrame
+                                Pos1Brick.Size = Size
+                                Pos1Brick.CFrame = CF
                                 Pos1Brick.CanCollide = false
                                 Pos1Brick.CanQuery = false
                                 Pos1Brick.CanTouch = false
@@ -1890,13 +1900,23 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 Pos1SelectionBox.Parent = Pos1Brick
                                 Pos1SelectionBox.Adornee = Pos1Brick
 
-                                Pos1 = Mouse.Target.CFrame
+                                Pos1 = CF
                             elseif not Pos2 then
+                                local Size = Mouse.Target.Size
+                                local CF = Mouse.Target.CFrame
+
+                                if Mouse.Target:IsA("Terrain") or Mouse.Target.Name == "Beach" then
+                                    Size = Vector3.new(4,4,4)
+                                    local NewPos = GetPos("Dig", Size, Enum.NormalId.Top, Mouse.Hit.Position)
+
+                                    CF = CFrame.new(NewPos)
+                                end
+
                                 Pos2Brick = Instance.new("Part", workspace)
                                 Pos2Brick.Anchored = true
                                 Pos2Brick.Transparency = 1
-                                Pos2Brick.Size = Mouse.Target.Size
-                                Pos2Brick.CFrame = Mouse.Target.CFrame
+                                Pos2Brick.Size = Size
+                                Pos2Brick.CFrame = CF
                                 Pos2Brick.CanCollide = false
                                 Pos2Brick.CanQuery = false
                                 Pos2Brick.CanTouch = false
@@ -1904,7 +1924,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 Pos2SelectionBox.Parent = Pos2Brick
                                 Pos2SelectionBox.Adornee = Pos2Brick
 
-                                Pos2 = Mouse.Target.CFrame
+                                Pos2 = CF
 
                                 SelectionBrick = Instance.new("Part", workspace)
                                 SelectionBrick.Transparency = 1
@@ -2070,27 +2090,28 @@ end
 -- to do:
 --[[
 add paint previews
-implement the center argument, find some way to move the blocks based on the center. (maybe get the difference between the center and the part by doing part.Position - center and then doing part.Position - difference)
-
 ]]
 
-Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the specified center position.", {}, {"file","center x","center y","center z"}, function(arguments)
+Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(arguments)
     if readfile and isfile and isfolder then
         local FileName = arguments[1]
-        local X,Y,Z = arguments[2] and tonumber(arguments[2]),arguments[3] and tonumber(arguments[3]),arguments[4] and tonumber(arguments[4])
 
-        if FileName and X and Y and Z then
+        if FileName then
             if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
                 local Contents: string = readfile("CORAVEN_SAVED_BLOCKS/"..FileName)
 
                 local Json = HttpService:JSONDecode(Contents)
 
                 if #Json > 0 then
-                    local Center = Vector3.new(X,Y,Z)
-
                     for _, Part in pairs(Json) do
                         local Preview = Instance.new("Part", workspace)
                         local SelectionBox = Instance.new("SelectionBox", Preview)
+                        local PaintPreviewBox = Instance.new("SelectionBox", ReplicatedStorage)
+                        PaintPreviewBox.Transparency = 1
+                        PaintPreviewBox.SurfaceTransparency = .3
+                        PaintPreviewBox.SurfaceColor3 = Color3.fromRGB(150, 150, 150)
+
+                        LoadBlocks.Previews[#LoadBlocks.Previews+1] = PaintPreviewBox
 
                         SelectionBox.Adornee = Preview
                         SelectionBox.Transparency = 1
@@ -2103,13 +2124,16 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                         Preview.CanQuery = false
                         Preview.CanTouch = false
 
-                        Preview.CFrame = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z)
-                        Preview.Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z)
+                        local CF = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z)
+                        local Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z)
+
+                        Preview.CFrame = CF
+                        Preview.Size = Size
                         Preview.Transparency = 1
 
                         local UnserializedPart = {
-                            CFrame = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z),
-                            Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z),
+                            CFrame = CF,
+                            Size = Size,
                             Material = Part.Material,
                             Color = Color3.new(Part.Color.R, Part.Color.G, Part.Color.B),
                             Sign = Part.Sign,
@@ -2118,7 +2142,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                         }
 
                         LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {SelectionBox, UnserializedPart}
-                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {nil, UnserializedPart}
+                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {PaintPreviewBox, UnserializedPart}
                     end
 
                     LoadBlocks.Loading = true
@@ -2136,6 +2160,14 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                 break
                             elseif #LoadBlocks.BuildQueue == 0 then
                                 Building = false
+
+                                for i,v in pairs(LoadBlocks.PaintQueue) do
+                                    local SelectionBox = v[1]
+                                    local Part = LoadBlocks.BuiltParts[i]
+
+                                    SelectionBox.Parent = Part
+                                    SelectionBox.Adornee = Part
+                                end
                             end
 
                             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -2168,9 +2200,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                     local Part = Table[2]
 
                                     if LocalPlayer:DistanceFromCharacter(Part.CFrame.Position) <= 23 then
-                                        if Building then
-                                            SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
-                                        end
+                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
 
                                         local Remote = Building and Remotes.Build[#Remotes.Build > 1 and math.random(1, #Remotes.Build) or 1]
                                         or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
@@ -2202,8 +2232,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
 
                                                 table.remove(LoadBlocks.BuildQueue, 1)
 
+                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
                                                 SelectionBox:Destroy()
-                                                table.remove(LoadBlocks.Previews, 1)
 
                                                 for i,v in pairs(Parts) do
                                                     if (Part.CFrame.Position - v.Position).Magnitude <= .5 then
@@ -2226,11 +2256,14 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                             task.wait()
 
                                             if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color == Part.Color then
+                                                SelectionBox:Destroy()
+                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+
                                                 table.remove(LoadBlocks.BuiltParts, 1)
                                                 table.remove(LoadBlocks.PaintQueue, 1)
                                             end
                                         end
-                                    elseif Building then
+                                    else
                                         SelectionBox.SurfaceColor3 = Color3.fromRGB(255,210,0)
                                     end
                                 end
@@ -2249,8 +2282,6 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
             end
         elseif not FileName then
             Raven.Notif:Error("No filename supplied.")
-        elseif not X or not Y or not Z then
-            Raven.Notif:Error("No center axes supplied (or they were not numbers).")
         else
             Raven.Notif:Error("You are already loading blocks.")
         end
