@@ -2115,6 +2115,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                         SelectionBox.SurfaceColor3 = Color3.fromRGB(150, 150, 150)
 
                         LoadBlocks.Previews[#LoadBlocks.Previews+1] = Preview
+                        LoadBlocks.Previews[#LoadBlocks.Previews+1] = SelectionBox
                         Preview.Anchored = true
                         Preview.CanCollide = false
                         Preview.CanQuery = false
@@ -2310,7 +2311,7 @@ Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments
         task.wait()
 
         for i,v in pairs(LoadBlocks.Previews) do
-            if v and v.Parent then
+            if v then
                 v:Destroy()
             end
         end
