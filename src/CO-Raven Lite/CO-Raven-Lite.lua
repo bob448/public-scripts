@@ -2352,7 +2352,9 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                 local ImageBytes = readfile(ImageFileName)
                 local Image
 
-                local Succ, Err = pcall(PNGLIB.new, ImageBytes)
+                local Succ, Err = pcall(function()
+                    Image = PNGLIB.new(ImageBytes)
+                end)
                 
                 if not Succ and Err then
                     Raven.Notif:Error("Error opening image: "..Err)
@@ -2362,7 +2364,7 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
 
                     local JsonTable = {}
 
-                    Raven.Notif:Success("Saving image to \""..ImageFileName.."\"..")
+                    Raven.Notif:Success("Saving image to \""..SaveFileName.."\"..")
 
                     for y = 0, Height do
                         for x = 0, Width do
@@ -2372,11 +2374,16 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                                 continue
                             end
 
-                            local CF = CFrame.new(x * 4, y * 4, 0)
+                            local Size = Vector3.new(4,4,4)
+                            local PixelPos = Vector3.new(x * Size.X - 2, y * Size.Y - 2, 2)
+
+                            local CF = CFrame.new(
+                                PixelPos
+                            )
 
                             JsonTable[#JsonTable+1] = {
                                 CFrame = SaveBlocksSerializeProperty(CF),
-                                Size = SaveBlocksSerializeProperty(Vector3.new(4,4,4)),
+                                Size = SaveBlocksSerializeProperty(Size),
                                 Material = Enum.Material.SmoothPlastic,
                                 Color = SaveBlocksSerializeProperty(Color),
                                 Sign = false,
@@ -2391,6 +2398,8 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
                     end
 
                     writefile("CORAVEN_SAVED_BLOCKS/"..SaveFileName, HttpService:JSONEncode(JsonTable))
+
+                    Raven.Notif:Success("Done!")
                 elseif not isfile(ImageFileName) then
                     Raven.Notif:Error("The passed image file name is not a file.")
                 end
