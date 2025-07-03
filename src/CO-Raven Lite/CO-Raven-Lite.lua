@@ -2238,6 +2238,16 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                                 end
                                             end
                                         else
+                                            if not LoadBlocks.BuiltParts[1] or not LoadBlocks.BuiltParts[1].Parent then
+                                                table.remove(LoadBlocks.BuiltParts, 1)
+                                                table.remove(LoadBlocks.PaintQueue, 1)
+
+                                                SelectionBox:Destroy()
+                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+
+                                                continue
+                                            end
+
                                             Remote:FireServer(
                                                 LoadBlocks.BuiltParts[1],
                                                 Enum.NormalId.Top,
