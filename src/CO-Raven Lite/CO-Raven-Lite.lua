@@ -2157,7 +2157,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                 Building = false
 
                                 for i,v in pairs(LoadBlocks.PaintQueue) do
-                                    local SelectionBox = v[1]
+                                    local SelectionBox = v[2]
                                     local Part = LoadBlocks.BuiltParts[i]
 
                                     SelectionBox.Parent = Part
