@@ -2088,9 +2088,12 @@ local function MatToChosenOneMat(material: Enum.Material)
     return _MatToChosenOneMat[material]
 end
 
-Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(arguments)
+Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", "y offset", "z offset"}, function(arguments)
     if readfile and isfile and isfolder then
         local FileName = arguments[1]
+        local XOffset = arguments[2] and tonumber(arguments[2]) or 0
+        local YOffset = arguments[3] and tonumber(arguments[3]) or 0 
+        local ZOffset = arguments[4] and tonumber(arguments[4]) or 0
 
         if FileName then
             if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
@@ -2121,7 +2124,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                         Preview.CanQuery = false
                         Preview.CanTouch = false
 
-                        local CF = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z)
+                        local CF = CFrame.new(Part.CFrame.X + XOffset, Part.CFrame.Y + YOffset, Part.CFrame.Z + ZOffset)
                         local Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z)
 
                         Preview.CFrame = CF
