@@ -2201,6 +2201,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                         or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
 
                                         if Building then
+                                            Root.CFrame = Part.CFrame
+
                                             Remote:FireServer(
                                                 workspace.Terrain,
                                                 Enum.NormalId.Top,
@@ -2247,6 +2249,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
 
                                                 continue
                                             end
+
+                                            Root.CFrame = Part.CFrame
 
                                             Remote:FireServer(
                                                 LoadBlocks.BuiltParts[1],
