@@ -2195,6 +2195,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
 
                                     local SelectionBox = Table[1]
                                     local Part = Table[2]
+                                    local Preview = Table[3]
 
                                     SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
 
@@ -2204,7 +2205,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                     if Building then
                                         Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
 
-                                        Camera.CameraSubject = Part
+                                        Camera.CameraSubject = Preview
 
                                         Remote:FireServer(
                                             workspace.Terrain,
@@ -2255,7 +2256,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
 
                                         Root.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
 
-                                        Camera.CameraSubject = Part
+                                        Camera.CameraSubject = Preview
 
                                         Remote:FireServer(
                                             LoadBlocks.BuiltParts[1],
