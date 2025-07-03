@@ -981,7 +981,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                                     task.wait(.3)
                                     if not Brick.Parent then
                                         Queue[i] = nil
-                                    else
+                                    elseif DeleteAuraHighlights[Brick] then
                                         DeleteAuraHighlights[Brick]:Destroy()
                                         DeleteAuraHighlights[Brick] = nil
                                     end
