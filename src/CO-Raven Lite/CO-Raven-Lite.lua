@@ -4,10 +4,11 @@
 -- A Chosen One Script.
 
 if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
-    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/dev/src/Raven-Base/raven-base.lua")))
+    task.spawn(loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/refs/heads/main/src/Raven-Base/raven-base.lua")))
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
+local HttpService = game:GetService("HttpService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -15,6 +16,7 @@ local Teams = game:GetService("Teams")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TextChatService = game:GetService("TextChatService")
+local UserInputService = game:GetService("UserInputService")
 
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
@@ -75,12 +77,86 @@ type RavenMod = {
     },
     Command: {
         AutoCompleteCommand: (data: string) -> (string?)
-    }
+    },
+    Gui: {
+        Draggable: (mainframe: any, dragframe: any) -> (),
+        AnimateGradient: (uigradient: UIGradient, speed: number) -> (RBXScriptConnection),
+        BounceButton: (button: TextButton | ImageButton, OgSize: UDim2) -> ()
+    },
+    IsMobile: boolean
 }
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
 Raven.Name = "CO-Raven Lite"
 Raven.VERSION = 1.9
+
+local RavenGUI = Raven:GetCoreGui():WaitForChild("Raven")
+
+local cancel_selection_button = Instance.new("TextButton")
+cancel_selection_button.Font = Enum.Font.Arial
+cancel_selection_button.Text = "Cancel"
+cancel_selection_button.TextColor3 = Color3.new(1, 1, 1)
+cancel_selection_button.TextScaled = true
+cancel_selection_button.TextSize = 14
+cancel_selection_button.TextStrokeColor3 = Color3.new(1, 0, 0)
+cancel_selection_button.TextStrokeTransparency = 0.5
+cancel_selection_button.TextWrapped = true
+cancel_selection_button.AnchorPoint = Vector2.new(0.5, 0)
+cancel_selection_button.BackgroundColor3 = Color3.new(0, 0, 0)
+cancel_selection_button.BorderColor3 = Color3.new(0, 0, 0)
+cancel_selection_button.BorderSizePixel = 0
+cancel_selection_button.Position = UDim2.new(0.5, 0, 0.803030312, 0)
+cancel_selection_button.Size = UDim2.new(0, 200, 0, 24)
+cancel_selection_button.Visible = false
+cancel_selection_button.Name = "CancelSelectionButton"
+cancel_selection_button.Parent = RavenGUI
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = cancel_selection_button
+
+local animated_close_gradient = Instance.new("UIGradient")
+animated_close_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_close_gradient.Name = "AnimatedCloseGradient"
+animated_close_gradient.Parent = uistroke
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = cancel_selection_button
+
+local confirm_selection_button = Instance.new("TextButton")
+confirm_selection_button.Font = Enum.Font.Arial
+confirm_selection_button.Text = "Confirm"
+confirm_selection_button.TextColor3 = Color3.new(1, 1, 1)
+confirm_selection_button.TextScaled = true
+confirm_selection_button.TextSize = 14
+confirm_selection_button.TextStrokeColor3 = Color3.new(0.145098, 0.67451, 0)
+confirm_selection_button.TextStrokeTransparency = 0.5
+confirm_selection_button.TextWrapped = true
+confirm_selection_button.AnchorPoint = Vector2.new(0.5, 0)
+confirm_selection_button.BackgroundColor3 = Color3.new(0, 0, 0)
+confirm_selection_button.BorderColor3 = Color3.new(0, 0, 0)
+confirm_selection_button.BorderSizePixel = 0
+confirm_selection_button.Position = UDim2.new(0.5, 0, 0.748196244, 0)
+confirm_selection_button.Size = UDim2.new(0, 200, 0, 24)
+confirm_selection_button.Visible = false
+confirm_selection_button.Name = "ConfirmSelectionButton"
+confirm_selection_button.Parent = RavenGUI
+
+local uistroke = Instance.new("UIStroke")
+uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uistroke.Color = Color3.new(0.494118, 0.164706, 0.87451)
+uistroke.Thickness = 5
+uistroke.Parent = confirm_selection_button
+
+local animated_confirm_gradient = Instance.new("UIGradient")
+animated_confirm_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0.494118, 0.164706, 0.87451)), ColorSequenceKeypoint.new(0.46885815262794495, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0.494118, 0.164706, 0.87451))})
+animated_confirm_gradient.Name = "AnimatedConfirmGradient"
+animated_confirm_gradient.Parent = uistroke
+
+local uicorner = Instance.new("UICorner")
+uicorner.Parent = confirm_selection_button
 
 local AntiFreezeCon: RBXScriptConnection? = nil
 
@@ -436,11 +512,11 @@ Activated["Build"] = function(tool: Tool)
 
     if Remote and Mouse.Target and tool.Preview.Adornee then
         Remote:FireServer(
-                Mouse.Target,
-                Mouse.TargetSurface,
-                Mouse.Hit.Position,
-                Button.Text
-            )
+            Mouse.Target,
+            Mouse.TargetSurface,
+            Mouse.Hit.Position,
+            Button.Text
+        )
     elseif not Remote then
         Raven.Notif:Error("No build remote found.")
     end
@@ -1625,5 +1701,609 @@ Raven:AddCMD("untrap", "Stops trapping.", {}, {}, function(arguments)
         Raven.Notif:Success("Disabled trap.")
     else
         Raven.Notif:Error("Trap is already disabled.")
+    end
+end)
+
+local SaveBlocks = {}
+SaveBlocks.Selecting = false
+SaveBlocks.CancelSelecting = false
+SaveBlocks.Click = nil
+
+local CancelSelectionOgSize = cancel_selection_button.Size
+local ConfirmSelectionOgSize = confirm_selection_button.Size
+
+cancel_selection_button.Activated:Connect(function()
+    if SaveBlocks.Selecting then
+        Raven.Gui:BounceButton(cancel_selection_button, CancelSelectionOgSize)
+
+        cancel_selection_button.Visible = false
+
+        SaveBlocks.CancelSelecting = true
+        SaveBlocks.Selecting = false
+    else
+        cancel_selection_button.Visible = false 
+    end
+end)
+
+confirm_selection_button.Activated:Connect(function()
+    if SaveBlocks.Selecting then
+        Raven.Gui:BounceButton(confirm_selection_button, ConfirmSelectionOgSize)
+        confirm_selection_button.Visible = false
+
+        SaveBlocks.Selecting = false
+    else
+        confirm_selection_button.Visible = false 
+    end
+end)
+
+local function IsSign(brick: Part)
+    return brick:HasTag("Sign")
+end
+
+local function IsToxic(brick: Part)
+    return brick:HasTag("OOF")
+end
+
+local function IsBrick(part: Part)
+    return part:IsDescendantOf(workspace.Bricks)
+end
+
+local SaveBlocksSerializeFunctions = {
+    ["CFrame"] = function(prop: CFrame)
+        return {
+            X = prop.X,
+            Y = prop.Y,
+            Z = prop.Z
+        }
+    end,
+    ["Vector3"] = function(prop: Vector3)
+        return {
+            X = prop.X,
+            Y = prop.Y,
+            Z = prop.Z
+        }
+    end,
+    ["Color3"] = function(prop: Color3)
+        return {
+            R = prop.R,
+            G = prop.G,
+            B = prop.B
+        }
+    end
+}
+
+local function SaveBlocksSerializeProperty(prop)
+    return SaveBlocksSerializeFunctions[typeof(prop)](prop)
+end
+
+local function GetLowerLeftCorner(part: Part)
+    local LeftLowerFrontCorner = -part.Size/2
+    return LeftLowerFrontCorner + Vector3.new(.5, .5, .5)
+end
+
+local function BrickIsNormalSize(brick: Part)
+    return brick.Size.X == 4 and brick.Size.Y == 4 and brick.Size.Z == 4
+end
+
+local function BrickIsDetailedSize(brick: Part)
+    return brick.Size.X == 1 and brick.Size.Y == 1 and brick.Size.Z == 1
+end
+
+Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}, {"file name"}, function(arguments)
+    if not SaveBlocks.Selecting then
+        if writefile and makefolder and isfolder then
+            local FileName: string? = arguments[1]
+
+            if FileName then
+                SaveBlocks.Selecting = true
+
+                local GetPos = require(ReplicatedStorage:WaitForChild("GetPos"))
+
+                cancel_selection_button.Visible = true
+
+                local Pos1 = nil
+                local Pos2 = nil
+
+                local Pos1Brick = nil
+                local Pos2Brick = nil
+
+                local Pos1SelectionBox = Instance.new("SelectionBox", ReplicatedStorage)
+                Pos1SelectionBox.LineThickness = 0.05
+                Pos1SelectionBox.SurfaceColor3 = Color3.new(0.517647, 1, 0.501960)
+                Pos1SelectionBox.SurfaceTransparency = 0.5
+                Pos1SelectionBox.Color3 = Color3.new(0.517647, 1, 0.501960)
+                Pos1SelectionBox.Visible = true
+                Pos1SelectionBox.Name = "Preview1"
+
+                local Pos2SelectionBox = Instance.new("SelectionBox", ReplicatedStorage)
+                Pos2SelectionBox.LineThickness = 0.05
+                Pos2SelectionBox.SurfaceColor3 = Color3.new(0.909803, 0.372549, 0.372549)
+                Pos2SelectionBox.SurfaceTransparency = 0.5
+                Pos2SelectionBox.Color3 = Color3.new(0.909803, 0.372549, 0.372549)
+                Pos2SelectionBox.Visible = true
+                Pos2SelectionBox.Name = "Preview2"
+
+                local SelectionBrick = nil
+                local SelectionBrickBox = Instance.new("SelectionBox", ReplicatedStorage)
+                SelectionBrickBox.LineThickness = 0.05
+                SelectionBrickBox.SurfaceColor3 = Color3.new(0.501960, 0.827450, 1)
+                SelectionBrickBox.SurfaceTransparency = 0.5
+                SelectionBrickBox.Color3 = Color3.new(0.501960, 0.827450, 1)
+                SelectionBrickBox.Visible = true
+                SelectionBrickBox.Name = "Preview"
+
+                local SelectionCFrame, SelectionSize = nil, nil
+
+                local function ReinitializeAll()
+                    Pos1SelectionBox.Parent = ReplicatedStorage
+                    Pos2SelectionBox.Parent = ReplicatedStorage
+
+                    Pos1Brick:Destroy()
+                    Pos2Brick:Destroy()
+
+                    Pos1SelectionBox.Adornee = nil
+                    Pos2SelectionBox.Adornee = nil
+
+                    SelectionBrickBox.Parent = ReplicatedStorage
+                    SelectionBrickBox.Adornee = nil
+                    SelectionBrick:Destroy()
+
+                    Pos1 = nil
+                    Pos2 = nil
+                end
+
+                local function DestroyAll()
+                    if Pos1Brick then
+                        Pos1Brick:Destroy()
+                    end
+                    if Pos2Brick then
+                        Pos2Brick:Destroy()
+                    end
+
+                    Pos1SelectionBox:Destroy()
+                    Pos2SelectionBox:Destroy()
+
+                    if SelectionBrick then
+                        SelectionBrick:Destroy()
+                    end
+                    SelectionBrickBox:Destroy()
+
+                    Pos1 = nil
+                    Pos2 = nil
+                end
+
+                local function SaveBlocksClickedfunction(input, gameProcessed)
+                    if not gameProcessed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                        local Mouse = LocalPlayer:GetMouse()
+
+                        if Mouse.Target and Mouse.Target.Anchored then
+                            if not Pos1 then
+                                local Size = Mouse.Target.Size
+                                local CF = Mouse.Target.CFrame
+
+                                if Mouse.Target:IsA("Terrain") or Mouse.Target.Name == "Beach" then
+                                    Size = Vector3.new(4,4,4)
+                                    local NewPos = GetPos("Dig", Size, Enum.NormalId.Top, Mouse.Hit.Position)
+
+                                    CF = CFrame.new(NewPos)
+                                end
+
+                                Pos1Brick = Instance.new("Part", workspace)
+                                Pos1Brick.Anchored = true
+                                Pos1Brick.Transparency = 1
+                                Pos1Brick.Size = Size
+                                Pos1Brick.CFrame = CF
+                                Pos1Brick.CanCollide = false
+                                Pos1Brick.CanQuery = false
+                                Pos1Brick.CanTouch = false
+
+                                Pos1SelectionBox.Parent = Pos1Brick
+                                Pos1SelectionBox.Adornee = Pos1Brick
+
+                                Pos1 = CF
+                            elseif not Pos2 then
+                                local Size = Mouse.Target.Size
+                                local CF = Mouse.Target.CFrame
+
+                                if Mouse.Target:IsA("Terrain") or Mouse.Target.Name == "Beach" then
+                                    Size = Vector3.new(4,4,4)
+                                    local NewPos = GetPos("Dig", Size, Enum.NormalId.Top, Mouse.Hit.Position)
+
+                                    CF = CFrame.new(NewPos)
+                                end
+
+                                Pos2Brick = Instance.new("Part", workspace)
+                                Pos2Brick.Anchored = true
+                                Pos2Brick.Transparency = 1
+                                Pos2Brick.Size = Size
+                                Pos2Brick.CFrame = CF
+                                Pos2Brick.CanCollide = false
+                                Pos2Brick.CanQuery = false
+                                Pos2Brick.CanTouch = false
+
+                                Pos2SelectionBox.Parent = Pos2Brick
+                                Pos2SelectionBox.Adornee = Pos2Brick
+
+                                Pos2 = CF
+
+                                SelectionBrick = Instance.new("Part", workspace)
+                                SelectionBrick.Transparency = 1
+                                SelectionBrick.Anchored = true
+                                SelectionBrick.CanCollide = false
+                                SelectionBrick.CanQuery = false
+                                SelectionBrick.CanTouch = false
+
+                                SelectionBrickBox.Parent = SelectionBrick
+                                SelectionBrickBox.Adornee = SelectionBrick
+
+                                SelectionBrick.Transparency = 1
+
+                                local Model = Instance.new("Model", workspace)
+                                Pos2Brick.Parent = Model
+                                Pos1Brick.Parent = Model
+                                Model.PrimaryPart = Pos1Brick
+
+                                SelectionCFrame, SelectionSize = Model:GetBoundingBox()
+
+                                SelectionBrick.CFrame = SelectionCFrame
+                                SelectionBrick.Size = SelectionSize
+
+                                confirm_selection_button.Visible = true
+                            else
+                                ReinitializeAll()
+                                confirm_selection_button.Visible = false
+                                SaveBlocksClickedfunction(input, gameProcessed)
+                            end
+                        end
+                    end
+                end
+
+                SaveBlocks.Click = UserInputService.InputBegan:Connect(SaveBlocksClickedfunction)
+
+                repeat task.wait() until not SaveBlocks.Selecting
+
+                confirm_selection_button.Visible = false
+                cancel_selection_button.Visible = false
+
+                SaveBlocks.Click:Disconnect()
+
+                if SaveBlocks.CancelSelecting then
+                    DestroyAll()
+                else
+                    DestroyAll()
+
+                    Raven.Notif:Success("Saving blocks to \""..FileName.."\"..")
+
+                    local Parts = workspace:GetPartBoundsInBox(SelectionCFrame, SelectionSize)
+
+                    local JsonTable = {}
+
+                    for i,v: Part in pairs(Parts) do
+                        if not IsBrick(v) then
+                            continue
+                        end
+
+                        local Sign = IsSign(v)
+                        local Text = ""
+
+                        if Sign then
+                            local Input = v:FindFirstChild("Input")
+
+                            if Input then
+                                local Label: TextBox = Input:FindFirstChild("Label")
+                                if Label then Text = Label.Text end
+                            else
+                                continue -- this is the base of a sign, don't save
+                            end
+                        end
+
+                        local Toxic = IsToxic(v)
+
+                        if not BrickIsNormalSize(v) and not BrickIsDetailedSize(v) then
+                            local LowerLeftCorner = GetLowerLeftCorner(v)
+
+                            for x=0, v.Size.X - 1, 1 do
+                                for y=0, v.Size.Y - 1, 1 do
+                                    for z=0, v.Size.Z - 1, 1 do
+                                        local Offset = Vector3.new(x,y,z)
+                                        local NewCFrame = v.CFrame * CFrame.new(LowerLeftCorner + Offset)
+
+                                        JsonTable[#JsonTable+1] = {
+                                            CFrame = SaveBlocksSerializeProperty(NewCFrame),
+                                            Size = SaveBlocksSerializeProperty(Vector3.new(1,1,1)),
+                                            Material = v.Material.Value,
+                                            Color = SaveBlocksSerializeProperty(v.Color),
+                                            Sign = Sign,
+                                            Text = Text,
+                                            Toxic = Toxic
+                                        }
+                                    end
+                                end
+                            end
+                        else
+                            JsonTable[#JsonTable+1] = {
+                                CFrame = SaveBlocksSerializeProperty(v.CFrame),
+                                Size = SaveBlocksSerializeProperty(v.Size),
+                                Material = v.Material.Value,
+                                Color = SaveBlocksSerializeProperty(v.Color),
+                                Sign = Sign,
+                                Text = Text,
+                                Toxic = Toxic
+                            }
+                        end
+                    end
+
+                    if not isfolder("CORAVEN_SAVED_BLOCKS") then
+                        makefolder("CORAVEN_SAVED_BLOCKS")
+                    end
+
+                    writefile("CORAVEN_SAVED_BLOCKS/"..FileName, HttpService:JSONEncode(JsonTable))
+
+                    Raven.Notif:Success("Saved selected bricks to file \""..FileName.."\"\n in workspace folder.")
+                end
+            else
+                Raven.Notif:Error("No filename supplied.")
+            end
+        else
+            Raven.Notif:Error("Your executor does not support writefile/isfolder/makefolder.")
+        end
+    else
+        Raven.Notif:Error("You are already selecting blocks to save.")
+    end
+end)
+
+local LoadBlocks = {}
+LoadBlocks.Previews = {}
+LoadBlocks.BuildQueue = {}
+LoadBlocks.PaintQueue = {}
+LoadBlocks.BuiltParts = {}
+LoadBlocks.Loading = false
+LoadBlocks.Task = nil
+
+local _MatToChosenOneMat = {
+    [Enum.Material.Neon.Value] = "neon",
+    [Enum.Material.Metal.Value] = "metal",
+    [Enum.Material.Asphalt.Value] = "asphalt",
+    [Enum.Material.Concrete.Value] = "concrete",
+    [Enum.Material.Pavement.Value] = "pavement",
+    [Enum.Material.DiamondPlate.Value] = "steel",
+    [Enum.Material.Granite.Value] = "granite",
+    [Enum.Material.Marble.Value] = "marble",
+    [Enum.Material.Pebble.Value] = "pebble",
+    [Enum.Material.Slate.Value] = "stone",
+    [Enum.Material.Wood.Value] = "wood",
+    [Enum.Material.Glass.Value] = "glass",
+    [Enum.Material.Snow.Value] = "snow",
+    [Enum.Material.Grass.Value] = "grass",
+    [Enum.Material.WoodPlanks.Value] = "planks",
+    [Enum.Material.Ice.Value] = "ice",
+    [Enum.Material.Brick.Value] = "bricks",
+    [Enum.Material.CeramicTiles.Value] = "tiles",
+    [Enum.Material.Plastic.Value] = "plastic",
+    [Enum.Material.SmoothPlastic.Value] = "smooth"
+}
+
+local function MatToChosenOneMat(material: Enum.Material)
+    return _MatToChosenOneMat[material]
+end
+
+Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(arguments)
+    if readfile and isfile and isfolder then
+        local FileName = arguments[1]
+
+        if FileName then
+            if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
+                local Contents: string = readfile("CORAVEN_SAVED_BLOCKS/"..FileName)
+
+                local Json = HttpService:JSONDecode(Contents)
+
+                if #Json > 0 then
+                    for _, Part in pairs(Json) do
+                        local Preview = Instance.new("Part", workspace)
+                        local SelectionBox = Instance.new("SelectionBox", Preview)
+                        local PaintPreviewBox = Instance.new("SelectionBox", ReplicatedStorage)
+                        PaintPreviewBox.Transparency = 1
+                        PaintPreviewBox.SurfaceTransparency = .3
+                        PaintPreviewBox.SurfaceColor3 = Color3.fromRGB(150, 150, 150)
+
+                        LoadBlocks.Previews[#LoadBlocks.Previews+1] = PaintPreviewBox
+
+                        SelectionBox.Adornee = Preview
+                        SelectionBox.Transparency = 1
+                        SelectionBox.SurfaceTransparency = .5
+                        SelectionBox.SurfaceColor3 = Color3.fromRGB(150, 150, 150)
+
+                        LoadBlocks.Previews[#LoadBlocks.Previews+1] = Preview
+                        Preview.Anchored = true
+                        Preview.CanCollide = false
+                        Preview.CanQuery = false
+                        Preview.CanTouch = false
+
+                        local CF = CFrame.new(Part.CFrame.X, Part.CFrame.Y, Part.CFrame.Z)
+                        local Size = Vector3.new(Part.Size.X, Part.Size.Y, Part.Size.Z)
+
+                        Preview.CFrame = CF
+                        Preview.Size = Size
+                        Preview.Transparency = 1
+
+                        local UnserializedPart = {
+                            CFrame = CF,
+                            Size = Size,
+                            Material = Part.Material,
+                            Color = Color3.new(Part.Color.R, Part.Color.G, Part.Color.B),
+                            Sign = Part.Sign,
+                            Text = Part.Text,
+                            Toxic = Part.Toxic
+                        }
+
+                        LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {SelectionBox, UnserializedPart}
+                        LoadBlocks.PaintQueue[#LoadBlocks.PaintQueue+1] = {PaintPreviewBox, UnserializedPart}
+                    end
+
+                    LoadBlocks.Loading = true
+
+                    LoadBlocks.Task = task.spawn(function()
+                        local Building = true
+                        
+                        while LoadBlocks.Loading do
+                            task.wait()
+
+                            if #LoadBlocks.BuildQueue == 0 and not Building and #LoadBlocks.BuiltParts == 0 then
+                                if LoadBlocks.Loading then
+                                    Raven.Commands["unloadblocks"].Function()
+                                end
+                                break
+                            elseif #LoadBlocks.BuildQueue == 0 then
+                                Building = false
+
+                                for i,v in pairs(LoadBlocks.PaintQueue) do
+                                    local SelectionBox = v[1]
+                                    local Part = LoadBlocks.BuiltParts[i]
+
+                                    SelectionBox.Parent = Part
+                                    SelectionBox.Adornee = Part
+                                end
+                            end
+
+                            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                            if Root then
+                                local Remotes = {}
+                                Remotes.Build = {}
+                                Remotes.Paint = {}
+
+                                for i,v in ipairs(Players:GetPlayers()) do
+                                    if v.Character then
+                                        for _, Tool: Tool in pairs(LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())) do
+                                            if Tool:IsA("Tool") then
+                                                if Tool.Name == "Paint" or Tool.Name == "Build" then
+                                                    local Remote = GetRemoteFromTool(Tool)
+
+                                                    if Remote then
+                                                        table.insert(Remotes[Tool.Name], Remote)
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+
+                                if Building and #Remotes.Build > 0 or #Remotes.Paint > 0 then
+                                    local Table = Building and LoadBlocks.BuildQueue[1] or LoadBlocks.PaintQueue[1]
+
+                                    local SelectionBox = Table[1]
+                                    local Part = Table[2]
+
+                                    if LocalPlayer:DistanceFromCharacter(Part.CFrame.Position) <= 23 then
+                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
+
+                                        local Remote = Building and Remotes.Build[#Remotes.Build > 1 and math.random(1, #Remotes.Build) or 1]
+                                        or Remotes.Paint[#Remotes.Paint > 1 and math.random(1, #Remotes.Paint) or 1]
+
+                                        if Building then
+                                            Remote:FireServer(
+                                                workspace.Terrain,
+                                                Enum.NormalId.Top,
+                                                Part.CFrame.Position,
+                                                BrickIsNormalSize(Part) and "normal" or BrickIsDetailedSize(Part) and "detailed" or "detailed"
+                                            )
+
+                                            task.wait()
+
+                                            local Parts = workspace:GetPartBoundsInBox(Part.CFrame, Part.Size - Vector3.new(.1,.1,.1))
+
+                                            if #Parts > 0 then
+                                                local InCharacter = false
+                                                for i,v in pairs(Parts) do
+                                                    if v:IsDescendantOf(LocalPlayer.Character) then
+                                                        InCharacter = true
+                                                        break
+                                                    end
+                                                end
+
+                                                if InCharacter then
+                                                    continue
+                                                end
+
+                                                table.remove(LoadBlocks.BuildQueue, 1)
+
+                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+                                                SelectionBox:Destroy()
+
+                                                for i,v in pairs(Parts) do
+                                                    if (Part.CFrame.Position - v.Position).Magnitude <= .5 then
+                                                        LoadBlocks.BuiltParts[#LoadBlocks.BuiltParts+1] = v
+                                                        break
+                                                    end
+                                                end
+                                            end
+                                        else
+                                            Remote:FireServer(
+                                                LoadBlocks.BuiltParts[1],
+                                                Enum.NormalId.Top,
+                                                LoadBlocks.BuiltParts[1].Position,
+                                                "both \240\159\164\157",
+                                                Part.Color,
+                                                Part.Toxic and "toxic" or MatToChosenOneMat(Part.Material),
+                                                ""
+                                            )
+
+                                            task.wait()
+
+                                            if LoadBlocks.BuiltParts[1].Material.Value == Part.Material and LoadBlocks.BuiltParts[1].Color == Part.Color then
+                                                SelectionBox:Destroy()
+                                                table.remove(LoadBlocks.Previews, table.find(LoadBlocks.Previews, SelectionBox))
+
+                                                table.remove(LoadBlocks.BuiltParts, 1)
+                                                table.remove(LoadBlocks.PaintQueue, 1)
+                                            end
+                                        end
+                                    else
+                                        SelectionBox.SurfaceColor3 = Color3.fromRGB(255,210,0)
+                                    end
+                                end
+                            end
+                        end
+                    end)
+
+                    Raven.Notif:Success("Started loading blocks. Remember to get close enough to the yellow parts so it can be built/painted.")
+                else
+                    Raven.Notif:Error("No parts found in file.") 
+                end
+            elseif not isfolder("CORAVEN_SAVED_BLOCKS") then
+                Raven.Notif:Error("You have not saved blocks yet.")
+            else
+                Raven.Notif:Error("That is not a file.")
+            end
+        elseif not FileName then
+            Raven.Notif:Error("No filename supplied.")
+        else
+            Raven.Notif:Error("You are already loading blocks.")
+        end
+    else
+        Raven.Notif:Error("Your executor does not support readfile/isfile/isfolder.")
+    end
+end)
+
+Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments)
+    if LoadBlocks.Loading then
+        LoadBlocks.Loading = false
+
+        task.wait()
+
+        for i,v in pairs(LoadBlocks.Previews) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(LoadBlocks.Previews)
+        table.clear(LoadBlocks.BuildQueue)
+        table.clear(LoadBlocks.PaintQueue)
+        table.clear(LoadBlocks.BuiltParts)
+
+        Raven.Notif:Success("Stopped loading blocks.")
+    else
+        Raven.Notif:Error("You are not loading blocks.") 
     end
 end)
