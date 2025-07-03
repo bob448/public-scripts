@@ -2048,7 +2048,7 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
         else
             Raven.Notif:Error("Your executor does not support writefile/isfolder/makefolder.")
         end
-    else
+    elseif SaveBlocks.Selecting then
         Raven.Notif:Error("You are already selecting blocks to save.")
     end
 end)
@@ -2304,7 +2304,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
             end
         elseif not FileName then
             Raven.Notif:Error("No filename supplied.")
-        else
+        elseif LoadBlocks.Loading then
             Raven.Notif:Error("You are already loading blocks.")
         end
     else
@@ -2337,5 +2337,79 @@ Raven:AddCMD("unloadblocks", "Stops loading blocks.", {}, {}, function(arguments
         Raven.Notif:Success("Stopped loading blocks.")
     else
         Raven.Notif:Error("You are not loading blocks.") 
+    end
+end)
+
+Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadblocks compatible JSON, then saves it to the specified file name.", {}, {"image file", "save file name"}, function(arguments)
+    local ImageFileName = arguments[1]
+    local SaveFileName = arguments[2]
+
+    local PNGLIB = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/CO-Raven%20Lite/Libraries/PNG.lua"))()
+
+    if ImageFileName and SaveFileName then
+        if isfile and readfile and writefile and isfolder and makefolder then
+            if isfile(ImageFileName) then
+                local ImageBytes = readfile(ImageFileName)
+                local Image
+
+                local Succ, Err = pcall(function()
+                    Image = PNGLIB.new(ImageBytes)
+                end)
+                
+                if not Succ and Err then
+                    Raven.Notif:Error("Error opening image: "..Err)
+                elseif Succ then
+                    local Width = Image.Width
+                    local Height = Image.Height
+
+                    local JsonTable = {}
+
+                    Raven.Notif:Success("Saving image to \""..SaveFileName.."\"..")
+
+                    for y = Height, 0, -1 do
+                        for x = Width, 0, -1 do
+                            local Color, Alpha = Image:GetPixel(x, y)
+
+                            if Alpha < 50 then
+                                continue
+                            end
+
+                            local Size = Vector3.new(4,4,4)
+                            local PixelPos = Vector3.new((Width - x) * Size.X - 2, (Height - y) * Size.Y - 2, 2)
+
+                            local CF = CFrame.new(
+                                PixelPos
+                            )
+
+                            JsonTable[#JsonTable+1] = {
+                                CFrame = SaveBlocksSerializeProperty(CF),
+                                Size = SaveBlocksSerializeProperty(Size),
+                                Material = Enum.Material.SmoothPlastic.Value,
+                                Color = SaveBlocksSerializeProperty(Color),
+                                Sign = false,
+                                Text = "",
+                                Toxic = false
+                            }
+                        end
+                    end
+
+                    if not isfolder("CORAVEN_SAVED_BLOCKS") then
+                        makefolder("CORAVEN_SAVED_BLOCKS")
+                    end
+
+                    writefile("CORAVEN_SAVED_BLOCKS/"..SaveFileName, HttpService:JSONEncode(JsonTable))
+
+                    Raven.Notif:Success("Done!")
+                elseif not isfile(ImageFileName) then
+                    Raven.Notif:Error("The passed image file name is not a file.")
+                end
+            else
+                Raven.Notif:Error("File \""..ImageFileName.."\" not found. Make sure to put it in your workspace folder of your executor.")
+            end
+        else
+            Raven.Notif:Error("Your executor does not support isfile/readfile/writefile/isfolder/makefolder.")
+        end
+    else
+        Raven.Notif:Error("No image file/save file specified.")
     end
 end)
