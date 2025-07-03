@@ -2193,8 +2193,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file"}, function(a
                                 if Building and #Remotes.Build > 0 or #Remotes.Paint > 0 and Camera then
                                     local Table = Building and LoadBlocks.BuildQueue[1] or LoadBlocks.PaintQueue[1]
 
-                                    local SelectionBox = Table[1]
-                                    local Part = Table[2]
+                                    local SelectionBox = Table[2]
+                                    local Part = Table[3]
                                     local Preview = Table[1]
 
                                     SelectionBox.SurfaceColor3 = Color3.fromRGB(24,255,0)
