@@ -2086,6 +2086,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                 local Json = HttpService:JSONDecode(Contents)
 
                 if #Json > 0 then
+                    local Center = Vector3.new(X,Y,Z)
+
                     for _, Part in pairs(Json) do
                         local Preview = Instance.new("Part", workspace)
                         local SelectionBox = Instance.new("SelectionBox", Preview)
