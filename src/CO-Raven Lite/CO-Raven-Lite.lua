@@ -1737,7 +1737,11 @@ confirm_selection_button.Activated:Connect(function()
 end)
 
 local function IsSign(brick: Part)
-    return table.find(brick:GetTags(), "Sign") ~= nil
+    return brick:HasTag("Sign")
+end
+
+local function IsToxic(brick: Part)
+    return brick:HasTag("OOF")
 end
 
 local function IsBrick(part: Part)
@@ -1973,6 +1977,8 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                             end
                         end
 
+                        local Toxic = IsToxic(v)
+
                         if not BrickIsNormalSize(v) and not BrickIsDetailedSize(v) then
                             local LowerLeftCorner = GetLowerLeftCorner(v)
 
@@ -1988,7 +1994,8 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                             Material = v.Material.Value,
                                             Color = SaveBlocksSerializeProperty(v.Color),
                                             Sign = Sign,
-                                            Text = Text
+                                            Text = Text,
+                                            Toxic = Toxic
                                         }
                                     end
                                 end
@@ -2000,7 +2007,8 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
                                 Material = v.Material.Value,
                                 Color = SaveBlocksSerializeProperty(v.Color),
                                 Sign = Sign,
-                                Text = Text
+                                Text = Text,
+                                Toxic = Toxic
                             }
                         end
                     end
@@ -2059,6 +2067,13 @@ local function MatToChosenOneMat(material: Enum.Material)
     return _MatToChosenOneMat[material]
 end
 
+-- to do:
+--[[
+add paint previews
+implement the center argument, find some way to move the blocks based on the center. (maybe use .Unit on the position then add the center vector)
+
+]]
+
 Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the specified center position.", {}, {"file","center x","center y","center z"}, function(arguments)
     if readfile and isfile and isfolder then
         local FileName = arguments[1]
@@ -2096,7 +2111,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                             Material = Part.Material,
                             Color = Color3.new(Part.Color.R, Part.Color.G, Part.Color.B),
                             Sign = Part.Sign,
-                            Text = Part.Text
+                            Text = Part.Text,
+                            Toxic = Part.Toxic
                         }
 
                         LoadBlocks.BuildQueue[#LoadBlocks.BuildQueue+1] = {SelectionBox, UnserializedPart}
@@ -2201,7 +2217,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file and sets the center to the 
                                                 LoadBlocks.BuiltParts[1].Position,
                                                 "both \240\159\164\157",
                                                 Part.Color,
-                                                MatToChosenOneMat(Part.Material),
+                                                Part.Toxic and "toxic" or MatToChosenOneMat(Part.Material),
                                                 ""
                                             )
 
