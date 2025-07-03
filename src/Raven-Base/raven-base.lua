@@ -1813,7 +1813,7 @@ AddCMD("rejoincode", "Gets the rejoin code and copies it to clipboard.", {}, {},
 
     if CanAccessCoreGui and setclipboard then
         setclipboard(
-            "game.TeleportService:TeleportToPlaceInstance("..PlaceId..",\""..JobId.."\")"
+            "game:GetService(\"TeleportService\"):TeleportToPlaceInstance("..PlaceId..",\""..JobId.."\")"
         )
         Success("Copied rejoin code to clipboard!")
     end
