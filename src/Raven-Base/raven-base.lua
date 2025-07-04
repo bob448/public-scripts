@@ -3322,8 +3322,6 @@ local DeletePlayer = {}
 DeletePlayer.Cons = {}
 DeletePlayer.Players = {}
 
-local OldIncomingMessage = TextChatService.OnIncomingMessage
-
 local function IsDeleted(player: Player)
     for i, _ in pairs(DeletePlayer.Players) do
         if i == player then
@@ -3348,33 +3346,37 @@ AddCMD("deleteplayer", "Removes a player or players from your client.", {"blockp
     local Targets = FindPlayers(unpack(arguments))
 
     if #Targets > 0 then
-        for _, v in pairs(Targets) do
-            DeletePlayer.Players[v] = v.Character or v.CharacterAdded:Wait()
+        if hookfunction then
+            for _, v in pairs(Targets) do
+                DeletePlayer.Players[v] = v.Character or v.CharacterAdded:Wait()
 
-            if v.Character then
-                v.Character.Parent = ReplicatedStorage
+                if v.Character then
+                    v.Character.Parent = ReplicatedStorage
+                end
+
+                DeletePlayer.Cons[#DeletePlayer.Cons+1] = v.CharacterAdded:Connect(function(Character)
+                    DeletePlayer.Players[v] = Character
+                    Character.Parent = ReplicatedStorage
+                end)
+
+                Success("Added \""..v.Name.."\" to the deleteplayer list.")
             end
 
-            DeletePlayer.Cons[#DeletePlayer.Cons+1] = v.CharacterAdded:Connect(function(Character)
-                DeletePlayer.Players[v] = Character
-                Character.Parent = ReplicatedStorage
-            end)
+            TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+                local Hidden = Instance.new("TextChatMessageProperties")
+                Hidden.Text = ""
 
-            Success("Added \""..v.Name.."\" to the deleteplayer list.")
-        end
+                local UserId = message.TextSource.UserId
+                local Player = UserId and Players:GetPlayerByUserId(UserId)
 
-        TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-            local Hidden = Instance.new("TextChatMessageProperties")
-            Hidden.Text = ""
+                if Player and DeletePlayer.Players[Player] then
+                    return Hidden
+                end
 
-            local UserId = message.TextSource.UserId
-            local Player = UserId and Players:GetPlayerByUserId(UserId)
-
-            if Player and DeletePlayer.Players[Player] then
-                return Hidden
+                return OldIncomingMessage(message)
             end
-
-            return OldIncomingMessage(message)
+        else
+            Error("Your exploit does not support hookfunction.")
         end
     else
         Error("No players specified.")
@@ -3397,10 +3399,6 @@ AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unrem
 
                 Success("Removed \""..Target.Name.."\" from the deleteplayer list.")
             end
-        end
-
-        if #Targets == 0 then
-            TextChatService.OnIncomingMessage = OldIncomingMessage
         end
 
         Success("Removed player(s) from deleteplayer list.")
