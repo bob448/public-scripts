@@ -2099,8 +2099,8 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
         local YOffset = arguments[3] and tonumber(arguments[3]) or 0
         local ZOffset = arguments[4] and tonumber(arguments[4]) or 0
 
-        if XOffset % 4 ~= 0 or YOffset % 4 ~= 0 or ZOffset % 4 ~= 0 then
-            Raven.Notif:Error("Error: Offsets must be multiples of four. (offsets should be like 4,8,12, etc.)")
+        if XOffset % 2 ~= 0 or YOffset % 2 ~= 0 or ZOffset % 2 ~= 0 then
+            Raven.Notif:Error("Error: Offsets must be multiples of two. (offsets should be like 2,4,6,8, etc.)")
             return
         end
 
