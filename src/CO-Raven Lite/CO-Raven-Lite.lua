@@ -1773,6 +1773,94 @@ Raven:AddCMD("untrap", "Stops trapping.", {}, {}, function(arguments)
     end
 end)
 
+local function FindFirstDescendant(obj: Instance, name: string)
+    if obj then
+        for i,v in ipairs(obj:GetDescendants()) do
+            if v.Name == name then
+                return v
+            end
+        end
+    end
+
+    return nil
+end
+
+Raven:AddCMD("muteboombox", "Mutes the player's boombox along with their clones.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and Raven.Player:FindPlayers(arguments[1])
+
+    local FindAll = arguments[1]:lower() == "all"
+
+    if Targets and #Targets > 0 and not FindAll then
+        local Target = Targets[1]
+
+        local Sound: Sound? = Target.Character and FindFirstDescendant(Target.Character, "Sound")
+
+        if Sound and Sound:IsA("Sound") and Sound.Parent.Name == "Handle" then
+            Sound:Pause()
+        end
+
+        local Clones = workspace:WaitForChild("Clones")
+
+        local TargetClones = Clones:FindFirstChild(Target.Name)
+
+        if TargetClones then
+            for i,v: Sound? in ipairs(TargetClones:GetDescendants()) do
+                if v:IsA("Sound") and v.Name == "Sound" and v.Parent.Name == "Handle" then
+                    v:Pause()
+                end
+            end
+        end
+
+        Raven.Notif:Success("Stopped all boombox sounds of target.")
+    elseif FindAll then
+        for i,v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("Sound") and v.Name == "Sound" and v.Parent.Name == "Handle" then
+                v:Pause()
+            end
+        end
+    else
+        Raven.Notif:Error("Couldn't find target.")
+    end
+end)
+
+Raven:AddCMD("unmuteboombox", "Unmutes the player's boombox along with their clones.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and Raven.Player:FindPlayers(arguments[1])
+
+    local FindAll = arguments[1]:lower() == "all"
+
+    if Targets and #Targets > 0 and not FindAll then
+        local Target = Targets[1]
+
+        local Sound: Sound? = Target.Character and FindFirstDescendant(Target.Character, "Sound")
+
+        if Sound and Sound:IsA("Sound") and Sound.Parent.Name == "Handle" then
+            Sound:Play()
+        end
+
+        local Clones = workspace:WaitForChild("Clones")
+
+        local TargetClones = Clones:FindFirstChild(Target.Name)
+
+        if TargetClones then
+            for i,v: Sound? in ipairs(TargetClones:GetDescendants()) do
+                if v:IsA("Sound") and v.Name == "Sound" and v.Parent.Name == "Handle" then
+                    v:Play()
+                end
+            end
+        end
+
+        Raven.Notif:Success("Stopped all boombox sounds of target.")
+    elseif FindAll then
+        for i,v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("Sound") and v.Name == "Sound" and v.Parent.Name == "Handle" then
+                v:Play()
+            end
+        end
+    else
+        Raven.Notif:Error("Couldn't find target.")
+    end
+end)
+
 local SaveBlocks = {}
 SaveBlocks.Selecting = false
 SaveBlocks.CancelSelecting = false
