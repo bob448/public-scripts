@@ -3318,6 +3318,97 @@ AddCMD("undeathtp", "Disables deathtp.", {}, {}, function(arguments)
     end
 end)
 
+local DeletePlayer = {}
+DeletePlayer.Cons = {}
+DeletePlayer.Players = {}
+
+local OldIncomingMessage = TextChatService.OnIncomingMessage
+
+local function IsDeleted(player: Player)
+    for i, _ in pairs(DeletePlayer.Players) do
+        if i == player then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function GetDeletedCharacter(player: Player)
+    for i,v in pairs(DeletePlayer.Players) do
+        if i == player then
+            return v
+        end
+    end
+
+    return nil
+end
+
+AddCMD("deleteplayer", "Removes a player or players from your client.", {"blockplayer","removeplayer"}, {"player"}, function(arguments)
+    local Targets = FindPlayers(unpack(arguments))
+
+    if #Targets > 0 then
+        for _, v in pairs(Targets) do
+            DeletePlayer.Players[v] = v.Character or v.CharacterAdded:Wait()
+
+            if v.Character then
+                v.Character.Parent = ReplicatedStorage
+            end
+
+            DeletePlayer.Cons[#DeletePlayer.Cons+1] = v.CharacterAdded:Connect(function(Character)
+                DeletePlayer.Players[v] = Character
+                Character.Parent = ReplicatedStorage
+            end)
+
+            Success("Added \""..v.Name.."\" to the deleteplayer list.")
+        end
+
+        TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+            local Hidden = Instance.new("TextChatMessageProperties")
+            Hidden.Text = ""
+
+            local UserId = message.TextSource.UserId
+            local Player = UserId and Players:GetPlayerByUserId(UserId)
+
+            if Player and DeletePlayer.Players[Player] then
+                return Hidden
+            end
+
+            return OldIncomingMessage(message)
+        end
+    else
+        Error("No players specified.")
+    end
+end)
+
+AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unremoveplayer"}, {"player"}, function(arguments)
+    local Targets = FindPlayers(unpack(arguments))
+
+    if #Targets > 0 then
+        for _, Target in pairs(Targets) do
+            if IsDeleted(Target) then
+                local Character = GetDeletedCharacter(Target)
+
+                if Exists(Character) and Character.Parent ~= workspace then
+                    Character.Parent = workspace
+                end
+
+                DeletePlayer.Players[Target] = nil
+
+                Success("Removed \""..Target.Name.."\" from the deleteplayer list.")
+            end
+        end
+
+        if #Targets == 0 then
+            TextChatService.OnIncomingMessage = OldIncomingMessage
+        end
+
+        Success("Removed player(s) from deleteplayer list.")
+    else
+        Error("No targets specified.")
+    end
+end)
+
 local FlyHeartbeatCon = nil
 
 AddCMD("fly", "Activates fly.", {}, {"speed/none"}, function(arguments)
