@@ -1108,8 +1108,12 @@ local function ReplaceCMD(name: string, description: string, aliases: {string?},
         Commands[name:lower()] = nil
 
         AddCMD(name, description, arguments, aliases, func)
+
+        return true
     else
         Error("Could not replace command \""..name.."\". Command does not exist.")
+
+        return false
     end
 end
 
@@ -2355,6 +2359,434 @@ AddCMD("unfreeze", "Unanchors your root.", {"unfr"}, {}, function(arguments)
 
     if Root then
         Root.Anchored = false
+    end
+end)
+
+module.BringUA = {}
+
+local BringUAModes = {}
+
+local function GetUAMode(name: string)
+    return BringUAModes[name]
+end
+
+function module.BringUA:GetUAMode(...)
+    return GetUAMode(...)
+end
+
+local function AddUAMode(name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
+    if GetUAMode(name:lower()) then
+        Error("Couldn't add UA mode. \""..name.."\" already exists!")
+    else
+        local Table = {}
+        Table.Function = func
+        Table.Description = description
+
+        BringUAModes[name:lower()] = Table
+    end
+end
+
+function module.BringUA:AddUAMode(...)
+    return AddUAMode(...)
+end
+
+local function ReplaceUAMode(name: string, description: string, func:  (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
+    local Table = GetUAMode(name)
+    if Table then
+        BringUAModes[name] = nil
+        
+        AddUAMode(name, description, func)
+
+        return true
+    else
+        Error("Cannot replace UAMode \""..name.."\"! It does not exist.")
+
+        return false
+    end
+end
+
+function module.BringUA:ReplaceUAMode(...)
+    return ReplaceUAMode(...)
+end
+
+local function RandomAngle()
+    return CFrame.Angles(math.rad(math.random(-360, 360)),math.rad(math.random(-360, 360)),math.rad(math.random(-360, 360))) 
+end
+
+AddUAMode("normal", "The normal BringUA mode. Brings all of the parts to the position.", function(positionForce, orientationForce, center, _, _, part)
+    positionForce.Position = center
+    orientationForce.CFrame = CFrame.new(Vector3.zero, center)
+
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxVelocity = math.huge
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    positionForce.RigidityEnabled = true
+    orientationForce.RigidityEnabled = true
+
+    part.CanCollide = false
+    part.CanQuery = false
+end)
+
+AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionForce, orientationForce, center, parts, partIndex, _, persistentVars, size, speed)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxVelocity = math.huge
+
+    positionForce.Responsiveness = 30
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    orientationForce.RigidityEnabled = true
+
+    if not persistentVars.Rotation then
+        persistentVars.Rotation = 0
+    end
+
+    local NumOfParts = 0
+
+    for _ in pairs(parts) do
+        NumOfParts += 1
+    end
+
+    local Circle = math.pi * 2
+    local Angle = partIndex * (Circle / NumOfParts) + math.rad(persistentVars.Rotation)
+
+    local X = math.cos(Angle) * size
+    local Z = math.sin(Angle) * size
+
+    local Cf = CFrame.new(center + Vector3.new(X, 0, Z), center)
+
+    positionForce.Position = Cf.Position
+    orientationForce.CFrame = Cf.Rotation
+
+    persistentVars.Rotation += speed ~= 0 and speed or .1
+end)
+
+AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxVelocity = math.huge
+
+    positionForce.Responsiveness = 30
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    orientationForce.RigidityEnabled = true
+
+    if not persistentVars.Rotation then
+        persistentVars.Rotation = 0
+    end
+
+    if not persistentVars.Layer then
+        persistentVars.Layer = {}
+    end
+
+    if not persistentVars.Layer[part] then
+        local Random = Random.new()
+        persistentVars.Layer[part] = Random:NextInteger(0, size / 1.3)
+    end
+
+    local NumOfParts = 0
+
+    for _ in pairs(parts) do
+        NumOfParts += 1
+    end
+
+    local Circle = math.pi * 2
+    local Angle = partIndex * (Circle / NumOfParts) + math.rad(persistentVars.Rotation)
+
+    local X = math.cos(Angle) * (size - persistentVars.Layer[part])
+    local Z = math.sin(Angle) * (size - persistentVars.Layer[part])
+
+    local Cf = CFrame.new(center + Vector3.new(X, 0, Z), center)
+
+    positionForce.Position = Cf.Position
+    orientationForce.CFrame = Cf.Rotation
+
+    persistentVars.Rotation += speed ~= 0 and speed or .1
+
+    part.CanCollide = false
+    part.CanQuery = false
+end)
+
+AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForce, orientationForce, center, _, _, part, persistentVars, _, speed)
+    if not persistentVars[part] then
+        persistentVars[part] = RandomAngle()
+    end
+    
+    positionForce.Position = center
+    orientationForce.CFrame = persistentVars[part]
+
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxVelocity = math.huge
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    positionForce.RigidityEnabled = true
+    orientationForce.RigidityEnabled = true
+
+    persistentVars[part] *= CFrame.Angles(speed,speed,speed)
+
+    part.CanCollide = false
+    part.CanQuery = false
+end)
+
+local function FibonacciSpiralSpheres(Points: number)
+	local Vectors = {}
+	local GR = (math.sqrt(5) + 1) / 2
+	local GA = (2 - GR) * (2 * math.pi)
+	
+	for i = 1, Points do
+		local Lat = math.asin(-1 + 2 * i / (Points + 1))
+		local Lon = GA * i
+		
+		local X = math.cos(Lon) * math.cos(Lat)
+		local Y = math.sin(Lon) * math.cos(Lat)
+		local Z = math.sin(Lat)
+		
+		table.insert(Vectors, Vector3.new(X, Y, Z))
+	end
+	
+	return Vectors
+end
+
+AddUAMode("sphere", "Surrounds the center with a sphere of parts.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxVelocity = math.huge
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    positionForce.RigidityEnabled = true
+    orientationForce.RigidityEnabled = true
+
+    if not persistentVars.Angle then
+        persistentVars.Angle = {}
+    end
+
+    if not persistentVars.Angle[part] then
+        persistentVars.Angle[part] = RandomAngle()
+    end
+
+    local NumOfParts = 0
+
+    for _ in pairs(parts) do
+        NumOfParts += 1
+    end
+
+    local Sphere = FibonacciSpiralSpheres(NumOfParts)
+
+    local Position = center + Sphere[partIndex].Unit * size
+
+    positionForce.Position = Position
+    orientationForce.CFrame = persistentVars.Angle[part]
+
+    part.CanCollide = false
+    part.CanQuery = false
+
+    persistentVars.Angle[part] *= CFrame.Angles(speed, speed, speed)
+end)
+
+AddCMD("listuamodes", "Lists all BringUA modes.", {}, {}, function(arguments)
+    local data = {}
+
+    for Name, Table in pairs(BringUAModes) do
+        data[#data+1] = Name..": "..Table.Description
+    end
+
+    Output(data)
+end)
+
+local BringUA = {}
+BringUA.Enabled = false
+BringUA.Heartbeat = nil
+BringUA.Parts = {}
+
+AddCMD("bringua", "Brings unanchored parts using the specified center and mode.", {"unbringunanchored"}, {"player","mode","size","speed","center x","center y","center z"}, function(arguments)
+    local Targets = arguments[1] and FindPlayers(arguments[1])
+    local Target = Targets and #Targets > 0 and Targets[1]
+
+    local Mode = arguments[2]
+    local Size = arguments[3] and tonumber(arguments[3])
+    local Speed = arguments[4] and tonumber(arguments[4])
+    local X,Y,Z = arguments[5] and tonumber(arguments[5]),arguments[6] and tonumber(arguments[6]),arguments[7] and tonumber(arguments[7])
+
+    if Target and Mode and Size and Size >= 0 and Speed and Speed >= 0 then
+        local CenterSpecified = X and Y and Z
+        X,Y,Z = CenterSpecified and tonumber(X), CenterSpecified and tonumber(Y), CenterSpecified and tonumber(Z)
+        local Center = X and Y and Z and Vector3.new(X,Y,Z)
+
+        Mode = GetUAMode(Mode)
+
+        if Mode then
+            if BringUA.Enabled then
+                RunCMD("unbringua", {})
+                task.wait()
+            end
+
+            BringUA.Enabled = true
+
+            local Persistent = {}
+
+            BringUA.Heartbeat = RunService.Heartbeat:Connect(function()
+                local Character: Model? = Target.Character
+                local Root: BasePart? = Character and Target.Character:FindFirstChild("HumanoidRootPart")
+
+                if Root then
+                    
+                    for _, v: BasePart in ipairs(workspace:GetDescendants()) do
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) then
+                            local InPlayer = false
+
+                            for _, player in ipairs(Players:GetPlayers()) do
+                                if player.Character and player ~= LocalPlayer then
+                                    for _, part: BasePart in ipairs(player.Character:GetDescendants()) do
+                                        if part == v then
+                                            InPlayer = true
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+
+                            if not BringUA.Parts[v] and not InPlayer then
+                                BringUA.Parts[v] = {}
+
+                                local AlignPosition, AlignOrientation = Instance.new("AlignPosition", v), Instance.new("AlignOrientation", v)
+                                local Attachment0 = Instance.new("Attachment", v)
+
+                                BringUA.Parts[v].AlignPosition = AlignPosition
+                                BringUA.Parts[v].AlignOrientation = AlignOrientation
+                                BringUA.Parts[v].Attachment0 = Attachment0
+
+                                AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
+                                AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+
+                                AlignPosition.Attachment0 = Attachment0
+                                AlignOrientation.Attachment0 = Attachment0
+                            end
+                        end
+                    end
+
+                    local PartIndex = 0
+
+                    for Part, Table in pairs(BringUA.Parts) do
+                        if not Exists(Part) then
+                            BringUA.Parts[Part] = nil
+                            continue
+                        end
+
+                        PartIndex += 1
+                        Mode.Function(
+                            Table.AlignPosition,
+                            Table.AlignOrientation,
+                            Center or Root.Position,
+                            BringUA.Parts,
+                            PartIndex,
+                            Part,
+                            Persistent,
+                            Size,
+                            Speed
+                        )
+                    end
+                end
+            end)
+
+            Success("Enabled BringUA.")
+        else
+            Error("Couldn't find specified mode. You can list modes with \"listuamodes\".")
+        end
+    elseif not Target then
+        Error("Couldn't find target player.")
+    elseif not Mode then
+        Error("No mode specified. You can list modes with \"listuamodes\".")
+    elseif not Size then
+        Error("No size specified. Please specify a size, some modes may need it.")
+    elseif Size < 0 then
+        Error("You cannot have a negative size.")
+    elseif not Speed then
+        Error("No speed specified. Please specify a speed, some modes may need it.")
+    elseif Speed < 0 then
+        Error("You cannot have a negative speed.")
+    end
+end)
+
+AddCMD("unbringua", "Stops bringing unanchored parts.", {"unbringunanchored"}, {}, function(arguments)
+    if BringUA.Enabled then
+        BringUA.Enabled = false
+
+        for Part, Table in pairs(BringUA.Parts) do
+            if Table.AlignPosition then
+                Table.AlignPosition:Destroy()
+            end
+            if Table.AlignOrientation then
+                Table.AlignOrientation:Destroy()
+            end
+            if Table.Attachment0 then
+                Table.Attachment0:Destroy()
+            end
+
+            Part.CanCollide = true
+        end
+
+        table.clear(BringUA.Parts)
+
+        if BringUA.Heartbeat then
+            BringUA.Heartbeat:Disconnect()
+        end
+
+        Success("Disabled BringUA.")
+    else
+        Error("BringUA is already disabled.")
+    end
+end)
+
+AddCMD("invisicam", "Activates the invisicam occlusion module.", {"inviscam"}, {}, function(arguments)
+    LocalPlayer.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+end)
+
+AddCMD("uninvisicam", "Activates the invisicam occlusion module.", {"viscam"}, {}, function(arguments)
+    LocalPlayer.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Zoom
+end)
+
+local NetBypass = {}
+NetBypass.Enabled = false
+NetBypass.RenderStepped = nil
+
+AddCMD("netbypass", "Constantly changes your simulationradius to math.huge.", {}, {}, function(arguments)
+    if not NetBypass.Enabled then
+        if setsimulationradius then
+            NetBypass.Enabled = true
+
+            NetBypass.RenderStepped = RunService.RenderStepped:Connect(function()
+                setsimulationradius(math.huge)
+            end)
+        else
+            Error("Your exploit does not support setsimulationradius.")
+        end
+    else
+        Error("Netbypass is already enabled.")
+    end
+end)
+
+AddCMD("unnetbypass", "Disables netbypass.", {}, {}, function(arguments)
+    if NetBypass.Enabled then
+        NetBypass.Enabled = false
+
+        if NetBypass.RenderStepped then
+            NetBypass.RenderStepped:Disconnect()
+        end
+    else
+        Error("Netbypass is already disabled.")
     end
 end)
 

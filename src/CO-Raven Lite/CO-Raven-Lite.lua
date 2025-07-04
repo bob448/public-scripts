@@ -87,6 +87,11 @@ type RavenMod = {
     IsMobile: boolean,
     Instance: {
         Exists: (inst: Instance?) -> (boolean)
+    },
+    BringUA: {
+        GetUAMode: (name: string) -> (any?),
+        AddUAMode: (name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ()) -> (),
+        ReplaceUAMode: (name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ()) -> (boolean)
     }
 }
 
