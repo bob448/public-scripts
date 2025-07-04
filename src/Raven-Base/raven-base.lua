@@ -2767,6 +2767,8 @@ AddCMD("netbypass", "Constantly changes your simulationradius to math.huge.", {}
             NetBypass.RenderStepped = RunService.RenderStepped:Connect(function()
                 setsimulationradius(math.huge)
             end)
+
+            Success("Enabled netbypass.")
         else
             Error("Your exploit does not support setsimulationradius.")
         end
@@ -2782,6 +2784,8 @@ AddCMD("unnetbypass", "Disables netbypass.", {}, {}, function(arguments)
         if NetBypass.RenderStepped then
             NetBypass.RenderStepped:Disconnect()
         end
+
+        Success("Disabled netbypass.")
     else
         Error("Netbypass is already disabled.")
     end
