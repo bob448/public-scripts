@@ -2318,6 +2318,8 @@ AddCMD("untouchfling", "Stops touchfling.", {"unwalkfling","unhiddenfling"}, {},
         end
 
         Success("Disabled touchfling.")
+    else
+        Error("Touchfling is already off.")
     end
 end)
 
