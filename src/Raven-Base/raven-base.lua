@@ -3262,6 +3262,8 @@ AddCMD("unchatlogs", "Stop recording chatlogs.", {}, {}, function(arguments)
         ChatLogsCon:Disconnect()
         ChatLogsCon = nil
         ClearChatLogs()
+
+        Success("Disabled chatlogs.")
     else
         Error("Chatlogs are already disabled.")
     end
