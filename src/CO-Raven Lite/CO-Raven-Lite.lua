@@ -1034,6 +1034,60 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
     end
 end)
 
+local AntiDrag = {}
+AntiDrag.Enabled = false
+AntiDrag.Heartbeat = nil
+
+Raven:AddCMD("antidrag", "Tries to avoid being dragged by admin or enlightened.", {}, {}, function(arguments)
+     if not AntiDrag.Enabled then
+        local LastDragFrame = nil
+        AntiDrag.Enabled = true
+        AntiDrag.Heartbeat = RunService.Heartbeat:Connect(function()
+            local Dragger: DragDetector? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Dragger")
+            local Humanoid: Humanoid? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+            if Dragger then
+                Dragger.ResponseStyle = Enum.DragDetectorResponseStyle.Custom
+
+                if LastDragFrame ~= nil and LastDragFrame ~= Dragger.DragFrame then
+                    if Humanoid then
+                        Humanoid.PlatformStand = false
+                        Humanoid.Sit = false
+
+                        Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+                end
+
+                LastDragFrame = Dragger.DragFrame
+            end
+        end)
+
+        Raven.Notif:Success("Enabled antidrag.")
+    else
+        Raven.Notif:Error("Antidrag is already enabled. Try running \"unantidrag\".")
+    end
+end)
+
+Raven:AddCMD("unantidrag", "Stops antidrag.", {}, {}, function(arguments)
+    if AntiDrag.Enabled then
+        AntiDrag.Enabled = false
+        
+        if AntiDrag.Heartbeat then
+            AntiDrag.Heartbeat:Disconnect()
+        end
+
+        local Dragger: DragDetector? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Dragger")
+
+        if Dragger then
+            Dragger.ResponseStyle = Enum.DragDetectorResponseStyle.Physical
+        end
+
+        Raven.Notif:Success("Turned off antidrag.")
+    else
+        Raven.Notif:Error("Antidrag is already off.")
+    end
+end)
+
 local UnanchorAuraCon = nil
 local UnanchorAuraHighlights = {}
 
