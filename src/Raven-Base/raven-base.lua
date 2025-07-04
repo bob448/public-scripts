@@ -2259,6 +2259,87 @@ AddCMD("unfling", "Stops flinging all targets.", {}, {}, function(arguments)
     end
 end)
 
+local Touchfling = {}
+Touchfling.Enabled = false
+Touchfling.Heartbeat = nil
+
+AddCMD("touchfling", "Flings everyone who touches your character without having to teleport.", {"walkfling","hiddenfling"}, {"power (number/none)"}, function(arguments)
+    if not Touchfling.Enabled then
+        local Power = arguments[1] and tonumber(arguments[1]) or 10e4
+
+        if Power and Power > 0 then
+            Touchfling.Enabled = true
+
+            Touchfling.Heartbeat = RunService.Heartbeat:Connect(function()
+                local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                if Root then
+                    local LastVelocity = Root.AssemblyLinearVelocity
+
+                    Root.AssemblyLinearVelocity = LastVelocity * Vector3.new(Power,Power,Power)
+
+                    RunService.RenderStepped:Wait()
+
+                    Root.AssemblyLinearVelocity = LastVelocity
+                end
+            end)
+
+            Success("Enabled touchfling.")
+        else
+            Error("You cannot have a negative power.")
+        end
+    else
+        Error("You are already using touchfling. Try using \"untouchfling\".")
+    end
+end)
+
+AddCMD("untouchfling", "Stops touchfling.", {"unwalkfling","unhiddenfling"}, {}, function(arguments)
+    if Touchfling.Enabled then
+        Touchfling.Heartbeat:Disconnect()
+        Touchfling.Enabled = false
+
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Root then
+            local Correct = 0
+
+            Info("Stabilizing root's velocity..")
+
+            repeat task.wait()
+                Root.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                Root.AssemblyAngularVelocity = Vector3.new(0,0,0)
+
+                if Root.AssemblyLinearVelocity.Magnitude < 1 then
+                    Correct += 1
+                end
+            until Correct > 25
+
+            Success("Done.")
+        end
+
+        Success("Disabled touchfling.")
+    end
+end)
+
+AddCMD("refresh", "Resets your character and then teleports you back to your original position.", {}, {}, function(arguments)
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+    local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if Root and Humanoid then
+        Info("Refreshing.")
+
+        local OgCF = Root.CFrame
+        Humanoid.Health = 0
+        
+        local Character = LocalPlayer.CharacterAdded:Wait()
+        Character:WaitForChild("HumanoidRootPart").CFrame = OgCF
+
+        Success("Refreshed.")
+    else
+        Error("Couldn't find Root/Humanoid.")
+    end
+end)
+
 AddCMD("freeze", "Anchors your root.", {"fr"}, {}, function(arguments)
     local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
