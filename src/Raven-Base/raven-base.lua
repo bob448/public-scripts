@@ -2428,7 +2428,6 @@ AddUAMode("normal", "The normal BringUA mode. Brings all of the parts to the pos
     orientationForce.RigidityEnabled = true
 
     part.CanCollide = false
-    part.CanQuery = false
 end)
 
 AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionForce, orientationForce, center, parts, partIndex, _, persistentVars, size, speed)
@@ -2512,7 +2511,6 @@ AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", functio
     persistentVars.Rotation += speed ~= 0 and speed or .1
 
     part.CanCollide = false
-    part.CanQuery = false
 end)
 
 AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForce, orientationForce, center, _, _, part, persistentVars, _, speed)
@@ -2536,7 +2534,6 @@ AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForc
     persistentVars[part] *= CFrame.Angles(speed,speed,speed)
 
     part.CanCollide = false
-    part.CanQuery = false
 end)
 
 local function FibonacciSpiralSpheres(Points: number)
@@ -2591,7 +2588,6 @@ AddUAMode("sphere", "Surrounds the center with a sphere of parts.", function(pos
     orientationForce.CFrame = persistentVars.Angle[part]
 
     part.CanCollide = false
-    part.CanQuery = false
 
     persistentVars.Angle[part] *= CFrame.Angles(speed, speed, speed)
 end)
