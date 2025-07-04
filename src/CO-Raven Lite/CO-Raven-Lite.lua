@@ -64,6 +64,7 @@ type RavenMod = {
     AddCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
     GetCMD: (name: string) -> (CommandTable),
     ReplaceCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    RunCMD: (name: string, arguments: {string?}) -> (any?),
     Output: {
         ClearOutput: () -> (),
         OutputData: (data: {any?}) -> ()
@@ -83,7 +84,10 @@ type RavenMod = {
         AnimateGradient: (uigradient: UIGradient, speed: number) -> (RBXScriptConnection),
         BounceButton: (button: TextButton | ImageButton, OgSize: UDim2) -> ()
     },
-    IsMobile: boolean
+    IsMobile: boolean,
+    Instance: {
+        Exists: (inst: Instance?) -> (boolean)
+    }
 }
 
 local Raven: RavenMod = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/Raven-Base/raven-base.lua"))()
@@ -235,7 +239,7 @@ Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances travele
 
                         repeat task.wait()
                             Root.CFrame = Pos
-                        until not Character.Parent or (Root.Position - Pos.Position).Magnitude <= 1
+                        until not Raven.Instance:Exists(Character) or (Root.Position - Pos.Position).Magnitude <= 1
 
                         Disable = false
                     end
@@ -897,12 +901,19 @@ end)
 Raven:AddCMD("unblind", "Unblinds you.", {}, {}, function(arguments)
     local BlindGUI = LocalPlayer.PlayerGui:FindFirstChild("Blind")
     local Blur = Lighting:FindFirstChild("Blur")
+    local Fog = Lighting:FindFirstChild("Fog")
 
     if BlindGUI then
         BlindGUI.Enabled = false
     end
     if Blur then
         Blur.Enabled = false
+    end
+    if Fog then
+        Fog.Density = 0
+        Fog.Offset = 0
+        Fog.Glare = 0
+        Fog.Haze = 0
     end
 end)
 
@@ -983,7 +994,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
 
                                 task.spawn(function()
                                     task.wait(.3)
-                                    if not Brick.Parent then
+                                    if not Raven.Instance:Exists(Brick) then
                                         Queue[i] = nil
                                     elseif DeleteAuraHighlights[Brick] then
                                         DeleteAuraHighlights[Brick]:Destroy()
@@ -2258,7 +2269,7 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
                                             end
                                         end
                                     else
-                                        if not LoadBlocks.BuiltParts[1] or not LoadBlocks.BuiltParts[1].Parent then
+                                        if not Raven.Instance:Exists(LoadBlocks.BuiltParts[1]) then
                                             table.remove(LoadBlocks.BuiltParts, 1)
                                             table.remove(LoadBlocks.PaintQueue, 1)
 

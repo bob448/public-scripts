@@ -27,6 +27,16 @@ local TextChannels
 local RBXGeneral: TextChannel? = nil
 local RBXSystem: TextChannel? = nil
 
+local function Exists(inst: Instance?)
+    return inst ~= nil and inst.Parent ~= nil
+end
+
+module.Instance = {}
+
+function module.Instance:Exists(...)
+    return Exists(...)
+end
+
 task.spawn(function()
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         TextChannels = TextChatService:WaitForChild("TextChannels")
@@ -899,7 +909,7 @@ end
 
 local function Notify(data: string, status: Color3?, time: number?)
     if not data then
-        return Notify("Could not display notification.", Statuses.Error)
+        return Notify("Could not display notification. No data supplied.", Statuses.Error)
     end
     
     local Notif = notification_frame:Clone()
@@ -939,7 +949,7 @@ local function Notify(data: string, status: Color3?, time: number?)
 
         task.wait(time or 4)
 
-        if not Notif or not Notif.Parent then return end
+        if not Exists(Notif) then return end
 
         CloseNotification(Notif, Status, Text)
     end)
@@ -1079,6 +1089,18 @@ end
 
 function module:GetCMD(...)
     return GetCMD(...)
+end
+
+local function RunCMD(name: string, arguments: {string?})
+    local Command = GetCMD(name)
+
+    if Command then
+        return Command.Function(arguments)
+    end
+end
+
+function module:RunCMD(...)
+    return RunCMD(...)
 end
 
 local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
@@ -2084,6 +2106,157 @@ AddCMD("unesp", "Disables ESP", {}, {}, function(arguments)
     end
 
     table.clear(EspPlayers)
+end)
+
+local Fling = {}
+Fling.FlingCon = nil
+Fling.OgCFrame = nil
+Fling.LinearVelocity = nil
+Fling.Attachment0 = nil
+
+local function ReadjustAfterFling(root: BasePart, humanoid: Humanoid?)
+    local BeforeReadjusting = tick()
+
+    if humanoid and workspace.CurrentCamera then
+        workspace.CurrentCamera.CameraSubject = humanoid
+    end
+
+    local Correct = 0
+
+    repeat task.wait()
+        root.AssemblyLinearVelocity = Vector3.new(0,0,0)
+        root.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        root.CFrame = Fling.OgCFrame
+
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+        end
+        task.wait()
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+
+        if (root.Position - Fling.OgCFrame.Position).Magnitude < 3 then
+            Correct += 1
+        end
+    until Correct > 100 or tick() > BeforeReadjusting + 10
+    Success("Stopped readjusting.")
+end
+
+local FlingOffsets = {
+    CFrame.new(0, 0, 1),
+    CFrame.new(1, 0, 1),
+    CFrame.new(0, 0, 0),
+    CFrame.new(-1, 0, -1),
+    CFrame.new(1, 0, -1),
+    CFrame.new(-1, 0, 1),
+    CFrame.new(0, 0, 2),
+    CFrame.new(0, 0, -2),
+    CFrame.new(0, 0, 3),
+    CFrame.new(0, 0, -3)
+}
+
+AddCMD("fling", "Flings a player.", {}, {"player"}, function(arguments)
+    if not Fling.Flinging then
+        local Targets = FindPlayers(unpack(arguments))
+
+        if #Targets > 0 then
+            Fling.Flinging = true
+
+            local TargetIndex = 1
+            local OffsetIndex = 0
+            local Angle = CFrame.Angles(0,0,0)
+
+            Fling.FlingCon = RunService.Heartbeat:Connect(function()
+                local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                
+                if Root then
+                    if not Fling.OgCFrame then
+                        Fling.OgCFrame = Root.CFrame
+                    end
+
+                    if not Exists(Fling.LinearVelocity) then
+                        Fling.LinearVelocity = Instance.new("LinearVelocity", Root)
+                        
+                        if Exists(Fling.Attachment0) then
+                            Fling.Attachment0:Destroy()
+                        end
+
+                        Fling.Attachment0 = Instance.new("Attachment", Root)
+
+                        Fling.LinearVelocity.Attachment0 = Fling.Attachment0
+                        Fling.LinearVelocity.MaxForce = math.huge
+                        Fling.LinearVelocity.VectorVelocity = Vector3.new(9e9,9e9,9e9)
+                    end
+                    Angle *= CFrame.Angles(30,30,30)
+
+                    OffsetIndex += 1
+                    if OffsetIndex > #FlingOffsets then
+                        OffsetIndex = 1
+                    end
+
+                    local Target = Targets[TargetIndex]
+
+                    local TRoot = Target and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart")
+                    local THum = Target and Target.Character and Target.Character:FindFirstChildWhichIsA("Humanoid")
+
+                    if TRoot and (#Targets > 1 and TRoot.AssemblyLinearVelocity.Magnitude < 300 or #Targets == 1) then
+                        if THum then
+                            Root.CFrame = TRoot.CFrame * CFrame.new(THum.MoveDirection * TRoot.AssemblyLinearVelocity.Magnitude / 1.2) * FlingOffsets[OffsetIndex] * Angle
+                        else
+                            Root.CFrame = TRoot.CFrame * FlingOffsets[OffsetIndex] * Angle
+                        end
+
+                        if THum and workspace.CurrentCamera then
+                            workspace.CurrentCamera.CameraSubject = THum
+                        end
+                    elseif not Exists(Target) and #Targets == 1 then
+                        Info("Player left.")
+
+                        RunCMD("unfling", {})
+                        return
+                    else
+                        if TargetIndex == #Targets then
+                            TargetIndex = 1
+                        else
+                            TargetIndex += 1
+                        end
+                    end
+                end
+            end)
+
+            Success("Started flinging.")
+        end
+    else
+        Error("You are already flinging someone.")
+    end
+end)
+
+AddCMD("unfling", "Stops flinging all targets.", {}, {}, function(arguments)
+    if Fling.Flinging then
+        if Fling.FlingCon then
+            Fling.FlingCon:Disconnect()
+        end
+        if Exists(Fling.Attachment0) then
+            Fling.Attachment0:Destroy()
+        end
+        if Exists(Fling.LinearVelocity) then
+            Fling.LinearVelocity:Destroy()
+        end
+
+        Fling.Flinging = false
+
+        Success("Stopped flinging. Readjusting to original position if you have a root.")
+
+        local Root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Root then
+            local Humanoid = LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            ReadjustAfterFling(Root, Humanoid)
+        end
+    else
+        Error("You are not flinging anyone.")
+    end
 end)
 
 AddCMD("freeze", "Anchors your root.", {"fr"}, {}, function(arguments)
