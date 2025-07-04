@@ -3269,6 +3269,55 @@ AddCMD("unchatlogs", "Stop recording chatlogs.", {}, {}, function(arguments)
     end
 end)
 
+local DeathTP = {}
+DeathTP.Enabled = false
+DeathTP.Heartbeat = nil
+
+AddCMD("deathtp", "Teleports you back to your original position when you die.", {}, {}, function(arguments)
+    if not DeathTP.Enabled then
+        DeathTP.Enabled = true
+
+        local Died = false
+
+        DeathTP.Heartbeat = RunService.Heartbeat:Connect(function()
+            if not Died then
+                local Character = LocalPlayer.Character
+                local Root,Humanoid = Character and Character:FindFirstChild("HumanoidRootPart"), Character and Character:FindFirstChildWhichIsA("Humanoid")
+
+                if Humanoid and Root and Humanoid.Health <= 0 and workspace.CurrentCamera then
+                    local LastPos = Root.CFrame
+                    Died = true
+                    
+                    Character = LocalPlayer.CharacterAdded:Wait()
+                    Root = Character:WaitForChild("HumanoidRootPart")
+
+                    Root.CFrame = LastPos
+
+                    Died = false
+                end
+            end
+        end)
+
+        Success("Enabled DeathTP.")
+    else
+        Error("DeathTP is already enabled.")
+    end
+end)
+
+AddCMD("undeathtp", "Disables deathtp.", {}, {}, function(arguments)
+    if DeathTP.Enabled then
+        DeathTP.Enabled = false
+
+        if DeathTP.Heartbeat then
+            DeathTP.Heartbeat:Disconnect()
+        end
+
+        Success("Disabled DeathTP.")
+    else
+        Error("DeathTP is already disabled.")
+    end
+end)
+
 local FlyHeartbeatCon = nil
 
 AddCMD("fly", "Activates fly.", {}, {"speed/none"}, function(arguments)
