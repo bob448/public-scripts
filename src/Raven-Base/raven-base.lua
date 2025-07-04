@@ -2678,6 +2678,10 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                     for Part, Table in pairs(BringUA.Parts) do
                         if not Exists(Part) or LocalPlayer:DistanceFromCharacter(Part.Position) > Size then
+                            BringUA.Parts[Part].AlignPosition:Destroy()
+                            BringUA.Parts[Part].AlignOrientation:Destroy()
+                            BringUA.Parts[Part].Attachment0:Destroy()
+                            
                             BringUA.Parts[Part] = nil
                             continue
                         end
