@@ -2641,7 +2641,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                 if Root then
                     
                     for _, v: BasePart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and LocalPlayer:DistanceFromCharacter(v.Position) <= Size then
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 10 then
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
@@ -2677,11 +2677,13 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     local PartIndex = 0
 
                     for Part, Table in pairs(BringUA.Parts) do
-                        if not Exists(Part) or LocalPlayer:DistanceFromCharacter(Part.Position) > Size then
+                        if not Exists(Part) or LocalPlayer:DistanceFromCharacter(Part.Position) > Size + 10 then
                             BringUA.Parts[Part].AlignPosition:Destroy()
                             BringUA.Parts[Part].AlignOrientation:Destroy()
                             BringUA.Parts[Part].Attachment0:Destroy()
-                            
+
+                            Part.CanCollide = true
+
                             BringUA.Parts[Part] = nil
                             continue
                         end
