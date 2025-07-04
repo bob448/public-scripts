@@ -2613,6 +2613,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
     local Mode = arguments[2]
     local Size = arguments[3] and tonumber(arguments[3])
+    Size = Size ~= 0 and Size or 25
     local Speed = arguments[4] and tonumber(arguments[4])
     local X,Y,Z = arguments[5] and tonumber(arguments[5]),arguments[6] and tonumber(arguments[6]),arguments[7] and tonumber(arguments[7])
 
@@ -2640,7 +2641,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                 if Root then
                     
                     for _, v: BasePart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) then
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and LocalPlayer:DistanceFromCharacter(v.Position) <= Size then
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
@@ -2676,7 +2677,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     local PartIndex = 0
 
                     for Part, Table in pairs(BringUA.Parts) do
-                        if not Exists(Part) then
+                        if not Exists(Part) or LocalPlayer:DistanceFromCharacter(Part.Position) > Size then
                             BringUA.Parts[Part] = nil
                             continue
                         end
