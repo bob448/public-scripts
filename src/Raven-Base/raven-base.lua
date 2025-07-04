@@ -1926,9 +1926,8 @@ local function PlayerHasEsp(player: Player)
     return false
 end
 
-local function DestroyEspPart(part: Part, player: Player)
+local function DestroyEspPart(part: Part, player: Player, Table)
     if PlayerHasEsp(player) and IsEspPart(part) then
-        local Table = EspPlayers[player].Parts[part]
         if Table.Box then
             Table.Box:Destroy()
         end
@@ -1947,7 +1946,7 @@ end
 local function DestroyEspPlayer(player: Player)
     if PlayerHasEsp(player) then
         for Part, Table in pairs(EspPlayers[player].Parts) do
-            DestroyEspPart(Part, player)
+            DestroyEspPart(Part, player, Table)
         end
 
         if EspPlayers[player].TeamChanged then
@@ -2064,6 +2063,7 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {},
             end
 
             EspPlayers[Target].CharacterAdded = Target.CharacterAdded:Connect(function(character)
+                DestroyEspPlayer(Target)
                 InitEsp(Target, character)
             end)
         end
