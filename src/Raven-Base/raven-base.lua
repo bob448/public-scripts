@@ -2678,12 +2678,6 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                     for Part, Table in pairs(BringUA.Parts) do
                         if not Exists(Part) then
-                            BringUA.Parts[Part].AlignPosition:Destroy()
-                            BringUA.Parts[Part].AlignOrientation:Destroy()
-                            BringUA.Parts[Part].Attachment0:Destroy()
-
-                            Part.CanCollide = true
-
                             BringUA.Parts[Part] = nil
                             continue
                         end
