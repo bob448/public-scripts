@@ -2641,7 +2641,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                 if Root then
                     
                     for _, v: BasePart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30 then
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and (isnetworkowner and isnetworkowner(v) or not isnetworkowner and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30) then
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
@@ -2679,6 +2679,14 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     for Part, Table in pairs(BringUA.Parts) do
                         if not Exists(Part) then
                             BringUA.Parts[Part] = nil
+                            continue
+                        elseif isnetworkowner and not isnetworkowner(Part) then
+                            BringUA.Parts[Part].AlignPosition:Destroy()
+                            BringUA.Parts[Part].AlignOrientation:Destroy()
+                            BringUA.Parts[Part].Attachment0:Destroy()
+
+                            BringUA.Parts[Part] = nil
+
                             continue
                         end
 
@@ -3401,8 +3409,6 @@ end)
 local AntiAFKTriggered = false
 
 AddCMD("antiafk", "Prevents being kicked for afking. (EXPERIMENTAL)", {}, {}, function(arguments)
-    local Idled = LocalPlayer.Idled
-
     if getconnections and not AntiAFKTriggered then
         for i,v in pairs(getconnections(LocalPlayer.Idled)) do
             if v.State == Enum.ConnectionState.Connected then
