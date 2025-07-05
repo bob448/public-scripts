@@ -3412,7 +3412,7 @@ end)
 
 local AntiAFKTriggered = false
 
-AddCMD("antiafk", "Prevents being kicked for afking. (EXPERIMENTAL)", {}, {}, function(arguments)
+AddCMD("antiidle", "Prevents being kicked for idleing. (EXPERIMENTAL)", {}, {}, function(arguments)
     if getconnections and not AntiAFKTriggered then
         for i,v in pairs(getconnections(LocalPlayer.Idled)) do
             if v.State == Enum.ConnectionState.Connected then
