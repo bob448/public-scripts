@@ -2671,7 +2671,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                         end
                     end
 
-                    local PartIndex = 0
+                    local PartIndex = 1
 
                     for Part, Table in pairs(BringUA.Parts) do
                         local Args = {
@@ -2704,11 +2704,12 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                                 unpack(Args)
                             )
                         end
-
-                        PartIndex += 1
+                        
                         Mode.Function(
                             unpack(Args)
                         )
+
+                        PartIndex += 1
                     end
                 end
             end)
