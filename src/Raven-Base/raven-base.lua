@@ -2637,8 +2637,8 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                 if Root then
                     
-                    for _, v: BasePart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and (isnetworkowner and isnetworkowner(v) or not isnetworkowner and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30) then
+                    for _, v: Part | MeshPart in ipairs(workspace:GetDescendants()) do
+                        if (v:IsA("Part") or v:IsA("MeshPart")) and not v.Anchored and not v:IsDescendantOf(Character) and (isnetworkowner and isnetworkowner(v) or not isnetworkowner and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30) then
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
