@@ -1308,7 +1308,7 @@ local function FindPlayers(...: string): {Player?}
         for i,v in pairs(PlayerSelectors) do
             if i == key then
                 local Result = v()
-                table.move(Result, 1, #Result, 1, Found)
+                table.move(Result, 1, #Result, #Found+1, Found)
 
                 IsSelector = true
             end
@@ -2378,13 +2378,14 @@ function module.BringUA:GetUAMode(...)
     return GetUAMode(...)
 end
 
-local function AddUAMode(name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
+local function AddUAMode(name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> (), initFunction: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
     if GetUAMode(name:lower()) then
         Error("Couldn't add UA mode. \""..name.."\" already exists!")
     else
         local Table = {}
         Table.Function = func
         Table.Description = description
+        Table.Init = initFunction
 
         BringUAModes[name:lower()] = Table
     end
@@ -2394,7 +2395,7 @@ function module.BringUA:AddUAMode(...)
     return AddUAMode(...)
 end
 
-local function ReplaceUAMode(name: string, description: string, func:  (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
+local function ReplaceUAMode(name: string, description: string, func: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> (), initFunction: (positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number) -> ())
     local Table = GetUAMode(name)
     if Table then
         BringUAModes[name] = nil
@@ -2421,6 +2422,8 @@ AddUAMode("normal", "The normal BringUA mode. Brings all of the parts to the pos
     positionForce.Position = center
     orientationForce.CFrame = CFrame.new(Vector3.zero, center)
 
+    part.CanCollide = false
+end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
     positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
     positionForce.MaxForce = math.huge
     positionForce.MaxVelocity = math.huge
@@ -2430,26 +2433,9 @@ AddUAMode("normal", "The normal BringUA mode. Brings all of the parts to the pos
 
     positionForce.RigidityEnabled = true
     orientationForce.RigidityEnabled = true
-
-    part.CanCollide = false
 end)
 
 AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionForce, orientationForce, center, parts, partIndex, _, persistentVars, size, speed)
-    positionForce.MaxForce = math.huge
-    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
-    positionForce.MaxVelocity = math.huge
-
-    positionForce.Responsiveness = 30
-
-    orientationForce.MaxAngularVelocity = math.huge
-    orientationForce.MaxTorque = math.huge
-
-    orientationForce.RigidityEnabled = true
-
-    if not persistentVars.Rotation then
-        persistentVars.Rotation = 0
-    end
-
     local NumOfParts = 0
 
     for _ in pairs(parts) do
@@ -2468,9 +2454,7 @@ AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionF
     orientationForce.CFrame = Cf.Rotation
 
     persistentVars.Rotation += speed ~= 0 and speed or .1
-end)
-
-AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
+end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
     positionForce.MaxForce = math.huge
     positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
     positionForce.MaxVelocity = math.huge
@@ -2482,14 +2466,10 @@ AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", functio
 
     orientationForce.RigidityEnabled = true
 
-    if not persistentVars.Rotation then
-        persistentVars.Rotation = 0
-    end
+    persistentVars.Rotation = 0
+end)
 
-    if not persistentVars.Layer then
-        persistentVars.Layer = {}
-    end
-
+AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
     if not persistentVars.Layer[part] then
         local Random = Random.new()
         persistentVars.Layer[part] = Random:NextInteger(0, size / 1.3)
@@ -2515,6 +2495,21 @@ AddUAMode("blackhole", "Arranges all of the parts in a layered circle.", functio
     persistentVars.Rotation += speed ~= 0 and speed or .1
 
     part.CanCollide = false
+end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxVelocity = math.huge
+
+    positionForce.Responsiveness = 30
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    orientationForce.RigidityEnabled = true
+
+    persistentVars.Rotation = 0
+
+    persistentVars.Layer = {}
 end)
 
 AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForce, orientationForce, center, _, _, part, persistentVars, _, speed)
@@ -2525,6 +2520,10 @@ AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForc
     positionForce.Position = center
     orientationForce.CFrame = persistentVars[part]
 
+    persistentVars[part] *= CFrame.Angles(speed,speed,speed)
+
+    part.CanCollide = false
+end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
     positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
     positionForce.MaxForce = math.huge
     positionForce.MaxVelocity = math.huge
@@ -2534,10 +2533,6 @@ AddUAMode("rotating", "Like normal but the parts rotate.", function(positionForc
 
     positionForce.RigidityEnabled = true
     orientationForce.RigidityEnabled = true
-
-    persistentVars[part] *= CFrame.Angles(speed,speed,speed)
-
-    part.CanCollide = false
 end)
 
 local function FibonacciSpiralSpheres(Points: number)
@@ -2560,20 +2555,6 @@ local function FibonacciSpiralSpheres(Points: number)
 end
 
 AddUAMode("sphere", "Surrounds the center with a sphere of parts.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
-    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
-    positionForce.MaxForce = math.huge
-    positionForce.MaxVelocity = math.huge
-
-    orientationForce.MaxAngularVelocity = math.huge
-    orientationForce.MaxTorque = math.huge
-
-    positionForce.RigidityEnabled = true
-    orientationForce.RigidityEnabled = true
-
-    if not persistentVars.Angle then
-        persistentVars.Angle = {}
-    end
-
     if not persistentVars.Angle[part] then
         persistentVars.Angle[part] = RandomAngle()
     end
@@ -2594,6 +2575,18 @@ AddUAMode("sphere", "Surrounds the center with a sphere of parts.", function(pos
     part.CanCollide = false
 
     persistentVars.Angle[part] *= CFrame.Angles(speed, speed, speed)
+end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
+    positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+    positionForce.MaxForce = math.huge
+    positionForce.MaxVelocity = math.huge
+
+    orientationForce.MaxAngularVelocity = math.huge
+    orientationForce.MaxTorque = math.huge
+
+    positionForce.RigidityEnabled = true
+    orientationForce.RigidityEnabled = true
+
+    persistentVars.Angle = {}
 end)
 
 AddCMD("listuamodes", "Lists all BringUA modes.", {}, {}, function(arguments)
@@ -2681,6 +2674,18 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     local PartIndex = 0
 
                     for Part, Table in pairs(BringUA.Parts) do
+                        local Args = {
+                            Table.AlignPosition,
+                            Table.AlignOrientation,
+                            Center or Root.Position,
+                            BringUA.Parts,
+                            PartIndex,
+                            Part,
+                            Persistent,
+                            Size,
+                            Speed
+                        }
+
                         if not Exists(Part) then
                             BringUA.Parts[Part] = nil
                             continue
@@ -2693,18 +2698,16 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                             continue
                         end
+                        if not BringUA.Initialized then
+                            BringUA.Initialized = true
+                            Mode.Init(
+                                unpack(Args)
+                            )
+                        end
 
                         PartIndex += 1
                         Mode.Function(
-                            Table.AlignPosition,
-                            Table.AlignOrientation,
-                            Center or Root.Position,
-                            BringUA.Parts,
-                            PartIndex,
-                            Part,
-                            Persistent,
-                            Size,
-                            Speed
+                            unpack(Args)
                         )
                     end
                 end
