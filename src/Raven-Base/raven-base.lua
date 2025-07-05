@@ -13,16 +13,20 @@ local module = {}
 module.Name = "Raven"
 module.VERSION = -1
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local _CoreGui = game:GetService("CoreGui")
-local StarterGui = game:GetService("StarterGui")
-local TeleportService = game:GetService("TeleportService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
+local function GetService(name: string)
+    return game:GetService(name)
+end
+
+local ReplicatedStorage = GetService("ReplicatedStorage")
+local RunService = GetService("RunService")
+local _CoreGui = GetService("CoreGui")
+local StarterGui = GetService("StarterGui")
+local TeleportService = GetService("TeleportService")
+local TweenService = GetService("TweenService")
+local UserInputService = GetService("UserInputService")
+local Players = GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TextChatService = game:GetService("TextChatService")
+local TextChatService = GetService("TextChatService")
 local TextChannels
 local RBXGeneral: TextChannel? = nil
 local RBXSystem: TextChannel? = nil
@@ -125,7 +129,7 @@ function Draggable(dragframe,mainframe)
 		end
 	end)
 
-	game:GetService("UserInputService").InputChanged:Connect(function(input)
+	UserInputService.InputChanged:Connect(function(input)
 		if input==dinput and dragging then
 			local minus = input.Position - ogpos
 			local position=UDim2.new(ogguipos.X.Scale,ogguipos.X.Offset + minus.X ,ogguipos.Y.Scale,ogguipos.Y.Offset + minus.Y)
