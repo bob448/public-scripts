@@ -3410,19 +3410,19 @@ AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unrem
     end
 end)
 
-local AntiAFKTriggered = false
+local AntiIdleTriggered = false
 
 AddCMD("antiidle", "Prevents being kicked for idleing. (EXPERIMENTAL)", {}, {}, function(arguments)
-    if getconnections and not AntiAFKTriggered then
+    if getconnections and not AntiIdleTriggered then
         for i,v in pairs(getconnections(LocalPlayer.Idled)) do
             if v.State == Enum.ConnectionState.Connected then
                 v:Disable()
             end
         end
 
-        AntiAFKTriggered = true
-    elseif AntiAFKTriggered then
-        Error("Antiafk was already triggered. Rejoin to turn it off.")
+        AntiIdleTriggered = true
+    elseif AntiIdleTriggered then
+        Error("Antiidle was already triggered. Rejoin to turn it off.")
     else
         Error("Your exploit does not support getconnections.")
     end
