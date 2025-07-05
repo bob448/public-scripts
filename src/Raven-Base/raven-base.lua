@@ -2698,8 +2698,8 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                             continue
                         end
-                        if not BringUA.Initialized then
-                            BringUA.Initialized = true
+                        if not BringUA.Parts[Part].Initialized then
+                            BringUA.Parts[Part].Initialized = true
                             Mode.Init(
                                 unpack(Args)
                             )
