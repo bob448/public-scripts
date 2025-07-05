@@ -8,15 +8,19 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
     error("Current PlaceId is not in The Chosen One. Loading Raven Base instead.")
 end
 
-local HttpService = game:GetService("HttpService")
-local Lighting = game:GetService("Lighting")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Teams = game:GetService("Teams")
-local Players = game:GetService("Players")
+local function GetService(name: string)
+    return game:GetService(name)
+end
+
+local HttpService = GetService("HttpService")
+local Lighting = GetService("Lighting")
+local ReplicatedStorage = GetService("ReplicatedStorage")
+local RunService = GetService("RunService")
+local Teams = GetService("Teams")
+local Players = GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TextChatService = game:GetService("TextChatService")
-local UserInputService = game:GetService("UserInputService")
+local TextChatService = GetService("TextChatService")
+local UserInputService = GetService("UserInputService")
 
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
