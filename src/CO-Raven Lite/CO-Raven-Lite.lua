@@ -28,7 +28,7 @@ local function LoopThroughTables(...: {any?})
 
     for _, Table in Tables do
         if #Table and #Table > 0 then
-            table.move(Table, 1, #Table, 1, LoopThrough)
+            table.move(Table, 1, #Table, #LoopThrough+1, LoopThrough)
         end
     end
 
