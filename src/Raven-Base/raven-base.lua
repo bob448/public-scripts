@@ -3342,12 +3342,12 @@ local function GetDeletedCharacter(player: Player)
     return nil
 end
 
-AddCMD("deleteplayer", "Removes a player or players from your client.", {"blockplayer","removeplayer"}, {"player"}, function(arguments)
+AddCMD("deleteplayer", "Removes a player or players from your client. (WARNING: This will replace OnIncomingMessage, which might break some game's functionality like chat messages.)", {"blockplayer","removeplayer"}, {"player"}, function(arguments)
     local Targets = FindPlayers(unpack(arguments))
 
     if #Targets > 0 then
-        if hookfunction then
-            for _, v in pairs(Targets) do
+        for _, v in pairs(Targets) do
+            if v ~= LocalPlayer then
                 DeletePlayer.Players[v] = v.Character or v.CharacterAdded:Wait()
 
                 if v.Character then
@@ -3361,22 +3361,15 @@ AddCMD("deleteplayer", "Removes a player or players from your client.", {"blockp
 
                 Success("Added \""..v.Name.."\" to the deleteplayer list.")
             end
+        end
 
-            TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-                local Hidden = Instance.new("TextChatMessageProperties")
-                Hidden.Text = ""
+        TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+            local UserId = message.TextSource.UserId
+            local Player = UserId and Players:GetPlayerByUserId(UserId)
 
-                local UserId = message.TextSource.UserId
-                local Player = UserId and Players:GetPlayerByUserId(UserId)
-
-                if Player and DeletePlayer.Players[Player] then
-                    return Hidden
-                end
-
-                return OldIncomingMessage(message)
+            if Player and IsDeleted(Player) then
+                message.Text = ""
             end
-        else
-            Error("Your exploit does not support hookfunction.")
         end
     else
         Error("No players specified.")
@@ -3400,8 +3393,6 @@ AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unrem
                 Success("Removed \""..Target.Name.."\" from the deleteplayer list.")
             end
         end
-
-        Success("Removed player(s) from deleteplayer list.")
     else
         Error("No targets specified.")
     end
