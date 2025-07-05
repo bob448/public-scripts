@@ -13,16 +13,20 @@ local module = {}
 module.Name = "Raven"
 module.VERSION = -1
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local _CoreGui = game:GetService("CoreGui")
-local StarterGui = game:GetService("StarterGui")
-local TeleportService = game:GetService("TeleportService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
+local function GetService(name: string)
+    return game:GetService(name)
+end
+
+local ReplicatedStorage = GetService("ReplicatedStorage")
+local RunService = GetService("RunService")
+local _CoreGui = GetService("CoreGui")
+local StarterGui = GetService("StarterGui")
+local TeleportService = GetService("TeleportService")
+local TweenService = GetService("TweenService")
+local UserInputService = GetService("UserInputService")
+local Players = GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TextChatService = game:GetService("TextChatService")
+local TextChatService = GetService("TextChatService")
 local TextChannels
 local RBXGeneral: TextChannel? = nil
 local RBXSystem: TextChannel? = nil
@@ -125,7 +129,7 @@ function Draggable(dragframe,mainframe)
 		end
 	end)
 
-	game:GetService("UserInputService").InputChanged:Connect(function(input)
+	UserInputService.InputChanged:Connect(function(input)
 		if input==dinput and dragging then
 			local minus = input.Position - ogpos
 			local position=UDim2.new(ogguipos.X.Scale,ogguipos.X.Offset + minus.X ,ogguipos.Y.Scale,ogguipos.Y.Offset + minus.Y)
@@ -2641,7 +2645,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                 if Root then
                     
                     for _, v: BasePart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30 then
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) and (isnetworkowner and isnetworkowner(v) or not isnetworkowner and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30) then
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
@@ -2679,6 +2683,14 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     for Part, Table in pairs(BringUA.Parts) do
                         if not Exists(Part) then
                             BringUA.Parts[Part] = nil
+                            continue
+                        elseif isnetworkowner and not isnetworkowner(Part) then
+                            BringUA.Parts[Part].AlignPosition:Destroy()
+                            BringUA.Parts[Part].AlignOrientation:Destroy()
+                            BringUA.Parts[Part].Attachment0:Destroy()
+
+                            BringUA.Parts[Part] = nil
+
                             continue
                         end
 
@@ -3395,6 +3407,24 @@ AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unrem
         end
     else
         Error("No targets specified.")
+    end
+end)
+
+local AntiAFKTriggered = false
+
+AddCMD("antiafk", "Prevents being kicked for afking. (EXPERIMENTAL)", {}, {}, function(arguments)
+    if getconnections and not AntiAFKTriggered then
+        for i,v in pairs(getconnections(LocalPlayer.Idled)) do
+            if v.State == Enum.ConnectionState.Connected then
+                v:Disable()
+            end
+        end
+
+        AntiAFKTriggered = true
+    elseif AntiAFKTriggered then
+        Error("Antiafk was already triggered. Rejoin to turn it off.")
+    else
+        Error("Your exploit does not support getconnections.")
     end
 end)
 
