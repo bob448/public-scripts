@@ -3398,6 +3398,26 @@ AddCMD("undeleteplayer", "Re-adds a player or players.", {"unblockplayer","unrem
     end
 end)
 
+local AntiAFKTriggered = false
+
+AddCMD("antiafk", "Prevents being kicked for afking. (EXPERIMENTAL)", {}, {}, function(arguments)
+    local Idled = LocalPlayer.Idled
+
+    if getconnections and not AntiAFKTriggered then
+        for i,v in pairs(getconnections(LocalPlayer.Idled)) do
+            if v.State == Enum.ConnectionState.Connected then
+                v:Disable()
+            end
+        end
+
+        AntiAFKTriggered = true
+    elseif AntiAFKTriggered then
+        Error("Antiafk was already triggered. Rejoin to turn it off.")
+    else
+        Error("Your exploit does not support getconnections.")
+    end
+end)
+
 local FlyHeartbeatCon = nil
 
 AddCMD("fly", "Activates fly.", {}, {"speed/none"}, function(arguments)
