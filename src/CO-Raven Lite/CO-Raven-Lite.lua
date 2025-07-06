@@ -635,6 +635,8 @@ Activated["Sign"] = function(tool: Tool)
     end
 end
 
+local ClientBkitTools = {}
+
 local function InitBuildScripts(tools: {Tool})
     for i, tool:Tool in pairs(tools) do
         local SelectionBox: SelectionBox = tool:WaitForChild("Preview")
@@ -733,12 +735,16 @@ local function InitBuildScripts(tools: {Tool})
                 Unequipped:Disconnect()
                 Deactivated:Disconnect()
                 AncestryChanged:Disconnect()
+
+                local ToolIndex = table.find(ClientBkitTools, tool)
+
+                if ToolIndex then
+                    table.remove(ClientBkitTools, ToolIndex)
+                end
             end
         end)
     end
 end
-
-local ClientBkitTools = {}
 
 local function ToBool(str: string)
     return str == "true"
