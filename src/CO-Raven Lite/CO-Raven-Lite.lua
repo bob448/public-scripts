@@ -762,7 +762,7 @@ Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack."
 
         Raven.Notif:Success("Successfully initialized client-sided building tools.")
     else
-        Raven.Notif:Error("Either could not find character, or clientbkit has already been initialized. Try running \"unclientbkit\".")
+        Raven.Notif:Error("Could not find character.")
     end
 end)
 
