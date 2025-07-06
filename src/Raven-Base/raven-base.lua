@@ -2454,6 +2454,8 @@ AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionF
     orientationForce.CFrame = Cf.Rotation
 
     persistentVars.Rotation += speed ~= 0 and speed or .1
+
+    part.CanCollide = false
 end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, center: Vector3, parts: {BasePart?}, partIndex: number, part: BasePart, persistentVars: {}, size: number, speed: number)
     positionForce.MaxForce = math.huge
     positionForce.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
