@@ -2435,7 +2435,7 @@ end, function(positionForce: AlignPosition, orientationForce: AlignOrientation, 
     orientationForce.RigidityEnabled = true
 end)
 
-AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionForce, orientationForce, center, parts, partIndex, _, persistentVars, size, speed)
+AddUAMode("circle", "Arranges all of the parts in a circle.", function(positionForce, orientationForce, center, parts, partIndex, part, persistentVars, size, speed)
     local NumOfParts = 0
 
     for _ in pairs(parts) do
