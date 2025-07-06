@@ -255,6 +255,9 @@ Raven:AddCMD("antibring", "Tries to avoid bringing by checking distances travele
                 end
             else
                 table.clear(Movements)
+                Disable = true
+                task.wait(.3) -- for deathtp
+                Disable = false
             end
         end)
         
