@@ -903,6 +903,16 @@ Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, {}, function(arguments)
             DisableToxic.Heartbeat:Disconnect()
         end
 
+        local Character = LocalPlayer.Character
+
+        if Character then
+            local Toxify = Character:FindFirstChild("Toxify")
+
+            if Toxify then
+                Toxify.Enabled = true
+            end
+        end
+
         Raven.Notif:Success("Turned off disabletoxic.")
     else
         Raven.Notif:Error("Disabletoxic is already turned off.")
