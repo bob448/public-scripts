@@ -32,7 +32,7 @@ local RBXGeneral: TextChannel? = nil
 local RBXSystem: TextChannel? = nil
 
 local function Exists(inst: Instance?)
-    return inst ~= nil and inst.Parent ~= nil
+    return inst ~= nil or inst.Parent ~= nil
 end
 
 module.Instance = {}
