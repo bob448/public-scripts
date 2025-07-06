@@ -869,31 +869,43 @@ Raven:AddCMD("unpermadmin", "Stops pemradmin.", {}, {}, function(arguments)
     end
 end)
 
+local DisableToxic = {}
+DisableToxic.Heartbeat = nil
+DisableToxic.Enabled = false
+
 Raven:AddCMD("disabletoxic", "Disables toxic blocks.", {}, {}, function(arguments)
-    local Character = LocalPlayer.Character
+    if not DisableToxic.Enabled then
+        DisableToxic.Enabled = true
 
-    if Character then
-        local Toxify = Character:FindFirstChild("Toxify")
+        DisableToxic.Heartbeat = RunService.Heartbeat:Connect(function()
+            local Character = LocalPlayer.Character
 
-        if Toxify then
-            Toxify.Enabled = false
-            
-            Raven.Notif:Success("Disabled toxic blocks.")
-        end
+            if Character then
+                local Toxify = Character:FindFirstChild("Toxify")
+
+                if Toxify then
+                    Toxify.Enabled = false
+                end
+            end
+        end)
+
+        Raven.Notif:Success("Turned on disabletoxic.")
+    else
+        Raven.Notif:Error("Disabletoxic is already turned on.")
     end
 end)
 
 Raven:AddCMD("enabletoxic", "Enables toxic blocks.", {}, {}, function(arguments)
-    local Character = LocalPlayer.Character
+    if DisableToxic.Enabled then
+        DisableToxic.Enabled = false
 
-    if Character then
-        local Toxify = Character:FindFirstChild("Toxify")
-
-        if Toxify then
-            Toxify.Enabled = true
-
-            Raven.Notif:Success("Enabled toxic blocks.")
+        if DisableToxic.Heartbeat then
+            DisableToxic.Heartbeat:Disconnect()
         end
+
+        Raven.Notif:Success("Turned off disabletoxic.")
+    else
+        Raven.Notif:Error("Disabletoxic is already turned off.")
     end
 end)
 
