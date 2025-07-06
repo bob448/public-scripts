@@ -2690,7 +2690,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                             continue
                         end
-                        
+
                         local Args = {
                             Table.AlignPosition,
                             Table.AlignOrientation,
@@ -3293,30 +3293,34 @@ end)
 local DeathTP = {}
 DeathTP.Enabled = false
 DeathTP.Heartbeat = nil
+DeathTP.CharacterAdded = nil
 
 AddCMD("deathtp", "Teleports you back to your original position when you die.", {}, {}, function(arguments)
     if not DeathTP.Enabled then
         DeathTP.Enabled = true
 
-        local Died = false
+        local Waiting = false
+        local LastPos = nil
 
         DeathTP.Heartbeat = RunService.Heartbeat:Connect(function()
-            if not Died then
-                local Character = LocalPlayer.Character
-                local Root,Humanoid = Character and Character:FindFirstChild("HumanoidRootPart"), Character and Character:FindFirstChildWhichIsA("Humanoid")
+            if Waiting then return end
 
-                if Humanoid and Root and Humanoid.Health <= 0 and workspace.CurrentCamera then
-                    local LastPos = Root.CFrame
-                    Died = true
-                    
-                    Character = LocalPlayer.CharacterAdded:Wait()
-                    Root = Character:WaitForChild("HumanoidRootPart")
+            local Character = LocalPlayer.Character
+            local Root,Humanoid = Character and Character:FindFirstChild("HumanoidRootPart"), Character and Character:FindFirstChildWhichIsA("Humanoid")
 
-                    Root.CFrame = LastPos
-
-                    Died = false
-                end
+            if Humanoid and Root and Humanoid.Health > 0 and workspace.CurrentCamera then
+                LastPos = Root.CFrame
             end
+        end)
+
+        DeathTP.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(character: Model)
+            Waiting = true
+
+            local Root = character:WaitForChild("HumanoidRootPart")
+
+            if LastPos then Root.CFrame = LastPos end
+
+            Waiting = false
         end)
 
         Success("Enabled DeathTP.")
@@ -3331,6 +3335,9 @@ AddCMD("undeathtp", "Disables deathtp.", {}, {}, function(arguments)
 
         if DeathTP.Heartbeat then
             DeathTP.Heartbeat:Disconnect()
+        end
+        if DeathTP.CharacterAdded then
+            DeathTP.CharacterAdded:Disconnect()
         end
 
         Success("Disabled DeathTP.")
