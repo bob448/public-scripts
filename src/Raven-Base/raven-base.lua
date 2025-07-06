@@ -2676,11 +2676,12 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                     local PartIndex = 1
 
                     for Part, Table in pairs(BringUA.Parts) do
-                        local Args
                         if not Exists(Part) then
                             BringUA.Parts[Part] = nil
                             continue
-                        elseif isnetworkowner and not isnetworkowner(Part) then
+                        end
+
+                        if isnetworkowner and not isnetworkowner(Part) then
                             BringUA.Parts[Part].AlignPosition:Destroy()
                             BringUA.Parts[Part].AlignOrientation:Destroy()
                             BringUA.Parts[Part].Attachment0:Destroy()
@@ -2688,19 +2689,19 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                             BringUA.Parts[Part] = nil
 
                             continue
-                        else
-                            Args = {
-                                Table.AlignPosition,
-                                Table.AlignOrientation,
-                                Center or Root.Position,
-                                BringUA.Parts,
-                                PartIndex,
-                                Part,
-                                Persistent,
-                                Size,
-                                Speed
-                            }
                         end
+                        
+                        local Args = {
+                            Table.AlignPosition,
+                            Table.AlignOrientation,
+                            Center or Root.Position,
+                            BringUA.Parts,
+                            PartIndex,
+                            Part,
+                            Persistent,
+                            Size,
+                            Speed
+                        }
                         
                         if not BringUA.Parts[Part].Initialized then
                             BringUA.Parts[Part].Initialized = true
