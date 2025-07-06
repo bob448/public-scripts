@@ -1612,7 +1612,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                 local HasEnlightenIndex = table.find(HasEnlighten, v)
                 if v and v.Parent and v.Character and HasEnlightenIndex then
                     table.clear(Names)
-                    for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, v.Name:len()-3).."." end end
+                    for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, math.ceil(v.Name:len()/2)).."." end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
                         Raven.Player:Say("clearinv "..table.concat(Names, " "), true)
@@ -1651,7 +1651,7 @@ Raven:AddCMD("abuse", "Spams commands on a player or group of players.", {}, {"p
                 local Names = {}
                 for i,v in pairs(Targets) do
                     if v and v.Parent then
-                        Names[#Names+1] = v.Name:sub(1, v.Name:len()-3).."."
+                        Names[#Names+1] = v.Name:sub(1, math.ceil(v.Name:len()/2)).."."
                     else
                         for _, Player in ipairs(Players:GetPlayers()) do
                             if Player.Name == v.Name then
