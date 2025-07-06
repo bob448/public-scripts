@@ -732,6 +732,7 @@ local function InitBuildScripts(tools: {Tool})
                 EquippedCon:Disconnect()
                 Unequipped:Disconnect()
                 Deactivated:Disconnect()
+                AncestryChanged:Disconnect()
             end
         end)
     end
