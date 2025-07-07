@@ -22,10 +22,10 @@ local RunService = GetService("RunService")
 local _CoreGui = GetService("CoreGui")
 local StarterGui = GetService("StarterGui")
 local TeleportService = GetService("TeleportService")
-local TweenService = GetService("TweenService")
+local TweenService: TweenService = GetService("TweenService")
 local UserInputService = GetService("UserInputService")
 local Players = GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer: Player = Players.LocalPlayer
 local TextChatService = GetService("TextChatService")
 local TextChannels
 local RBXGeneral: TextChannel? = nil
@@ -1293,7 +1293,7 @@ local PlayerSelectors = {
     end,
     random = function()
         local PlayerList = Players:GetPlayers()
-        return #PlayerList > 1 and {PlayerList[math.random(1, #PlayerList + 1)]} or {PlayerList[1]}
+        return #PlayerList > 1 and {PlayerList[math.random(1, #PlayerList)]} or {PlayerList[1]}
     end
 }
 
@@ -3350,6 +3350,191 @@ local DeletePlayer = {}
 DeletePlayer.Cons = {}
 DeletePlayer.Players = {}
 
+DeletePlayer.Effects = {}
+
+local function AddDeletePlayerEffect(func: (Clone: Model) -> ())
+    DeletePlayer.Effects[#DeletePlayer.Effects+1] = func
+end
+
+local function RandomDeletePlayerEffect()
+    return DeletePlayer.Effects[math.random(1, #DeletePlayer.Effects)]
+end
+
+module.DeletePlayer = {}
+
+function module.DeletePlayer:AddEffect(...)
+    return AddDeletePlayerEffect(...)
+end
+
+AddDeletePlayerEffect(function(Clone)
+    local Humanoid = Clone:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.Health = 0
+    end
+
+    for _, v: BasePart in ipairs(Clone:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Anchored = false
+            if v.Name ~= "HumanoidRootPart" then
+                v.CanCollide = true
+            else
+                v.CanCollide = false
+            end
+
+            for _, joint in ipairs(v:GetJoints()) do
+                joint.Enabled = false
+            end
+        end 
+    end
+
+    local Sound = Instance.new("Sound", GetCoreGui())
+
+    Sound.SoundId = "rbxassetid://17755696142"
+    Sound:Play()
+
+    Sound.Ended:Wait()
+
+    Clone:Destroy()
+    Sound:Destroy()
+end)
+
+AddDeletePlayerEffect(function(Clone)
+    local Tween = nil
+
+    local Sound = Instance.new("Sound", GetCoreGui())
+    Sound.SoundId = "rbxassetid://9057675920"
+
+    for i, v: BasePart in ipairs(Clone:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Anchored = true
+
+            local Light = Instance.new("SpotLight", v)
+            Light.Color = Color3.new(0.568627, 0.866666, 0.984313)
+            Light.Brightness = 3
+
+            Tween = TweenService:Create(
+                v,
+                TweenInfo.new(1),
+                {["CFrame"] = v.CFrame * CFrame.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)) * CFrame.Angles(math.random(-360,360),math.random(-360,360),math.random(-360,360)), ["Transparency"] = 1}
+            )
+            Tween:Play()
+        end
+    end
+
+    Sound:Play()
+
+    Tween.Completed:Wait()
+
+    Clone:Destroy()
+
+    Sound.Ended:Wait()
+    Sound:Destroy()
+end)
+
+AddDeletePlayerEffect(function(Clone)
+    local Root = Clone:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Clone:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.Health = 0
+    end
+
+    for _, v: BasePart in ipairs(Clone:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Anchored = false
+            if v.Name ~= "HumanoidRootPart" then
+                v.CanCollide = true
+            else
+                v.CanCollide = false
+            end
+
+            for _, joint in ipairs(v:GetJoints()) do
+                joint.Enabled = false
+            end
+        end 
+    end
+
+    if Root then
+        local Sound = Instance.new("Sound", GetCoreGui())
+        Sound.SoundId = "rbxassetid://71379251021209"
+
+        Sound:Play()
+
+        local Explosion = Instance.new("Explosion", Root)
+        Explosion.Position = Root.Position
+        Explosion.ExplosionType = Enum.ExplosionType.NoCraters
+        Explosion.DestroyJointRadiusPercent = 0
+        
+        Sound.Ended:Wait()
+
+        Clone:Destroy()
+        Sound:Destroy()
+    end
+end)
+
+AddDeletePlayerEffect(function(Clone)
+    local Fire,HitFade,Reload = Instance.new("Sound", GetCoreGui()), Instance.new("Sound", GetCoreGui()), Instance.new("Sound", GetCoreGui())
+
+    Fire.SoundId = "http://www.roblox.com/asset?id=130113322"
+    HitFade.SoundId = "http://www.roblox.com/asset?id=130113415"
+    Reload.SoundId = "http://www.roblox.com/asset?id=130113370"
+
+    Fire:Play()
+
+    task.wait(.5)
+
+    HitFade:Play()
+
+    for i,v in ipairs(Clone:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Anchored = true
+
+            local Light = Instance.new("PointLight", v)
+            Light.Range += 2
+            Light.Color = Color3.fromRGB(0,255,255)
+            
+            local SelectionBox = Instance.new("SelectionBox", v)
+            SelectionBox.Adornee = v
+            SelectionBox.Color3 = BrickColor.new("Toothpaste").Color
+
+            local Tween = TweenService:Create(
+                v,
+                TweenInfo.new(.5),
+                {["Transparency"] = 1}
+            )
+            
+            Tween:Play()
+
+            task.spawn(function()
+                Tween.Completed:Wait()
+
+                Tween = TweenService:Create(
+                    SelectionBox,
+                    TweenInfo.new(.5),
+                    {["Transparency"] = 1}
+                )
+                
+                Tween:Play()
+            end)
+        end
+    end
+
+    task.wait(.6)
+
+    Reload:Play()
+
+    Reload.Ended:Wait()
+
+    task.wait(.5)
+
+    Reload:Destroy()
+    Fire:Destroy()
+    HitFade:Destroy()
+
+    Clone:Destroy()
+end)
+
 local function IsDeleted(player: Player)
     for i, _ in pairs(DeletePlayer.Players) do
         if i == player then
@@ -3378,25 +3563,35 @@ AddCMD("deleteplayer", "Removes a player or players from your client. (WARNING: 
             if v ~= LocalPlayer then
                 DeletePlayer.Players[v] = v.Character or v.CharacterAdded:Wait()
 
-                if v.Character then
-                    v.Character.Parent = ReplicatedStorage
-                end
+                v.Character.Archivable = true
+
+                local Clone = v.Character:Clone()
+
+                v.Character.Parent = ReplicatedStorage
 
                 DeletePlayer.Cons[#DeletePlayer.Cons+1] = v.CharacterAdded:Connect(function(Character)
                     DeletePlayer.Players[v] = Character
                     Character.Parent = ReplicatedStorage
                 end)
 
+                Clone.Parent = workspace
+
+                task.spawn(function()
+                    RandomDeletePlayerEffect()(Clone)
+                end)
+
                 Success("Added \""..v.Name.."\" to the deleteplayer list.")
             end
         end
 
-        TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-            local UserId = message.TextSource.UserId
-            local Player = UserId and Players:GetPlayerByUserId(UserId)
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+                local UserId = message.TextSource and message.TextSource.UserId
+                local Player = UserId and Players:GetPlayerByUserId(UserId)
 
-            if Player and IsDeleted(Player) then
-                message.Text = ""
+                if Player and IsDeleted(Player) then
+                    message.Text = ""
+                end
             end
         end
     else
