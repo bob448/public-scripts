@@ -3586,7 +3586,7 @@ AddCMD("deleteplayer", "Removes a player or players from your client. (WARNING: 
 
         if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
             TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-                local UserId = message.TextSource.UserId
+                local UserId = message.TextSource and message.TextSource.UserId
                 local Player = UserId and Players:GetPlayerByUserId(UserId)
 
                 if Player and IsDeleted(Player) then
