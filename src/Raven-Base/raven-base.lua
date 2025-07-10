@@ -1973,7 +1973,7 @@ local function DestroyEspPart(part: Part, player: Player, Table)
     return false
 end
 
-local function DestroyEspPlayer(player: Player, disconnectCharacterAdded: boolean?)
+local function DestroyEspPlayer(player: Player, disconnectCharacterAdded: boolean)
     if PlayerHasEsp(player) then
         if EspPlayers[player].TeamChanged then
             EspPlayers[player].TeamChanged:Disconnect()
@@ -1995,7 +1995,7 @@ local function DestroyEspPlayer(player: Player, disconnectCharacterAdded: boolea
             EspPlayers[player].HealthChanged:Disconnect()
         end
 
-        if EspPlayers[player].CharacterAdded and (disconnectCharacterAdded == nil or disconnectCharacterAdded) then
+        if EspPlayers[player].CharacterAdded and disconnectCharacterAdded then
             EspPlayers[player].CharacterAdded:Disconnect()
         end
 
@@ -2111,7 +2111,7 @@ end)
 AddCMD("unesp", "Disables ESP", {}, {}, function(arguments)
     for Player, Table in pairs(EspPlayers) do
         if Player then
-            DestroyEspPlayer(Player)
+            DestroyEspPlayer(Player, true)
         end
     end
 
