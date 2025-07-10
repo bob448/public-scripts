@@ -2644,7 +2644,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                             local InPlayer = false
 
                             for _, player in ipairs(Players:GetPlayers()) do
-                                if player.Character and player ~= LocalPlayer then
+                                if player.Character then
                                     for _, part: BasePart in ipairs(player.Character:GetDescendants()) do
                                         if part == v then
                                             InPlayer = true
