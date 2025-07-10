@@ -2094,6 +2094,7 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {},
 
             EspPlayers[Target].CharacterAdded = Target.CharacterAdded:Connect(function(character)
                 DestroyEspPlayer(Target)
+                task.wait(.05)
                 InitEsp(Target, character)
             end)
         end
