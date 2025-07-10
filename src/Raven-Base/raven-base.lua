@@ -2056,11 +2056,9 @@ local function InitEsp(player: Player, character: Model)
 
             EspPlayers[player].Parts[v] = {}
 
-            local PartTable = EspPlayers[player].Parts[v]
+            EspPlayers[player].Parts[v].Box = BoxHandleAdornment
 
-            PartTable.Box = BoxHandleAdornment
-
-            PartTable.SizeChanged = v:GetPropertyChangedSignal("Size"):Connect(function()
+            EspPlayers[player].Parts[v].SizeChanged = v:GetPropertyChangedSignal("Size"):Connect(function()
                 if PlayerHasEsp(player) and IsEspPart(v) and BoxHandleAdornment.Parent then
                     BoxHandleAdornment.Size = v.Size
                 elseif IsEspPart(v) then
