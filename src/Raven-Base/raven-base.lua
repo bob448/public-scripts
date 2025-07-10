@@ -1973,12 +1973,8 @@ local function DestroyEspPart(part: Part, player: Player, Table)
     return false
 end
 
-local function DestroyEspPlayer(player: Player)
+local function DestroyEspPlayer(player: Player, disconnectCharacterAdded: boolean?)
     if PlayerHasEsp(player) then
-        for Part, Table in pairs(EspPlayers[player].Parts) do
-            DestroyEspPart(Part, player, Table)
-        end
-
         if EspPlayers[player].TeamChanged then
             EspPlayers[player].TeamChanged:Disconnect()
         end
@@ -1999,8 +1995,12 @@ local function DestroyEspPlayer(player: Player)
             EspPlayers[player].HealthChanged:Disconnect()
         end
 
-        if EspPlayers[player].CharacterAdded then
+        if EspPlayers[player].CharacterAdded and (disconnectCharacterAdded == nil or disconnectCharacterAdded) then
             EspPlayers[player].CharacterAdded:Disconnect()
+        end
+
+        for Part, Table in pairs(EspPlayers[player].Parts) do
+            DestroyEspPart(Part, player, Table)
         end
     end
 end
@@ -2093,8 +2093,10 @@ AddCMD("esp", "Enables ESP, which allows you to see players through walls.", {},
             end
 
             EspPlayers[Target].CharacterAdded = Target.CharacterAdded:Connect(function(character)
-                DestroyEspPlayer(Target)
-                task.wait(.05)
+                DestroyEspPlayer(Target, false)
+
+                task.wait(.5)
+
                 InitEsp(Target, character)
             end)
         end
