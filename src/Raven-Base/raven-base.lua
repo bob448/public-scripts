@@ -2002,6 +2002,13 @@ local function DestroyEspPlayer(player: Player, disconnectCharacterAdded: boolea
         for Part, Table in pairs(EspPlayers[player].Parts) do
             DestroyEspPart(Part, player, Table)
         end
+
+        local EspFolder = GetCoreGui():FindFirstChild("RAVEN_ESP")
+        local PlayerFolder = EspFolder:FindFirstChild(player.Name)
+
+        if PlayerFolder then
+            PlayerFolder:Destroy()
+        end
     end
 end
 
