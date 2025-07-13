@@ -3823,6 +3823,11 @@ AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded o
     local Targets = arguments[1] and FindPlayers(arguments[1])
 
     if #Targets > 0 then
+        if Targets[1] == LocalPlayer then
+            Error("You cannot add yourself as a bot.")
+            return
+        end
+
         if not BotUtils.BotChatted then
             local Succ, _ = pcall(function()
                 BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
@@ -3871,6 +3876,11 @@ AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be i
     local Targets = arguments[1] and FindPlayers(arguments[1])
 
     if #Targets > 0 then
+        if Targets[1] == LocalPlayer then
+            Error("You cannot add yourself as an admin.")
+            return
+        end
+
         if not BotUtils.Chatted then
             local Succ, _ = pcall(function()
                 BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
