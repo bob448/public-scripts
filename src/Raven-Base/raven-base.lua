@@ -1356,6 +1356,8 @@ search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
                 else
                     v.Visible = true
                 end
+            else
+                v.Visible = false
             end
         end
     end
@@ -1578,8 +1580,9 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Label.Text = Text
         end
 
-        local _, _SepLabel = CreateCommandFrame()
+        local _SepFrame, _SepLabel = CreateCommandFrame()
         _SepLabel.Text = ""
+        _SepFrame.BackgroundTransparency = 1
     end
 
     local BuiltInLen = 0
