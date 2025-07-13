@@ -3292,6 +3292,14 @@ AddCMD("unloopcommand", "Stops looping a command at the specified index. Use lis
     end
 end)
 
+AddCMD("sit", "Sits.", {}, {}, function(arguments)
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.Sit = true
+    end
+end)
+
 local CoreGuis = {
     ["backpack"] = Enum.CoreGuiType.Backpack,
     ["chat"] = Enum.CoreGuiType.Chat,
