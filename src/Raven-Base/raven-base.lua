@@ -3993,6 +3993,8 @@ AddCMD("ungrabtools", "Disables grabtools.", {}, {}, function(arguments)
         if GrabTools.Heartbeat ~= nil then
             GrabTools.Heartbeat:Disconnect()
         end
+
+        Success("Disabled grabtools.")
     else
         Error("Grabtools is already disabled.")
     end
