@@ -1052,7 +1052,7 @@ local Commands = {}
 
 module.Commands = Commands
 
-type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string, ModuleAdded: boolean}
 
 local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?)
     if not Commands[name:lower()] then
@@ -1066,15 +1066,21 @@ local function AddCMD(name: string, description: string, aliases: {string?}, arg
         Table.Arguments = arguments
         Table.Aliases = aliases
         Table.BotCommand = botcommand or false
+        Table.ModuleAdded = false
 
         Commands[name:lower()] = Table
+
+        return Table
     else
         Error("Could not add command \""..name.."\". Command already exists!")
     end
 end
 
 function module:AddCMD(...)
-    return AddCMD(...)
+    local Table = AddCMD(...)
+    Table.ModuleAdded = true
+
+    return Table
 end
 
 local function GetCMD(name: string)
@@ -1502,6 +1508,15 @@ AddCMD("test", "A test command used in development of Raven.", {"testalias"}, {}
     Success("Successfully ran the test command!")
 end)
 
+local function CreateCommandFrame()
+    local Command: Frame = command_frame:Clone()
+    local Label: TextLabel = Command:WaitForChild("CommandLabel")
+
+    Command.Parent = commands_scrolling_frame
+
+    return Command, Label
+end
+
 AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_)
     commands_frame.Visible = true
 
@@ -1510,14 +1525,11 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             v:Destroy()
         end
     end
+
+    local ModuleAdded = {}
+    local BuiltIn = {}
     
     for Name: string, Table: CommandTable in pairs(Commands) do
-        local Command: Frame = command_frame:Clone()
-        local Label: TextLabel = Command:WaitForChild("CommandLabel")
-        Command:AddTag(Name)
-
-        Command.Parent = commands_scrolling_frame
-
         local Arguments = ""
 
         for i, arg in pairs(Table.Arguments) do
@@ -1538,7 +1550,33 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Aliases = "None"
         end
 
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
+        local Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
+
+        if Table.ModuleAdded then
+            ModuleAdded[Name] = Name
+        else
+            BuiltIn[Name] = Text
+        end
+    end
+
+    if #ModuleAdded > 0 then
+        local _, _Label = CreateCommandFrame()
+        _Label.Text = "Module-Added Commands:"
+
+        for Name, Text in pairs(ModuleAdded) do
+            local Command, Label = CreateCommandFrame()
+            Command:AddTag(Name)
+            Label.Text = Text
+        end
+    end
+
+    local _, _Label = CreateCommandFrame()
+    _Label.Text = "Built-In Commands:"
+
+    for Name, Text in pairs(ModuleAdded) do
+        local Command, Label = CreateCommandFrame()
+        Command:AddTag(Name)
+        Label.Text = Text
     end
 end)
 
