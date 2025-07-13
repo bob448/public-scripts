@@ -4006,12 +4006,12 @@ BotUtils.AdminChatted = nil
 BotUtils.BotChatted = nil
 
 module.BotUtils = {}
-module.BotUtils.Bots = Bots
-module.BotUtils.Admins = Admins
+module.BotUtils.Bots = BotUtils.Bots
+module.BotUtils.Admins = BotUtils.Admins
 
 module.BotUtils.BotIndex = nil
 
-local function SerializeStatus(color: Color3): table
+local function SerializeStatus(color: Color3)
     local Name = "Info"
 
     for SName, Status in Statuses do
