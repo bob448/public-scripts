@@ -1344,14 +1344,18 @@ local CommandFrameNormalSize = commands_frame.Size
 search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
     for _,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
-            local Command: string = v:GetTags()[1]
+            local Tags = v:GetTags()
 
-            if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) == search_commands_box.Text then
-                v.Visible = true
-            elseif search_commands_box.Text:len() > 0 then
-                v.Visible = false
-            else
-                v.Visible = true
+            if #Tags>0 then
+                local Command: string = v:GetTags()[1]
+
+                if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) == search_commands_box.Text then
+                    v.Visible = true
+                elseif search_commands_box.Text:len() > 0 then
+                    v.Visible = false
+                else
+                    v.Visible = true
+                end
             end
         end
     end
@@ -1574,6 +1578,8 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Label.Text = Text
         end
     end
+
+    CreateCommandFrame()
 
     local _, _Label = CreateCommandFrame()
     _Label.Text = "Built-In Commands:"
