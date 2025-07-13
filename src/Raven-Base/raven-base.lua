@@ -1570,19 +1570,25 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
 
     if ModuleAddedLen > 0 then
         local _, _Label = CreateCommandFrame()
-        _Label.Text = "Module-Added Commands:"
+        _Label.Text = "Module-Added Commands ("..ModuleAddedLen.." in length):"
 
         for Name, Text in pairs(ModuleAdded) do
             local Command, Label = CreateCommandFrame()
             Command:AddTag(Name)
             Label.Text = Text
         end
+
+        local _, _SepLabel = CreateCommandFrame()
+        _SepLabel.Text = ""
     end
 
-    CreateCommandFrame()
+    local BuiltInLen = 0
+    for i,v in pairs(BuiltIn) do
+        BuiltInLen += 1
+    end
 
     local _, _Label = CreateCommandFrame()
-    _Label.Text = "Built-In Commands:"
+    _Label.Text = "Built-In Commands ".."("..BuiltInLen.." in length):"
 
     for Name, Text in pairs(BuiltIn) do
         local Command, Label = CreateCommandFrame()
