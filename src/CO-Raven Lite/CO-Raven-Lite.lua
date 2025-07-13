@@ -1684,17 +1684,6 @@ Raven:AddCMD("abuse", "Spams commands on a player or group of players.", {}, {"p
     end
 end)
 
-Raven:AddCMD("unabuse", "Stops spamming commands.", {}, {}, function(arguments)
-    if AbuseCon then
-        AbuseCon:Disconnect()
-        AbuseCon = nil
-
-        Raven.Notif:Success("Disabled abuse.")
-    else
-        Raven.Notif:Error("Abuse is already disabled.")
-    end
-end)
-
 Raven:AddCMD("abuseall", "Abuses every other player besides yourself.", {"abuseothers","abuseo","abusea"}, {}, function(arguments)
     if not AbuseCon then
         AbuseCon = RunService.Heartbeat:Connect(function()
@@ -1702,16 +1691,7 @@ Raven:AddCMD("abuseall", "Abuses every other player besides yourself.", {"abuseo
             if #PlayerList > 1 then
                 local Command = AbuseCommands[math.random(1, #AbuseCommands)]
 
-                local Names = {}
-                for i,v in ipairs(PlayerList) do
-                    if v ~= LocalPlayer then
-                        Names[#Names+1] = v.Name:sub(1, v.Name:len()-3).."."
-                    end
-                end
-
-                if #Names > 0 then
-                    Raven.Player:Say(Command.." "..table.concat(Names, " "), true)
-                end
+                Raven.Player:Say(Command.." others", true)
             end
         end)
     else
@@ -1719,12 +1699,14 @@ Raven:AddCMD("abuseall", "Abuses every other player besides yourself.", {"abuseo
     end
 end)
 
-Raven:AddCMD("unabuseall", "Stops abusing everyone.", {"unabuseothers","unabuseo","unabusea"}, {}, function(arguments)
+Raven:AddCMD("unabuse", "Stops spamming commands.", {"unabuseall","unabuseothers","unabuseo","unabusea"}, {}, function(arguments)
     if AbuseCon then
         AbuseCon:Disconnect()
         AbuseCon = nil
+
+        Raven.Notif:Success("Disabled abuse.")
     else
-        Raven.Notif:Error("Abuse/AbuseAll is already off.")
+        Raven.Notif:Error("Abuse is already disabled.")
     end
 end)
 
