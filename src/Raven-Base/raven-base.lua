@@ -17,6 +17,7 @@ local function GetService(name: string)
     return game:GetService(name)
 end
 
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = GetService("ReplicatedStorage")
 local RunService = GetService("RunService")
 local _CoreGui = GetService("CoreGui")
@@ -24,7 +25,7 @@ local StarterGui = GetService("StarterGui")
 local TeleportService = GetService("TeleportService")
 local TweenService: TweenService = GetService("TweenService")
 local UserInputService = GetService("UserInputService")
-local Players = GetService("Players")
+local Players: Players = GetService("Players")
 local LocalPlayer: Player = Players.LocalPlayer
 local TextChatService = GetService("TextChatService")
 local TextChannels
@@ -1053,7 +1054,7 @@ module.Commands = Commands
 
 type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
 
-local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
+local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?)
     if not Commands[name:lower()] then
         for i,v in pairs(aliases) do
             aliases[i] = v:lower()
@@ -1064,6 +1065,7 @@ local function AddCMD(name: string, description: string, aliases: {string?}, arg
         Table.Description = description
         Table.Arguments = arguments
         Table.Aliases = aliases
+        Table.BotCommand = botcommand or false
 
         Commands[name:lower()] = Table
     else
@@ -1107,11 +1109,11 @@ function module:RunCMD(...)
     return RunCMD(...)
 end
 
-local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
+local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?)
     if Commands[name:lower()] then
         Commands[name:lower()] = nil
 
-        AddCMD(name, description, arguments, aliases, func)
+        AddCMD(name, description, arguments, aliases, func, botcommand)
 
         return true
     else
@@ -1428,9 +1430,13 @@ function module.Command:AutoCompleteCommand(...)
     return AutoCompleteCommand(...)
 end
 
+local BotUtils = {}
+BotUtils.BotMode = false
+BotUtils.Prefix = "##$R!"
+
 command_box.FocusLost:Connect(function(enterPressed, _)
     if enterPressed then
-        local String = command_box.Text
+        local String = command_box.Text:lower()
         command_box.Text = ""
 
         local Split = String:split(" ")
@@ -1459,6 +1465,15 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         local Table: CommandTable = GetCMD(Command)
 
+        if Table.BotCommand then
+            if not BotUtils.BotMode then
+                local StringArguments = #Arguments > 0 and table.concat(Arguments, " ") or ""
+
+                Say(BotUtils.Prefix..Command.." "..StringArguments, true)
+                return
+            end
+        end
+
         local Succ, Err = pcall(Table.Function, Arguments)
 
         if not Succ and Err ~= nil and tostring(Err) then
@@ -1469,10 +1484,14 @@ end)
 
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, {}, function(arguments)
     DebugMode = true
+
+    Success("Turned on debug mode.")
 end)
 
 AddCMD("debugoff", "Turns off debug mode.", {}, {}, function(arguments)
     DebugMode = false
+
+    Success("Turned off debug mode.")
 end)
 
 AddCMD("test", "A test command used in development of Raven.", {"testalias"}, {}, function(arguments)
@@ -1518,7 +1537,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Aliases = "None"
         end
 
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases
+        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
     end
 end)
 
@@ -1817,7 +1836,7 @@ AddCMD("unview", "Sets the camera to your Humanoid.", {"fixcam"}, {}, function(a
     end
 end)
 
-AddCMD("rejoin", "Rejoins the game.", {}, {}, function(arguments)
+AddCMD("rejoin", "Rejoins the game.", {"rj"}, {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
     local Succ
@@ -2917,7 +2936,6 @@ end)
 local Invisible = {}
 Invisible.InvisibleHighlights = {}
 
-
 AddCMD("invisible", "Makes your character invisible to others", {}, {}, function(arguments)
     if not Invisible.Enabled then
         local Character: Model? = LocalPlayer.Character
@@ -3211,6 +3229,74 @@ AddCMD("unloopjp", "Stops changing your jumppower.", {}, {}, function(arguments)
         Success("Disabled loopjp.")
     else
         Error("LoopJP is already off.")
+    end
+end)
+
+local CommandLoops = {}
+
+AddCMD("loopcommand", "Loops a command", {"loopcmd"}, {"delay", "command", "arguments"}, function(arguments)
+    local Delay = arguments[1] and tonumber(arguments[1]) or .1
+    local Command = arguments[2] and GetCMD(arguments[2]:lower())
+    local Arguments = {}
+
+    if #arguments > 2 then
+        table.move(arguments, 3, #arguments, 1,  Arguments)
+    end
+
+    if Command then
+        local CommandLoop = {}
+        CommandLoop.Description = "Command: "..arguments[2]:lower()
+        CommandLoop.Enabled = true
+        CommandLoop.LoopTask = task.spawn(function()
+            while CommandLoop.Enabled do
+                Command.Function(Arguments)
+
+                local Before = tick()
+                repeat task.wait() until tick() > Before + Delay or not CommandLoop.Enabled
+            end
+        end)
+
+        CommandLoops[#CommandLoops+1] = CommandLoop
+
+        Success("Started looping command.")
+    else
+        Error("Command not found.")
+    end
+end)
+
+AddCMD("listloopcommands", "Lists all currently looping commands.", {"listloopcmds", "listlooping", "listloopingcommands", "listloopingcmds"}, {}, function(arguments)
+    local Data = {"Looping commands:"}
+
+    for i, CommandLoop in pairs(CommandLoops) do
+        Data[#Data+1] = tostring(i)..". "..CommandLoop.Description
+    end
+
+    Output(Data)
+end)
+
+AddCMD("unloopcommand", "Stops looping a command at the specified index. Use listloopcommands to get the desired index of the looping command.", {"unloopcmd"}, {"index"}, function(arguments)
+    local Index = arguments[1] and tonumber(arguments[1])
+
+    if Index then
+        if CommandLoops[Index] then
+            CommandLoops[Index].Enabled = false
+
+            Success("Stopped looping command.")
+
+            table.remove(CommandLoops, Index)
+        else
+            Error("Couldn't find index in CommandLoops. Try using \"listloopcommands\" to list all loops.")
+        end
+    else
+        Error("No index specified.")
+    end
+end)
+
+AddCMD("sit", "Sits.", {}, {}, function(arguments)
+    local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+    if Humanoid then
+        Humanoid.Sit = true
     end
 end)
 
@@ -3757,6 +3843,516 @@ AddCMD("unstun", "Disables platformstand.", {}, {}, function(arguments)
     if Humanoid then Humanoid.PlatformStand = false end
 end)
 
+BotUtils.Bots = {} -- These and BotUtils.Admins are player usernames. This is so they can both be saved.
+BotUtils.Admins = {}
+BotUtils.AdminChatted = nil
+BotUtils.BotChatted = nil
+
+module.BotUtils = {}
+module.BotUtils.Bots = Bots
+module.BotUtils.Admins = Admins
+
+module.BotUtils.BotIndex = nil
+
+local function SerializeStatus(color: Color3): table
+    local Name = "Info"
+
+    for SName, Status in Statuses do
+        if Status == color then
+            Name = SName
+            break
+        end
+    end
+
+    return Name
+end
+
+local function UnserializeStatus(name: string)
+    local Color = Statuses.Info
+
+    for SName, Status in Statuses do
+        if SName == name then
+            Color = Status
+            break
+        end
+    end
+
+    return Color
+end
+
+local function AlertAdmin(data: string, name: string, color: Color3?)
+    color = color or Statuses.Info
+
+    local Color = SerializeStatus(color)
+
+    local Json = HttpService:JSONEncode({
+        Status = Color,
+        Data = data,
+        Name = name
+    })
+
+    Say(Json:gsub("\n", " "), true)
+end
+
+function module.BotUtils:AlertAdmin(...)
+    return AlertAdmin(...)
+end
+
+function module:EnableBotMode(...)
+    BotUtils.BotMode = true
+end
+
+function module:DisableBotMode(...)
+    BotUtils.BotMode = false
+end
+
+local function ClearChatFilter()
+    Say(".", true)
+end
+
+local function JsonBots()
+    local Table = {}
+
+    for _, Name in pairs(BotUtils.Bots) do
+        Table[#Table + 1] = Name
+    end
+
+    return HttpService:JSONEncode(Table)
+end
+
+AddCMD("savebots", "Saves bots to a file.", {}, {}, function(arguments)
+    if writefile and isfile and readfile then
+        if #BotUtils.Bots > 0 then
+            if not isfile("RAVEN_SAVED_BOTS") then
+                writefile("RAVEN_SAVED_BOTS", JsonBots())
+
+                Success("Saved bots.")
+                return
+            end
+
+            local Contents: string = readfile("RAVEN_SAVED_BOTS")
+            local Decoded = nil
+
+            pcall(function()
+                Decoded = HttpService:JSONDecode(Contents)
+            end)
+
+            local Json = JsonBots()
+
+            if Decoded and #Decoded > 0 then
+                local ToAdd = {}
+                for _, Name in pairs(BotUtils.Bots) do
+                    local Index = table.find(Decoded, Name)
+
+                    if not Index then
+                        ToAdd[#ToAdd+1] = Name
+                    end
+                end
+
+                table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
+
+                writefile("RAVEN_SAVED_BOTS", HttpService:JSONEncode(Decoded))
+            else
+                writefile("RAVEN_SAVED_BOTS", JsonBots())
+            end
+
+            Success("Saved bots.")
+        else
+            Error("No bots to save.")
+        end
+    else
+        Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
+    end
+end)
+
+AddCMD("clearsavedbots", "Deletes the file with saved bots in it.", {}, {}, function(arguments)
+    if isfile and delfile then
+        if isfile("RAVEN_SAVED_BOTS") then
+            delfile("RAVEN_SAVED_BOTS")
+
+            Success("Cleared saved bots.")
+        else
+            Error("You have not saved any bots yet.")
+        end
+    else
+        Error("Your exploit does not support isfile or delfile.")
+    end
+end)
+
+AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "arguments"}, function(arguments)
+    if #arguments > 0 then
+        Say(BotUtils.Prefix..table.concat(arguments, " "), true)
+    end
+end)
+
+local function UpdateBotIndex()
+    local Before = BotUtils.BotIndex
+    Say(BotUtils.Prefix.."BIND", true);
+    task.wait(.5)
+    ClearChatFilter()
+
+    if Before == BotUtils.BotIndex then
+        return false
+    else
+        return true
+    end
+end
+
+AddCMD("testbot", "A test bot command used in the development of Raven.", {}, {}, function(arguments)
+    UpdateBotIndex()
+
+    Info("Your bot index is "..tostring(BotUtils.BotIndex))
+end, true)
+
+AddCMD("botmode", "Toggles BotMode. Use this when you want to use bot commands.", {}, {}, function(arguments)
+    BotUtils.BotMode = not BotUtils.BotMode
+
+    if BotUtils.BotMode then
+        Info("Turned on BotMode.")
+    else
+        Info("Turned off BotMode.")
+    end
+end)
+
+local function InitializeBotChatted()
+    local Succ, _ = pcall(function()
+        BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+            local IsBot = false
+            local BotIndex = nil
+
+            for i, name in pairs(BotUtils.Bots) do
+                if name == player.Name then
+                    IsBot = true
+                    BotIndex = i
+                    break
+                end
+            end
+
+            if IsBot then
+                local Decoded = nil
+                local Succ, _ = pcall(function()
+                    Decoded = HttpService:JSONDecode(message)
+                end)
+
+                if Decoded and Succ then
+                    if Decoded.Status and Decoded.Data and Decoded.Name then
+                        if Decoded.Name == LocalPlayer.Name then
+                            local Color = UnserializeStatus(Decoded.Status)
+                            
+                            Notify(Decoded.Data, Color, 4)
+                        end
+                    end
+                elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
+                    local PrefixSplit = message:split(BotUtils.Prefix)
+                    
+                    if PrefixSplit and #PrefixSplit > 0 then
+                        local Command = PrefixSplit[2]
+
+                        if Command == "BIND" then
+                            Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+
+    if not Succ then
+        Error("Your exploit does not support PlayerChatted.")
+        return false
+    else
+        return true
+    end
+end
+
+AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded on their client, and they have added you as an admin.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and FindPlayers(arguments[1])
+
+    if #Targets > 0 then
+        if Targets[1] == LocalPlayer then
+            Error("You cannot add yourself as a bot.")
+            return
+        end
+
+        if table.find(BotUtils.Bots, Targets[1].Name) then
+            Error("That player is already added as a bot.")
+            return
+        end
+
+        if BotUtils.BotChatted == nil then
+            if not InitializeBotChatted() then
+                return
+            end
+        end
+        BotUtils.Bots[#BotUtils.Bots+1] = Targets[1].Name
+
+        Success("Added bot.")
+    else
+        Error("No target found.")
+    end
+end)
+
+AddCMD("removebot", "Removes a bot.", {}, {"name"}, function(arguments)
+    if arguments[1] then
+        local Target = nil
+        local Index = nil
+
+        for i, Name: string in pairs(BotUtils.Bots) do
+            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+                Target = Name
+                Index = i
+            end
+        end
+
+        if Target ~= nil and Index ~= nil then
+            table.remove(BotUtils.Bots, Index)
+
+            if #BotUtils.Bots == 0 and BotUtils.BotChatted then
+                BotUtils.BotChatted:Disconnect()
+                BotUtils.BotChatted = nil
+            end
+
+            Success("Removed bot.")
+        else
+            Error("Couldn't find bot.")
+        end
+    else
+        Error("No target specified.") 
+    end
+end)
+
+AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
+    table.clear(BotUtils.Bots)
+
+    if BotUtils.BotChatted ~= nil then
+        BotUtils.BotChatted:Disconnect()
+        BotUtils.BotChatted = nil
+    end
+
+    Success("Cleared bots.")
+end)
+
+local function InitializeAdminChatted()
+    local Succ, _ = pcall(function()
+        BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+            if message:find(BotUtils.Prefix) then
+                local IsAdmin = false
+
+                for _, name in pairs(BotUtils.Admins) do
+                    if name == player.Name then
+                        IsAdmin = true
+                        break
+                    end
+                end
+
+                if IsAdmin then
+                    local PrefixSplit = message:split(BotUtils.Prefix)
+                    local FullCommand = PrefixSplit[2]
+
+                    local SpaceSplit = FullCommand:split(" ")
+                    local Arguments = {}
+                    local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
+                    
+                    if #SpaceSplit > 0 then
+                        table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
+                    end
+
+                    local Command = nil
+
+                    for Name: string, Table: CommandTable in pairs(Commands) do
+                        if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
+                            Command = Table
+                            break
+                        end
+                    end
+
+                    if Command then
+                        local Succ, Err = pcall(Command.Function, Arguments)
+
+                        if not Succ then
+                            if tostring(Err) then
+                                AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
+                            else
+                                AlertAdmin("Unknown error.", player.Name, Statuses.Error)
+                            end
+                        end
+                    elseif StringCommand == "BIND" then
+                        local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
+
+                        if BotIndex then
+                            BotUtils.BotIndex = BotIndex
+                        end
+                    else
+                        AlertAdmin("Command not found.", player.Name, Statuses.Error)
+                    end
+
+                    ClearChatFilter()
+                end
+            end
+        end)
+    end)
+
+    if not Succ then
+        Error("Your exploit does not support PlayerChatted.")
+        return false
+    else
+        return true
+    end
+end
+
+AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be in control of your client.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and FindPlayers(arguments[1])
+
+    if #Targets > 0 then
+        if Targets[1] == LocalPlayer then
+            Error("You cannot add yourself as an admin.")
+            return
+        end
+
+        if table.find(BotUtils.Admins, Targets[1].Name) then
+            Error("That player is already added as a admin.")
+            return
+        end
+
+        if BotUtils.AdminChatted == nil then
+            if not InitializeAdminChatted() then
+                return
+            end
+        end
+
+        BotUtils.Admins[#BotUtils.Admins+1] = Targets[1].Name
+
+        Success("Added admin.")
+    else
+        Error("No target found.")
+    end
+end)
+
+AddCMD("removeadmin", "Removes an admin.", {}, {"name"}, function(arguments)
+    if arguments[1] then
+        local Target = nil
+        local Index = nil
+
+        for i, Name: string in pairs(BotUtils.Admins) do
+            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+                Target = Name
+                Index = i
+            end
+        end
+
+        if Target ~= nil and Index ~= nil then
+            table.remove(BotUtils.Admins, Index)
+
+            if #BotUtils.Admins == 0 and BotUtils.AdminChatted then
+                BotUtils.AdminChatted:Disconnect()
+                BotUtils.AdminChatted = nil
+            end
+
+            Success("Removed admin.")
+        else
+            Error("Couldn't find admin.")
+        end
+    else
+        Error("No target specified.") 
+    end
+end)
+
+local function JsonAdmins()
+    local Table = {}
+
+    for _, Name in pairs(BotUtils.Admins) do
+        Table[#Table + 1] = Name
+    end
+
+    return HttpService:JSONEncode(Table)
+end
+
+AddCMD("saveadmins", "Saves admins to a file.", {}, {}, function(arguments)
+    if writefile and isfile and readfile then
+        if #BotUtils.Admins > 0 then
+            if not isfile("RAVEN_SAVED_ADMINS") then
+                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+
+                Success("Saved admins.")
+                return
+            end
+
+            local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+            local Decoded = nil
+
+            pcall(function()
+                Decoded = HttpService:JSONDecode(Contents)
+            end)
+
+            local Json = JsonAdmins()
+
+            if Decoded and #Decoded > 0 then
+                local ToAdd = {}
+                for _, Name in pairs(BotUtils.Admins) do
+                    local Index = table.find(Decoded, Name)
+
+                    if not Index then
+                        ToAdd[#ToAdd+1] = Name
+                    end
+                end
+
+                table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
+
+                writefile("RAVEN_SAVED_ADMINS", HttpService:JSONEncode(Decoded))
+            else
+                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+            end
+
+            Success("Saved admins.")
+        else
+            Error("No admins to save.")
+        end
+    else
+        Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
+    end
+end)
+
+AddCMD("clearsavedadmins", "Deletes the file with saved admins in it.", {}, {}, function(arguments)
+    if isfile and delfile then
+        if isfile("RAVEN_SAVED_ADMINS") then
+            delfile("RAVEN_SAVED_ADMINS")
+
+            Success("Cleared saved admins.")
+        else
+            Error("You have not saved any admins yet.")
+        end
+    else
+        Error("Your exploit does not support isfile or delfile.")
+    end
+end)
+
+AddCMD("clearadmins", "Removes all admins.", {}, {}, function(arguments)
+    table.clear(BotUtils.Admins)
+
+    if BotUtils.AdminChatted ~= nil then
+        BotUtils.AdminChatted:Disconnect()
+        BotUtils.AdminChatted = nil
+    end
+
+    Success("Cleared admins.")
+end)
+
+AddCMD("listbots", "Lists all bots and puts them in a GUI.", {}, {}, function(arguments)
+    local data = {"All bots:"}
+
+    table.move(BotUtils.Bots, 1, #BotUtils.Bots, 2, data)
+
+    Output(data)
+end)
+
+AddCMD("listadmins", "Lists all admins and puts them in a GUI.", {}, {}, function(arguments)
+    local data = {"All admins:"}
+
+    table.move(BotUtils.Admins, 1, #BotUtils.Admins, 2, data)
+
+    Output(data)
+end)
+
 --[[
 
 
@@ -3787,8 +4383,8 @@ if readfile and isfile then -- Load saved openbind if there is any.
     end
 end
 
-if readfile and isfile then -- Load saved aliases.
-    if isfile("RAVEN_SAVED_ALIASES") then
+if readfile and isfile then
+    if isfile("RAVEN_SAVED_ALIASES") then  -- Load saved aliases.
         local SavedAliasesData: string = readfile("RAVEN_SAVED_ALIASES")
 
         if SavedAliasesData:len() > 0 then
@@ -3806,6 +4402,58 @@ if readfile and isfile then -- Load saved aliases.
                     end
                 end
             end
+        end
+    end
+
+    if isfile("RAVEN_SAVED_BOTS") then
+        local Contents: string = readfile("RAVEN_SAVED_BOTS")
+        local Table = nil
+
+        pcall(function()
+            Table = HttpService:JSONDecode(Contents)
+        end)
+
+        if Table ~= nil and #Table > 0 then
+            local ToRemove = {}
+            for i, Name in pairs(Table) do
+                if Name == LocalPlayer.Name then
+                    ToRemove[#ToRemove+1] = i
+                end
+            end
+
+            for _, i in pairs(ToRemove) do
+                table.remove(Table, i)
+            end
+
+            table.move(Table, 1, #Table, 1, BotUtils.Bots)
+
+            InitializeBotChatted()
+        end
+    end
+
+    if isfile("RAVEN_SAVED_ADMINS") then
+        local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+        local Table = nil
+
+        pcall(function()
+            Table = HttpService:JSONDecode(Contents)
+        end)
+
+        if Table and #Table > 0 then
+            local ToRemove = {}
+            for i, Name in pairs(Table) do
+                if Name == LocalPlayer.Name then
+                    ToRemove[#ToRemove+1] = i
+                end
+            end
+
+            for _, i in pairs(ToRemove) do
+                table.remove(Table, i)
+            end
+
+            table.move(Table, 1, #Table, 1, BotUtils.Admins)
+
+            InitializeAdminChatted()
         end
     end
 end
