@@ -4077,8 +4077,6 @@ local function InitializeAdminChatted()
                             else
                                 AlertAdmin("Unknown error.", player.Name, Statuses.Error)
                             end
-                        else
-                            AlertAdmin("Ran command.", player.Name, Statuses.Success)
                         end
                     else
                         AlertAdmin("Command not found.", player.Name, Statuses.Error)
