@@ -1344,6 +1344,11 @@ local CommandFrameNormalSize = commands_frame.Size
 search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
     for _,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
+            if search_commands_box.Text:len() == 0 then
+                v.Visible = true
+                continue
+            end
+            
             local Tags = v:GetTags()
 
             if #Tags>0 then
