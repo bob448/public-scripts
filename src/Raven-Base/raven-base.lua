@@ -1470,6 +1470,7 @@ command_box.FocusLost:Connect(function(enterPressed, _)
                 local StringArguments = #Arguments > 0 and table.concat(Arguments, " ") or ""
 
                 Say(BotUtils.Prefix..Command.." "..StringArguments, true)
+                Say(".", true)
                 return
             end
         end
@@ -3843,6 +3844,44 @@ AddCMD("unstun", "Disables platformstand.", {}, {}, function(arguments)
     if Humanoid then Humanoid.PlatformStand = false end
 end)
 
+local GrabTools = {} 
+GrabTools.Enabled = false
+GrabTools.Heartbeat = nil
+
+AddCMD("grabtools", "Enables grabtools", {}, {}, function(arguments)
+    if not GrabTools.Enabled then
+        GrabTools.Enabled = true
+
+        GrabTools.Heartbeat = RunService.Heartbeat:Connect(function()
+            local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+
+            if Humanoid then
+                for i,v in ipairs(workspace:GetChildren()) do
+                    if v:IsA("Tool") then
+                        Humanoid:EquipTool(v)
+                    end
+                end
+            end
+        end)
+
+        Success("Enabled Grabtools.")
+    else
+        Error("Grabtools is already enabled.")
+    end
+end)
+
+AddCMD("ungrabtools", "Disables grabtools.", {}, {}, function(arguments)
+    if GrabTools.Enabled then
+        GrabTools.Enabled = false
+
+        if GrabTools.Heartbeat ~= nil then
+            GrabTools.Heartbeat:Disconnect()
+        end
+    else
+        Error("Grabtools is already disabled.")
+    end
+end)
+
 BotUtils.Bots = {} -- These and BotUtils.Admins are player usernames. This is so they can both be saved.
 BotUtils.Admins = {}
 BotUtils.AdminChatted = nil
@@ -3982,6 +4021,7 @@ end)
 AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "arguments"}, function(arguments)
     if #arguments > 0 then
         Say(BotUtils.Prefix..table.concat(arguments, " "), true)
+        ClearChatFilter()
     end
 end)
 
