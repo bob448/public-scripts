@@ -1553,13 +1553,18 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
         local Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
 
         if Table.ModuleAdded then
-            ModuleAdded[Name] = Name
+            ModuleAdded[Name] = Text
         else
             BuiltIn[Name] = Text
         end
     end
 
-    if #ModuleAdded > 0 then
+    local ModuleAddedLen = 0
+    for i,v in pairs(ModuleAdded) do
+        ModuleAddedLen += 1
+    end
+
+    if ModuleAddedLen > 0 then
         local _, _Label = CreateCommandFrame()
         _Label.Text = "Module-Added Commands:"
 
@@ -1573,7 +1578,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
     local _, _Label = CreateCommandFrame()
     _Label.Text = "Built-In Commands:"
 
-    for Name, Text in pairs(ModuleAdded) do
+    for Name, Text in pairs(BuiltIn) do
         local Command, Label = CreateCommandFrame()
         Command:AddTag(Name)
         Label.Text = Text
