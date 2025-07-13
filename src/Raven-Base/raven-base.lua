@@ -1470,6 +1470,7 @@ command_box.FocusLost:Connect(function(enterPressed, _)
                 local StringArguments = #Arguments > 0 and table.concat(Arguments, " ") or ""
 
                 Say(BotUtils.Prefix..Command.." "..StringArguments, true)
+                Say(".", true)
                 return
             end
         end
@@ -4020,6 +4021,7 @@ end)
 AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "arguments"}, function(arguments)
     if #arguments > 0 then
         Say(BotUtils.Prefix..table.concat(arguments, " "), true)
+        ClearChatFilter()
     end
 end)
 
