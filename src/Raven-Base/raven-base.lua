@@ -4,6 +4,11 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
+--[[
+to do:
+    add the spin command
+]]
+
 if getgenv and getgenv().RAVEN_LOADED then
     error("Raven is already loaded.")
 end
@@ -1052,7 +1057,7 @@ local Commands = {}
 
 module.Commands = Commands
 
-type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string, ModuleAdded: boolean}
 
 local function AddCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?)
     if not Commands[name:lower()] then
@@ -1066,15 +1071,21 @@ local function AddCMD(name: string, description: string, aliases: {string?}, arg
         Table.Arguments = arguments
         Table.Aliases = aliases
         Table.BotCommand = botcommand or false
+        Table.ModuleAdded = false
 
         Commands[name:lower()] = Table
+
+        return Table
     else
         Error("Could not add command \""..name.."\". Command already exists!")
     end
 end
 
 function module:AddCMD(...)
-    return AddCMD(...)
+    local Table = AddCMD(...)
+    Table.ModuleAdded = true
+
+    return Table
 end
 
 local function GetCMD(name: string)
@@ -1338,14 +1349,25 @@ local CommandFrameNormalSize = commands_frame.Size
 search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
     for _,v: Frame in ipairs(commands_scrolling_frame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "CommandFrame" then
-            local Command: string = v:GetTags()[1]
+            if search_commands_box.Text:len() == 0 then
+                v.Visible = true
+                continue
+            end
 
-            if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) == search_commands_box.Text then
-                v.Visible = true
-            elseif search_commands_box.Text:len() > 0 then
-                v.Visible = false
+            local Tags = v:GetTags()
+
+            if #Tags>0 then
+                local Command: string = v:GetTags()[1]
+
+                if search_commands_box.Text:len() > 0 and Command:sub(1, search_commands_box.Text:len()) == search_commands_box.Text then
+                    v.Visible = true
+                elseif search_commands_box.Text:len() > 0 then
+                    v.Visible = false
+                else
+                    v.Visible = true
+                end
             else
-                v.Visible = true
+                v.Visible = false
             end
         end
     end
@@ -1502,6 +1524,15 @@ AddCMD("test", "A test command used in development of Raven.", {"testalias"}, {}
     Success("Successfully ran the test command!")
 end)
 
+local function CreateCommandFrame()
+    local Command: Frame = command_frame:Clone()
+    local Label: TextLabel = Command:WaitForChild("CommandLabel")
+
+    Command.Parent = commands_scrolling_frame
+
+    return Command, Label
+end
+
 AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_)
     commands_frame.Visible = true
 
@@ -1510,14 +1541,11 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             v:Destroy()
         end
     end
+
+    local ModuleAdded = {}
+    local BuiltIn = {}
     
     for Name: string, Table: CommandTable in pairs(Commands) do
-        local Command: Frame = command_frame:Clone()
-        local Label: TextLabel = Command:WaitForChild("CommandLabel")
-        Command:AddTag(Name)
-
-        Command.Parent = commands_scrolling_frame
-
         local Arguments = ""
 
         for i, arg in pairs(Table.Arguments) do
@@ -1538,7 +1566,47 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Aliases = "None"
         end
 
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
+        local Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
+
+        if Table.ModuleAdded then
+            ModuleAdded[Name] = Text
+        else
+            BuiltIn[Name] = Text
+        end
+    end
+
+    local ModuleAddedLen = 0
+    for i,v in pairs(ModuleAdded) do
+        ModuleAddedLen += 1
+    end
+
+    if ModuleAddedLen > 0 then
+        local _, _Label = CreateCommandFrame()
+        _Label.Text = "Module-Added Commands ("..ModuleAddedLen.." in length):"
+
+        for Name, Text in pairs(ModuleAdded) do
+            local Command, Label = CreateCommandFrame()
+            Command:AddTag(Name)
+            Label.Text = Text
+        end
+
+        local _SepFrame, _SepLabel = CreateCommandFrame()
+        _SepLabel.Text = ""
+        _SepFrame.BackgroundTransparency = 1
+    end
+
+    local BuiltInLen = 0
+    for i,v in pairs(BuiltIn) do
+        BuiltInLen += 1
+    end
+
+    local _, _Label = CreateCommandFrame()
+    _Label.Text = "Built-In Commands ".."("..BuiltInLen.." in length):"
+
+    for Name, Text in pairs(BuiltIn) do
+        local Command, Label = CreateCommandFrame()
+        Command:AddTag(Name)
+        Label.Text = Text
     end
 end)
 
@@ -1689,6 +1757,54 @@ AddCMD("saveopenbind", "Saves the open bind to a file.", {}, {}, function(argume
     else
         Error("Your executor does not have writefile.")
     end
+end)
+
+local SpinCommand = {}
+SpinCommand.Heartbeat = nil
+SpinCommand.ToMultiply = {}
+
+local SpinAxes = {
+    x = Vector3.new(1,0,0),
+    y = Vector3.new(0,1,0),
+    z = Vector3.new(0,0,1)
+}
+
+AddCMD("spin", "Starts spinning your root in the specified direction.", {}, {"speed", "axis"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1])
+    local Axis = arguments[2] and SpinAxes[arguments[2]:lower()]
+
+    if Axis then
+        Axis = Axis * Speed
+        
+        table.insert(SpinCommand.ToMultiply, CFrame.Angles(Axis.X,Axis.Y,Axis.Z))
+
+        if not SpinCommand.Heartbeat then
+            SpinCommand.Heartbeat = RunService.Heartbeat:Connect(function(deltaTime)
+                local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                if Root then
+                    for _, Mult in pairs(SpinCommand.ToMultiply) do
+                        Root.CFrame *= Mult
+                    end
+                end
+            end)
+        end
+
+        Success("Started spinning in that direction.")
+    else
+        Error("Axis not found. Available axes are 'x','y', and 'z'.")
+    end
+end)
+
+AddCMD("unspin", "Stops spinning.", {}, {}, function(arguments)
+    if SpinCommand.Heartbeat then
+        SpinCommand.Heartbeat:Disconnect()
+        SpinCommand.Heartbeat = nil
+    end
+
+    table.clear(SpinCommand.ToMultiply)
+
+    Success("Cleared all spin tasks.")
 end)
 
 AddCMD("keycodes", "Shows all available keycodes.", {}, {}, function(arguments)

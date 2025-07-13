@@ -35,7 +35,7 @@ local function LoopThroughTables(...: {any?})
     return LoopThrough
 end
 
-type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string}
+type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string, ModuleAdded: boolean}
 
 type RavenMod = {
     Name: string,
