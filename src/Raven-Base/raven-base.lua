@@ -1436,7 +1436,7 @@ BotUtils.Prefix = "##$R!"
 
 command_box.FocusLost:Connect(function(enterPressed, _)
     if enterPressed then
-        local String = command_box.Text
+        local String = command_box.Text:lower()
         command_box.Text = ""
 
         local Split = String:split(" ")
@@ -1467,7 +1467,9 @@ command_box.FocusLost:Connect(function(enterPressed, _)
 
         if Table.BotCommand then
             if not BotUtils.BotMode then
-                Say(BotUtils.Prefix..Table.Name..table.concat(Arguments, " "), true)
+                local StringArguments = #Arguments > 0 and table.concat(Arguments, " ") or ""
+
+                Say(BotUtils.Prefix..Command.." "..StringArguments, true)
                 return
             end
         end
@@ -1482,10 +1484,14 @@ end)
 
 AddCMD("debugon", "Turns on debug mode. Used in development for other commands.", {}, {}, function(arguments)
     DebugMode = true
+
+    Success("Turned on debug mode.")
 end)
 
 AddCMD("debugoff", "Turns off debug mode.", {}, {}, function(arguments)
     DebugMode = false
+
+    Success("Turned off debug mode.")
 end)
 
 AddCMD("test", "A test command used in development of Raven.", {"testalias"}, {}, function(arguments)
@@ -1531,7 +1537,7 @@ AddCMD("cmds", "Gets all commands and displays in in a GUI.", {}, {}, function(_
             Aliases = "None"
         end
 
-        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases
+        Label.Text = Name..": "..Table.Description.." | Arguments: "..Arguments.." | Aliases: "..Aliases.." | BotCommand?: "..(Table.BotCommand and "Yes" or "No")
     end
 end)
 
@@ -3285,9 +3291,7 @@ AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, 
     if not ChatLogsCon then
         local Succ, Err = pcall(function()
             ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
-                if chatType == Enum.ChatCallbackType.OnClientFormattingMessage then
-                    AddChatLog(message, player)
-                end
+                AddChatLog(message, player)
             end)
 
             chat_logs_frame.Visible = true
@@ -3777,27 +3781,39 @@ BotUtils.Admins = {}
 BotUtils.AdminChatted = nil
 BotUtils.BotChatted = nil
 
-local function SerializeColor3(color: Color3): table
-    local ColorTable = {
-        R = color.R,
-        G = color.G,
-        B = color.B
-    }
+local function SerializeStatus(color: Color3): table
+    local Name = "Info"
 
-    return ColorTable
+    for SName, Status in Statuses do
+        if Status == color then
+            Name = SName
+            break
+        end
+    end
+
+    return Name
 end
 
-local function UnserializeColor3(colorTable: {R: number, G: number, B: number})
-    return Color3.new(colorTable.R, colorTable.G, colorTable.B)
+local function UnserializeStatus(name: string)
+    local Color = Statuses.Info
+
+    for SName, Status in Statuses do
+        if SName == name then
+            Color = Status
+            break
+        end
+    end
+
+    return Color
 end
 
 local function AlertAdmin(data: string, name: string, color: Color3?)
     color = color or Statuses.Info
 
-    local Color = SerializeColor3(color)
+    local Color = SerializeStatus(color)
 
     local Json = HttpService:JSONEncode({
-        ["Color"] = Color,
+        Status = Color,
         Data = data,
         Name = name
     })
@@ -3809,6 +3825,16 @@ local function ClearChatFilter()
     Say(".", true)
 end
 
+AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "arguments"}, function(arguments)
+    if #arguments > 0 then
+        Say(BotUtils.Prefix..table.concat(arguments, " "))
+    end
+end)
+
+AddCMD("testbot", "A test bot command used in the development of Raven.", {}, {}, function(arguments)
+    Info("You are a bot!")
+end, true)
+
 AddCMD("botmode", "Toggles BotMode. Use this when you want to use bot commands.", {}, {}, function(arguments)
     BotUtils.BotMode = not BotUtils.BotMode
 
@@ -3819,6 +3845,45 @@ AddCMD("botmode", "Toggles BotMode. Use this when you want to use bot commands."
     end
 end)
 
+local function InitializeBotChatted()
+    local Succ, _ = pcall(function()
+        BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+            local IsBot = false
+
+            for _, name in pairs(BotUtils.Bots) do
+                if name == player.Name then
+                    IsBot = true
+                    break
+                end
+            end
+
+            if IsBot then
+                local Decoded = nil
+                local Succ, _ = pcall(function()
+                    Decoded = HttpService:JSONDecode(message)
+                end)
+
+                if Decoded and Succ then
+                    if Decoded.Status and Decoded.Data and Decoded.Name then
+                        if Decoded.Name == LocalPlayer.Name then
+                            local Color = UnserializeStatus(Decoded.Status)
+                            
+                            Notify(Decoded.Data, Color, 4)
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+
+    if not Succ then
+        Error("Your exploit does not support PlayerChatted.")
+        return false
+    else
+        return true
+    end
+end
+
 AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded on their client, and they have added you as an admin.", {}, {"player"}, function(arguments)
     local Targets = arguments[1] and FindPlayers(arguments[1])
 
@@ -3828,49 +3893,110 @@ AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded o
             return
         end
 
-        if not BotUtils.BotChatted then
-            local Succ, _ = pcall(function()
-                BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-                    if chatType == Enum.ChatCallbackType.OnClientFormattingMessage then
-                        local IsBot = false
+        if table.find(BotUtils.Bots, Targets[1].Name) then
+            Error("That player is already added as a bot.")
+            return
+        end
 
-                        for _, name in pairs(BotUtils.Bots) do
-                            if name == player.Name then
-                                IsBot = true
-                                break
-                            end
-                        end
-
-                        if IsBot then
-                            local Decoded = nil
-                            local Succ, _ = pcall(function()
-                                Decoded = HttpService:JSONDecode(message)
-                            end)
-
-                            if Decoded then
-                                if Decoded.Color and Decoded.Data and Decoded.Name then
-                                    if Decoded.Name == LocalPlayer.Name then
-                                        local Color = UnserializeColor3(Decoded.Color)
-                                        
-                                        Notify(Decoded.Data, Color, 4)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end)
-            end)
-
-            if not Succ then
-                Error("Your exploit does not support PlayerChatted.")
+        if BotUtils.BotChatted == nil then
+            if not InitializeBotChatted() then
                 return
             end
         end
         BotUtils.Bots[#BotUtils.Bots+1] = Targets[1].Name
+
+        Success("Added bot.")
     else
-        Error("No target specified.")
+        Error("No target found.")
     end
 end)
+
+AddCMD("removebot", "Removes a bot.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and FindPlayers(arguments[1])
+
+    if #Targets > 0 then
+        local Index = table.find(BotUtils.Bots, Targets[1].Name)
+
+        if Index then
+            table.remove(BotUtils.Bots, Targets[1].Name)
+
+            if #BotUtils.Bots == 0 and BotUtils.BotChatted then
+                BotUtils.BotChatted:Disconnect()
+                BotUtils.BotChatted = nil
+            end
+
+            Success("Removed bot.")
+        else
+            Error("Couldn't find bot.")
+        end
+    else
+        Error("No target found.")
+    end
+end)
+
+local function InitializeAdminChatted()
+    local Succ, _ = pcall(function()
+        BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+            if message:find(BotUtils.Prefix) then
+                local IsAdmin = false
+
+                for _, name in pairs(BotUtils.Admins) do
+                    if name == player.Name then
+                        IsAdmin = true
+                        break
+                    end
+                end
+
+                if IsAdmin then
+                    local PrefixSplit = message:split(BotUtils.Prefix)
+                    local FullCommand = PrefixSplit[2]
+
+                    local SpaceSplit = FullCommand:split(" ")
+                    local Arguments = {}
+                    local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
+                    
+                    if #SpaceSplit > 0 then
+                        table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
+                    end
+
+                    local Command = nil
+
+                    for Name: string, Table: CommandTable in pairs(Commands) do
+                        if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
+                            Command = Table
+                            break
+                        end
+                    end
+
+                    if Command then
+                        local Succ, Err = pcall(Command.Function, Arguments)
+
+                        if not Succ then
+                            if tostring(Err) then
+                                AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
+                            else
+                                AlertAdmin("Unknown error.", player.Name, Statuses.Error)
+                            end
+                        else
+                            AlertAdmin("Ran command.", player.Name, Statuses.Success)
+                        end
+                    else
+                        AlertAdmin("Command not found.", player.Name, Statuses.Error)
+                    end
+
+                    ClearChatFilter()
+                end
+            end
+        end)
+    end)
+
+    if not Succ then
+        Error("Your exploit does not support PlayerChatted.")
+        return false
+    else
+        return true
+    end
+end
 
 AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be in control of your client.", {}, {"player"}, function(arguments)
     local Targets = arguments[1] and FindPlayers(arguments[1])
@@ -3881,64 +4007,13 @@ AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be i
             return
         end
 
-        if not BotUtils.Chatted then
-            local Succ, _ = pcall(function()
-                BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-                    if chatType == Enum.ChatCallbackType.OnClientFormattingMessage and message:find(BotUtils.Prefix) then
-                        local IsAdmin = false
+        if table.find(BotUtils.Admins, Targets[1].Name) then
+            Error("That player is already added as a admin.")
+            return
+        end
 
-                        for _, name in pairs(BotUtils.Admins) do
-                            if name == player.Name then
-                                IsAdmin = true
-                                break
-                            end
-                        end
-
-                        if IsAdmin then
-                            local PrefixSplit = message:split(BotUtils.Prefix)
-                            local FullCommand = PrefixSplit[2]
-
-                            local SpaceSplit = FullCommand:split(" ")
-                            local Arguments = {}
-                            local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
-                            
-                            if #SpaceSplit > 0 then
-                                table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
-                            end
-
-                            local Command = nil
-
-                            for Name: string, Table: CommandTable in pairs(Commands) do
-                                if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
-                                    Command = Table
-                                    break
-                                end
-                            end
-
-                            if Command then
-                                local Succ, Err = pcall(Command.Function, Arguments)
-
-                                if not Succ then
-                                    if tostring(Err) then
-                                        AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
-                                    else
-                                        AlertAdmin("Unknown error.", player.Name, Statuses.Error)
-                                    end
-                                else
-                                    AlertAdmin("Ran command.", player.Name, Statuses.Success)
-                                end
-                            else
-                                AlertAdmin("Command not found.", player.Name, Statuses.Error)
-                            end
-
-                            ClearChatFilter()
-                        end
-                    end
-                end)
-            end)
-
-            if not Succ then
-                Error("Your exploit does not support PlayerChatted.")
+        if BotUtils.AdminChatted == nil then
+            if not InitializeAdminChatted() then
                 return
             end
         end
@@ -3947,7 +4022,30 @@ AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be i
 
         Success("Added admin.")
     else
-        Error("No target specified.")
+        Error("No target found.")
+    end
+end)
+
+AddCMD("removeadmin", "Removes an admin.", {}, {"player"}, function(arguments)
+    local Targets = arguments[1] and FindPlayers(arguments[1])
+
+    if #Targets > 0 then
+        local Index = table.find(BotUtils.Admins, Targets[1].Name)
+
+        if Index then
+            table.remove(BotUtils.Admins, Targets[1].Name)
+
+            if #BotUtils.Admins == 0 and BotUtils.AdminChatted then
+                BotUtils.AdminChatted:Disconnect()
+                BotUtils.AdminChatted = nil
+            end
+
+            Success("Removed admin.")
+        else
+            Error("Couldn't find admin.")
+        end
+    else
+        Error("No target found.")
     end
 end)
 
