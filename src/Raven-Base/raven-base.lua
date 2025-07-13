@@ -1836,7 +1836,7 @@ AddCMD("unview", "Sets the camera to your Humanoid.", {"fixcam"}, {}, function(a
     end
 end)
 
-AddCMD("rejoin", "Rejoins the game.", {}, {}, function(arguments)
+AddCMD("rejoin", "Rejoins the game.", {"rj"}, {}, function(arguments)
     local PlaceId = game.PlaceId
     local JobId = game.JobId
     local Succ
@@ -2936,7 +2936,6 @@ end)
 local Invisible = {}
 Invisible.InvisibleHighlights = {}
 
-
 AddCMD("invisible", "Makes your character invisible to others", {}, {}, function(arguments)
     if not Invisible.Enabled then
         local Character: Model? = LocalPlayer.Character
@@ -3230,6 +3229,66 @@ AddCMD("unloopjp", "Stops changing your jumppower.", {}, {}, function(arguments)
         Success("Disabled loopjp.")
     else
         Error("LoopJP is already off.")
+    end
+end)
+
+local CommandLoops = {}
+
+AddCMD("loopcommand", "Loops a command", {"loopcmd"}, {"delay", "command", "arguments"}, function(arguments)
+    local Delay = arguments[1] and tonumber(arguments[1]) or .1
+    local Command = arguments[2] and GetCMD(arguments[2]:lower())
+    local Arguments = {}
+
+    if #arguments > 2 then
+        table.move(arguments, 3, #arguments, 1,  Arguments)
+    end
+
+    if Command then
+        local CommandLoop = {}
+        CommandLoop.Description = "Command: "..arguments[2]:lower()
+        CommandLoop.Enabled = true
+        CommandLoop.LoopTask = task.spawn(function()
+            while CommandLoop.Enabled do
+                Command.Function(Arguments)
+
+                local Before = tick()
+                repeat task.wait() until tick() > Before + Delay or not CommandLoop.Enabled
+            end
+        end)
+
+        CommandLoops[#CommandLoops+1] = CommandLoop
+
+        Success("Started looping command.")
+    else
+        Error("Command not found.")
+    end
+end)
+
+AddCMD("listloopcommands", "Lists all currently looping commands.", {"listloopcmds", "listlooping", "listloopingcommands", "listloopingcmds"}, {}, function(arguments)
+    local Data = {"Looping commands:"}
+
+    for i, CommandLoop in pairs(CommandLoops) do
+        Data[#Data+1] = tostring(i)..". "..CommandLoop.Description
+    end
+
+    Output(Data)
+end)
+
+AddCMD("unloopcommand", "Stops looping a command at the specified index. Use listloopcommands to get the desired index of the looping command.", {"unloopcmd"}, {"index"}, function(arguments)
+    local Index = arguments[1] and tonumber(arguments[1])
+
+    if Index then
+        if CommandLoops[Index] then
+            CommandLoops[Index].Enabled = false
+
+            Success("Stopped looping command.")
+
+            table.remove(CommandLoops, Index)
+        else
+            Error("Couldn't find index in CommandLoops. Try using \"listloopcommands\" to list all loops.")
+        end
+    else
+        Error("No index specified.")
     end
 end)
 

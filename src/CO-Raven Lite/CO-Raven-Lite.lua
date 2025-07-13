@@ -800,33 +800,37 @@ local BreakBkitPlayers = {}
 Raven:AddCMD("breakbkit", "Spams a player or a group of player's remotes so they exhaust.", {}, {"player"}, function(arguments)
     local Targets = arguments and Raven.Player:FindPlayers(unpack(arguments))
 
-    for i,v in pairs(Targets) do
-        if v and v.Character then
-            BreakBkitPlayers[v] = {}
+    if #Targets > 0 then
+        for i,v in pairs(Targets) do
+            if v and v.Character then
+                BreakBkitPlayers[v] = {}
 
-            BreakBkitPlayers[v].RenderStepped = RunService.RenderStepped:Connect(function(_)
-                if v.Character then
-                    local LoopThrough = {}
-                    local CharacterChildren = v.Character:GetChildren()
-                    local BackpackChildren = v.Backpack:GetChildren()
+                BreakBkitPlayers[v].RenderStepped = RunService.RenderStepped:Connect(function(_)
+                    if v.Character then
+                        local LoopThrough = {}
+                        local CharacterChildren = v.Character:GetChildren()
+                        local BackpackChildren = v.Backpack:GetChildren()
 
-                    table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
-                    table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
+                        table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
+                        table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
 
-                    for i, tool: Tool in pairs(LoopThrough) do
-                        if tool and tool:IsA("Tool") and table.find(BreakBkitTools, tool.Name) then
-                            local Remote = GetRemoteFromTool(tool)
+                        for i, tool: Tool in pairs(LoopThrough) do
+                            if tool and tool:IsA("Tool") and table.find(BreakBkitTools, tool.Name) then
+                                local Remote = GetRemoteFromTool(tool)
 
-                            if Remote then
-                                Remote:FireServer()
+                                if Remote then
+                                    Remote:FireServer()
+                                end
                             end
                         end
                     end
-                end
-            end)
+                end)
 
-            Raven.Notif:Success("Added "..v.Name.." to the BreakBkit list.")
+                Raven.Notif:Success("Added "..v.Name.." to the BreakBkit list.")
+            end
         end
+    else
+        Raven.Notif:Error("No targets found.")
     end
 end)
 
@@ -1712,6 +1716,15 @@ Raven:AddCMD("abuseall", "Abuses every other player besides yourself.", {"abuseo
         end)
     else
         Raven.Notif:Error("Abuse/AbuseAll is already on.")
+    end
+end)
+
+Raven:AddCMD("unabuseall", "Stops abusing everyone.", {"unabuseothers","unabuseo","unabusea"}, {}, function(arguments)
+    if AbuseCon then
+        AbuseCon:Disconnect()
+        AbuseCon = nil
+    else
+        Raven.Notif:Error("Abuse/AbuseAll is already off.")
     end
 end)
 
