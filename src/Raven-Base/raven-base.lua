@@ -3785,6 +3785,8 @@ module.BotUtils = {}
 module.BotUtils.Bots = Bots
 module.BotUtils.Admins = Admins
 
+module.BotUtils.BotIndex = nil
+
 local function SerializeStatus(color: Color3): table
     local Name = "Info"
 
@@ -3916,8 +3918,23 @@ AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "argum
     end
 end)
 
+local function UpdateBotIndex()
+    local Before = BotUtils.BotIndex
+    Say(BotUtils.Prefix.."BIND", true);
+    task.wait(.5)
+    ClearChatFilter()
+
+    if Before == BotUtils.BotIndex then
+        return false
+    else
+        return true
+    end
+end
+
 AddCMD("testbot", "A test bot command used in the development of Raven.", {}, {}, function(arguments)
-    Info("You are a bot!")
+    UpdateBotIndex()
+
+    Info("Your bot index is "..tostring(BotUtils.BotIndex))
 end, true)
 
 AddCMD("botmode", "Toggles BotMode. Use this when you want to use bot commands.", {}, {}, function(arguments)
@@ -3934,10 +3951,12 @@ local function InitializeBotChatted()
     local Succ, _ = pcall(function()
         BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
             local IsBot = false
+            local BotIndex = nil
 
-            for _, name in pairs(BotUtils.Bots) do
+            for i, name in pairs(BotUtils.Bots) do
                 if name == player.Name then
                     IsBot = true
+                    BotIndex = i
                     break
                 end
             end
@@ -3954,6 +3973,16 @@ local function InitializeBotChatted()
                             local Color = UnserializeStatus(Decoded.Status)
                             
                             Notify(Decoded.Data, Color, 4)
+                        end
+                    end
+                elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
+                    local PrefixSplit = message:split(BotUtils.Prefix)
+                    
+                    if PrefixSplit and #PrefixSplit > 0 then
+                        local Command = PrefixSplit[2]
+
+                        if Command == "BIND" then
+                            Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
                         end
                     end
                 end
@@ -4032,6 +4061,8 @@ AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
         BotUtils.BotChatted:Disconnect()
         BotUtils.BotChatted = nil
     end
+
+    Success("Cleared bots.")
 end)
 
 local function InitializeAdminChatted()
@@ -4077,6 +4108,12 @@ local function InitializeAdminChatted()
                             else
                                 AlertAdmin("Unknown error.", player.Name, Statuses.Error)
                             end
+                        end
+                    elseif StringCommand == "BIND" then
+                        local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
+
+                        if BotIndex then
+                            BotUtils.BotIndex = BotIndex
                         end
                     else
                         AlertAdmin("Command not found.", player.Name, Statuses.Error)
@@ -4165,7 +4202,7 @@ end
 
 AddCMD("saveadmins", "Saves admins to a file.", {}, {}, function(arguments)
     if writefile and isfile and readfile then
-        if #BotUtils.Bots > 0 then
+        if #BotUtils.Admins > 0 then
             if not isfile("RAVEN_SAVED_ADMINS") then
                 writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
 
@@ -4229,6 +4266,8 @@ AddCMD("clearadmins", "Removes all admins.", {}, {}, function(arguments)
         BotUtils.AdminChatted:Disconnect()
         BotUtils.AdminChatted = nil
     end
+
+    Success("Cleared admins.")
 end)
 
 AddCMD("listbots", "Lists all bots and puts them in a GUI.", {}, {}, function(arguments)
@@ -4308,6 +4347,17 @@ if readfile and isfile then
         end)
 
         if Table ~= nil and #Table > 0 then
+            local ToRemove = {}
+            for i, Name in pairs(Table) do
+                if Name == LocalPlayer.Name then
+                    ToRemove[#ToRemove+1] = i
+                end
+            end
+
+            for _, i in pairs(ToRemove) do
+                table.remove(Table, i)
+            end
+
             table.move(Table, 1, #Table, 1, BotUtils.Bots)
 
             InitializeBotChatted()
@@ -4323,6 +4373,17 @@ if readfile and isfile then
         end)
 
         if Table and #Table > 0 then
+            local ToRemove = {}
+            for i, Name in pairs(Table) do
+                if Name == LocalPlayer.Name then
+                    ToRemove[#ToRemove+1] = i
+                end
+            end
+
+            for _, i in pairs(ToRemove) do
+                table.remove(Table, i)
+            end
+
             table.move(Table, 1, #Table, 1, BotUtils.Admins)
 
             InitializeAdminChatted()
