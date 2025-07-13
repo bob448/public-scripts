@@ -1760,8 +1760,8 @@ AddCMD("saveopenbind", "Saves the open bind to a file.", {}, {}, function(argume
 end)
 
 local SpinCommand = {}
-SpinCommand.Cons = {}
-SpinCommand.Instances = {}
+SpinCommand.Heartbeat = nil
+SpinCommand.ToMultiply = {}
 
 local SpinAxes = {
     x = Vector3.new(1,0,0),
@@ -1771,36 +1771,24 @@ local SpinAxes = {
 
 AddCMD("spin", "Starts spinning your root in the specified direction.", {}, {"speed", "axis"}, function(arguments)
     local Speed = arguments[1] and tonumber(arguments[1])
-    local Axis = arguments[2] and table.find(SpinAxes, arguments[2]:lower()) and SpinAxes[arguments[2]:lower()]
+    local Axis = arguments[2] and SpinAxes[arguments[2]:lower()]
 
     if Axis then
-        local AxisCF = CFrame.new(Axis * Speed)
-        local CurrentAlignOri: AlignOrientation? = nil
-        local CurrentAttachment: Attachment? = nil
+        Axis = Axis * Speed
+        
+        table.insert(SpinCommand.ToMultiply, CFrame.Angles(Axis.X,Axis.Y,Axis.Z))
 
-        SpinCommand.Cons[#SpinCommand.Cons+1] = RunService.Heartbeat:Connect(function(deltaTime)
-            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not SpinCommand.Heartbeat then
+            SpinCommand.Heartbeat = RunService.Heartbeat:Connect(function(deltaTime)
+                local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-            if Root then
-                if not Exists(CurrentAlignOri) then
-                    CurrentAlignOri = Instance.new("AlignOrientation", Root)
-                    CurrentAlignOri.Mode = Enum.OrientationAlignmentMode.OneAttachment
-
-                    SpinCommand.Instances[#SpinCommand.Instances+1] = CurrentAlignOri
-                    
-                    if Exists(CurrentAttachment) then
-                        CurrentAttachment:Destroy()
+                if Root then
+                    for _, Mult in pairs(SpinCommand.ToMultiply) do
+                        Root.CFrame *= Mult
                     end
-
-                    CurrentAttachment = Instance.new("Attachment", Root)
-                    SpinCommand.Instances[#SpinCommand.Instances+1] = CurrentAttachment
-
-                    CurrentAlignOri.Attachment0 = CurrentAttachment
                 end
-
-                CurrentAlignOri.CFrame *= AxisCF
-            end
-        end)
+            end)
+        end
 
         Success("Started spinning in that direction.")
     else
@@ -1809,17 +1797,12 @@ AddCMD("spin", "Starts spinning your root in the specified direction.", {}, {"sp
 end)
 
 AddCMD("unspin", "Stops spinning.", {}, {}, function(arguments)
-    for _, Con in pairs(SpinCommand.Cons) do
-        Con:Disconnect()
-    end
-    for _, Inst in pairs(SpinCommand.Instances) do
-        if Exists(Inst) then
-            Inst:Destroy()
-        end
+    if SpinCommand.Heartbeat then
+        SpinCommand.Heartbeat:Disconnect()
+        SpinCommand.Heartbeat = nil
     end
 
-    table.clear(SpinCommand.Cons)
-    table.clear(SpinCommand.Instances)
+    table.clear(SpinCommand.ToMultiply)
 
     Success("Cleared all spin tasks.")
 end)
