@@ -4,6 +4,11 @@
 -- A command-based system which can be used to create other scripts
 -- This is the official base version of Raven!
 
+--[[
+to do:
+    add the spin command
+]]
+
 if getgenv and getgenv().RAVEN_LOADED then
     error("Raven is already loaded.")
 end
@@ -1348,7 +1353,7 @@ search_commands_box:GetPropertyChangedSignal("Text"):Connect(function()
                 v.Visible = true
                 continue
             end
-            
+
             local Tags = v:GetTags()
 
             if #Tags>0 then
@@ -1752,6 +1757,71 @@ AddCMD("saveopenbind", "Saves the open bind to a file.", {}, {}, function(argume
     else
         Error("Your executor does not have writefile.")
     end
+end)
+
+local SpinCommand = {}
+SpinCommand.Cons = {}
+SpinCommand.Instances = {}
+
+local SpinAxes = {
+    x = Vector3.new(1,0,0),
+    y = Vector3.new(0,1,0),
+    z = Vector3.new(0,0,1)
+}
+
+AddCMD("spin", "Starts spinning your root in the specified direction.", {}, {"speed", "axis"}, function(arguments)
+    local Speed = arguments[1] and tonumber(arguments[1])
+    local Axis = arguments[2] and table.find(SpinAxes, arguments[2]:lower()) and SpinAxes[arguments[2]:lower()]
+
+    if Axis then
+        local AxisCF = CFrame.new(Axis * Speed)
+        local CurrentAlignOri: AlignOrientation? = nil
+        local CurrentAttachment: Attachment? = nil
+
+        SpinCommand.Cons[#SpinCommand.Cons+1] = RunService.Heartbeat:Connect(function(deltaTime)
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                if not Exists(CurrentAlignOri) then
+                    CurrentAlignOri = Instance.new("AlignOrientation", Root)
+                    CurrentAlignOri.Mode = Enum.OrientationAlignmentMode.OneAttachment
+
+                    SpinCommand.Instances[#SpinCommand.Instances+1] = CurrentAlignOri
+                    
+                    if Exists(CurrentAttachment) then
+                        CurrentAttachment:Destroy()
+                    end
+
+                    CurrentAttachment = Instance.new("Attachment", Root)
+                    SpinCommand.Instances[#SpinCommand.Instances+1] = CurrentAttachment
+
+                    CurrentAlignOri.Attachment0 = CurrentAttachment
+                end
+
+                CurrentAlignOri.CFrame *= AxisCF
+            end
+        end)
+
+        Success("Started spinning in that direction.")
+    else
+        Error("Axis not found. Available axes are 'x','y', and 'z'.")
+    end
+end)
+
+AddCMD("unspin", "Stops spinning.", {}, {}, function(arguments)
+    for _, Con in pairs(SpinCommand.Cons) do
+        Con:Disconnect()
+    end
+    for _, Inst in pairs(SpinCommand.Instances) do
+        if Exists(Inst) then
+            Inst:Destroy()
+        end
+    end
+
+    table.clear(SpinCommand.Cons)
+    table.clear(SpinCommand.Instances)
+
+    Success("Cleared all spin tasks.")
 end)
 
 AddCMD("keycodes", "Shows all available keycodes.", {}, {}, function(arguments)
