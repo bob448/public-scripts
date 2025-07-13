@@ -65,9 +65,9 @@ type RavenMod = {
         SetDebugMode: (boolean) -> ()
     },
     Commands: {},
-    AddCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    AddCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?) -> (),
     GetCMD: (name: string) -> (CommandTable),
-    ReplaceCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?)) -> (),
+    ReplaceCMD: (name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?) -> (),
     RunCMD: (name: string, arguments: {string?}) -> (any?),
     Output: {
         ClearOutput: () -> (),
@@ -99,6 +99,11 @@ type RavenMod = {
     },
     DeletePlayer: {
         AddEffect: (Clone: Model) -> ()
+    },
+    BotUtils: {
+        AlertAdmin: (data: string, name: string, color: Color3?) -> (),
+        EnableBotMode: () -> (),
+        DisableBotMode: () -> ()
     }
 }
 

@@ -1109,11 +1109,11 @@ function module:RunCMD(...)
     return RunCMD(...)
 end
 
-local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?))
+local function ReplaceCMD(name: string, description: string, aliases: {string?}, arguments: {string?}, func: ({string?}) -> (any?), botcommand: boolean?)
     if Commands[name:lower()] then
         Commands[name:lower()] = nil
 
-        AddCMD(name, description, arguments, aliases, func)
+        AddCMD(name, description, arguments, aliases, func, botcommand)
 
         return true
     else
@@ -3781,6 +3781,10 @@ BotUtils.Admins = {}
 BotUtils.AdminChatted = nil
 BotUtils.BotChatted = nil
 
+module.BotUtils = {}
+module.BotUtils.Bots = Bots
+module.BotUtils.Admins = Admins
+
 local function SerializeStatus(color: Color3): table
     local Name = "Info"
 
@@ -3821,13 +3825,94 @@ local function AlertAdmin(data: string, name: string, color: Color3?)
     Say(Json:gsub("\n", " "), true)
 end
 
+function module.BotUtils:AlertAdmin(...)
+    return AlertAdmin(...)
+end
+
+function module:EnableBotMode(...)
+    BotUtils.BotMode = true
+end
+
+function module:DisableBotMode(...)
+    BotUtils.BotMode = false
+end
+
 local function ClearChatFilter()
     Say(".", true)
 end
 
+local function JsonBots()
+    local Table = {}
+
+    for _, Name in pairs(BotUtils.Bots) do
+        Table[#Table + 1] = Name
+    end
+
+    return HttpService:JSONEncode(Table)
+end
+
+AddCMD("savebots", "Saves bots to a file.", {}, {}, function(arguments)
+    if writefile and isfile and readfile then
+        if #BotUtils.Bots > 0 then
+            if not isfile("RAVEN_SAVED_BOTS") then
+                writefile("RAVEN_SAVED_BOTS", JsonBots())
+
+                Success("Saved bots.")
+                return
+            end
+
+            local Contents: string = readfile("RAVEN_SAVED_BOTS")
+            local Decoded = nil
+
+            pcall(function()
+                Decoded = HttpService:JSONDecode(Contents)
+            end)
+
+            local Json = JsonBots()
+
+            if Decoded and #Decoded > 0 then
+                local ToAdd = {}
+                for _, Name in pairs(BotUtils.Bots) do
+                    local Index = table.find(Decoded, Name)
+
+                    if not Index then
+                        ToAdd[#ToAdd+1] = Name
+                    end
+                end
+
+                table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
+
+                writefile("RAVEN_SAVED_BOTS", HttpService:JSONEncode(Decoded))
+            else
+                writefile("RAVEN_SAVED_BOTS", JsonBots())
+            end
+
+            Success("Saved bots.")
+        else
+            Error("No bots to save.")
+        end
+    else
+        Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
+    end
+end)
+
+AddCMD("clearsavedbots", "Deletes the file with saved bots in it.", {}, {}, function(arguments)
+    if isfile and delfile then
+        if isfile("RAVEN_SAVED_BOTS") then
+            delfile("RAVEN_SAVED_BOTS")
+
+            Success("Cleared saved bots.")
+        else
+            Error("You have not saved any bots yet.")
+        end
+    else
+        Error("Your exploit does not support isfile or delfile.")
+    end
+end)
+
 AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "arguments"}, function(arguments)
     if #arguments > 0 then
-        Say(BotUtils.Prefix..table.concat(arguments, " "))
+        Say(BotUtils.Prefix..table.concat(arguments, " "), true)
     end
 end)
 
@@ -3911,14 +3996,20 @@ AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded o
     end
 end)
 
-AddCMD("removebot", "Removes a bot.", {}, {"player"}, function(arguments)
-    local Targets = arguments[1] and FindPlayers(arguments[1])
+AddCMD("removebot", "Removes a bot.", {}, {"name"}, function(arguments)
+    if arguments[1] then
+        local Target = nil
+        local Index = nil
 
-    if #Targets > 0 then
-        local Index = table.find(BotUtils.Bots, Targets[1].Name)
+        for i, Name: string in pairs(BotUtils.Bots) do
+            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+                Target = Name
+                Index = i
+            end
+        end
 
-        if Index then
-            table.remove(BotUtils.Bots, Targets[1].Name)
+        if Target ~= nil and Index ~= nil then
+            table.remove(BotUtils.Bots, Index)
 
             if #BotUtils.Bots == 0 and BotUtils.BotChatted then
                 BotUtils.BotChatted:Disconnect()
@@ -3930,7 +4021,16 @@ AddCMD("removebot", "Removes a bot.", {}, {"player"}, function(arguments)
             Error("Couldn't find bot.")
         end
     else
-        Error("No target found.")
+        Error("No target specified.") 
+    end
+end)
+
+AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
+    table.clear(BotUtils.Bots)
+
+    if BotUtils.BotChatted ~= nil then
+        BotUtils.BotChatted:Disconnect()
+        BotUtils.BotChatted = nil
     end
 end)
 
@@ -4026,14 +4126,20 @@ AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be i
     end
 end)
 
-AddCMD("removeadmin", "Removes an admin.", {}, {"player"}, function(arguments)
-    local Targets = arguments[1] and FindPlayers(arguments[1])
+AddCMD("removeadmin", "Removes an admin.", {}, {"name"}, function(arguments)
+    if arguments[1] then
+        local Target = nil
+        local Index = nil
 
-    if #Targets > 0 then
-        local Index = table.find(BotUtils.Admins, Targets[1].Name)
+        for i, Name: string in pairs(BotUtils.Admins) do
+            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+                Target = Name
+                Index = i
+            end
+        end
 
-        if Index then
-            table.remove(BotUtils.Admins, Targets[1].Name)
+        if Target ~= nil and Index ~= nil then
+            table.remove(BotUtils.Admins, Index)
 
             if #BotUtils.Admins == 0 and BotUtils.AdminChatted then
                 BotUtils.AdminChatted:Disconnect()
@@ -4045,8 +4151,102 @@ AddCMD("removeadmin", "Removes an admin.", {}, {"player"}, function(arguments)
             Error("Couldn't find admin.")
         end
     else
-        Error("No target found.")
+        Error("No target specified.") 
     end
+end)
+
+local function JsonAdmins()
+    local Table = {}
+
+    for _, Name in pairs(BotUtils.Admins) do
+        Table[#Table + 1] = Name
+    end
+
+    return HttpService:JSONEncode(Table)
+end
+
+AddCMD("saveadmins", "Saves admins to a file.", {}, {}, function(arguments)
+    if writefile and isfile and readfile then
+        if #BotUtils.Bots > 0 then
+            if not isfile("RAVEN_SAVED_ADMINS") then
+                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+
+                Success("Saved admins.")
+                return
+            end
+
+            local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+            local Decoded = nil
+
+            pcall(function()
+                Decoded = HttpService:JSONDecode(Contents)
+            end)
+
+            local Json = JsonAdmins()
+
+            if Decoded and #Decoded > 0 then
+                local ToAdd = {}
+                for _, Name in pairs(BotUtils.Admins) do
+                    local Index = table.find(Decoded, Name)
+
+                    if not Index then
+                        ToAdd[#ToAdd+1] = Name
+                    end
+                end
+
+                table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
+
+                writefile("RAVEN_SAVED_ADMINS", HttpService:JSONEncode(Decoded))
+            else
+                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+            end
+
+            Success("Saved admins.")
+        else
+            Error("No admins to save.")
+        end
+    else
+        Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
+    end
+end)
+
+AddCMD("clearsavedadmins", "Deletes the file with saved admins in it.", {}, {}, function(arguments)
+    if isfile and delfile then
+        if isfile("RAVEN_SAVED_ADMINS") then
+            delfile("RAVEN_SAVED_ADMINS")
+
+            Success("Cleared saved admins.")
+        else
+            Error("You have not saved any admins yet.")
+        end
+    else
+        Error("Your exploit does not support isfile or delfile.")
+    end
+end)
+
+AddCMD("clearadmins", "Removes all admins.", {}, {}, function(arguments)
+    table.clear(BotUtils.Admins)
+
+    if BotUtils.AdminChatted ~= nil then
+        BotUtils.AdminChatted:Disconnect()
+        BotUtils.AdminChatted = nil
+    end
+end)
+
+AddCMD("listbots", "Lists all bots and puts them in a GUI.", {}, {}, function(arguments)
+    local data = {"All bots:"}
+
+    table.move(BotUtils.Bots, 1, #BotUtils.Bots, 2, data)
+
+    Output(data)
+end)
+
+AddCMD("listadmins", "Lists all admins and puts them in a GUI.", {}, {}, function(arguments)
+    local data = {"All admins:"}
+
+    table.move(BotUtils.Admins, 1, #BotUtils.Admins, 2, data)
+
+    Output(data)
 end)
 
 --[[
@@ -4079,8 +4279,8 @@ if readfile and isfile then -- Load saved openbind if there is any.
     end
 end
 
-if readfile and isfile then -- Load saved aliases.
-    if isfile("RAVEN_SAVED_ALIASES") then
+if readfile and isfile then
+    if isfile("RAVEN_SAVED_ALIASES") then  -- Load saved aliases.
         local SavedAliasesData: string = readfile("RAVEN_SAVED_ALIASES")
 
         if SavedAliasesData:len() > 0 then
@@ -4098,6 +4298,36 @@ if readfile and isfile then -- Load saved aliases.
                     end
                 end
             end
+        end
+    end
+
+    if isfile("RAVEN_SAVED_BOTS") then
+        local Contents: string = readfile("RAVEN_SAVED_BOTS")
+        local Table = nil
+
+        pcall(function()
+            Table = HttpService:JSONDecode(Contents)
+        end)
+
+        if Table ~= nil and #Table > 0 then
+            table.move(Table, 1, #Table, 1, BotUtils.Bots)
+
+            InitializeBotChatted()
+        end
+    end
+
+    if isfile("RAVEN_SAVED_ADMINS") then
+        local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+        local Table = nil
+
+        pcall(function()
+            Table = HttpService:JSONDecode(Contents)
+        end)
+
+        if Table and #Table > 0 then
+            table.move(Table, 1, #Table, 1, BotUtils.Admins)
+
+            InitializeAdminChatted()
         end
     end
 end
