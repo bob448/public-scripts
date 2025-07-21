@@ -993,8 +993,11 @@ local DeleteAuraHighlights = {}
 Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
     if not DeleteAuraCon then
         local Queue = {}
+        local Waiting = false
 
         DeleteAuraCon = RunService.Heartbeat:Connect(function(delta)
+            if Waiting then return end
+
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
             if Root then
@@ -1058,6 +1061,10 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                                 Queue[i] = nil
                             end
                         end
+
+                        Waiting = true
+                        task.wait(.1)
+                        Waiting = false
                     end
                 end
             end
@@ -1147,8 +1154,11 @@ local UnanchorAuraHighlights = {}
 Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
     if not UnanchorAuraCon then
         local Queue = {}
+        local Waiting = false
 
         UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
+            if Waiting then return end
+
             local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
             if Root then
@@ -1213,6 +1223,10 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                                 Queue[i] = nil
                             end
                         end
+
+                        Waiting = true
+                        task.wait(.1)
+                        Waiting = false
                     end
                 end
             end
