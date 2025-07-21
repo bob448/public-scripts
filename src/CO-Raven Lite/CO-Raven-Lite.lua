@@ -1053,11 +1053,8 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                         end
 
                         Waiting = true
+
                         task.wait(.1)
-
-                        Waiting = false
-
-                        task.wait(.2)
 
                         for i, Brick in pairs(Queue) do
                             if not Raven.Instance:Exists(Brick) then
@@ -1067,6 +1064,8 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
                                 DeleteAuraHighlights[Brick] = nil
                             end
                         end
+
+                        Waiting = false
                     end
                 end
             end
@@ -1222,11 +1221,10 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
 
                         Waiting = true
                         task.wait(.1)
-                        Waiting = false
-
-                        task.wait(.2)
                         UnanchorAuraHighlights[Brick]:Destroy()
                         UnanchorAuraHighlights[Brick] = nil
+
+                        Waiting = false
                     end
                 end
             end
