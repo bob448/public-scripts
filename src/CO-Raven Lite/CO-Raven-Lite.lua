@@ -1299,6 +1299,48 @@ Raven:AddCMD("unantivampiresword", "Disables antivampiresword.", {"nofixonspawn"
     end
 end)
 
+local GetGears = {
+    11377306,
+    101106419,
+    11419319,
+    94794847,
+    31839337,
+    13745494,
+    168141301,
+    11999247,
+    121946387,
+    10472779,
+    11450664,
+    12547976,
+    11563251,
+    16979083,
+    83021250,
+    35683911,
+    82357101,
+    162857357,
+    58574445,
+    104642700,
+    233520257,
+    120307951,
+    159229806,
+    69499437,
+    99119240,
+    139577901,
+    93136802,
+    73829193,
+    80597060,
+    80661504,
+    108158379,
+    2544549379
+}
+
+Raven:AddCMD("getgears", "Gets a ton of gears. Only works if you have enlighten.", {}, {}, function(arguments)
+    for _, gear in pairs(GetGears) do
+        Raven.Player:Say("gear me "..tostring(gear), true)
+        task.wait(.3)
+    end
+end)
+
 local BuildCircle = false
 local CirclePreviews = {}
 
