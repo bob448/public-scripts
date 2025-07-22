@@ -12,15 +12,16 @@ local function GetService(name: string)
     return game:GetService(name)
 end
 
-local HttpService = GetService("HttpService")
-local Lighting = GetService("Lighting")
-local ReplicatedStorage = GetService("ReplicatedStorage")
-local RunService = GetService("RunService")
-local Teams = GetService("Teams")
-local Players = GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local TextChatService = GetService("TextChatService")
-local UserInputService = GetService("UserInputService")
+local StarterGui: StarterGui = GetService("StarterGui")
+local HttpService: HttpService = GetService("HttpService")
+local Lighting: Lighting = GetService("Lighting")
+local ReplicatedStorage: ReplicatedStorage = GetService("ReplicatedStorage")
+local RunService: RunService = GetService("RunService")
+local Teams: Teams = GetService("Teams")
+local Players: Players = GetService("Players")
+local LocalPlayer: Player = Players.LocalPlayer
+local TextChatService: TextChatService = GetService("TextChatService")
+local UserInputService: UserInputService = GetService("UserInputService")
 
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
@@ -1257,6 +1258,88 @@ end)
 Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
     if #arguments > 0 then
         Raven.Player:Say(table.concat(arguments, " "), true)
+    end
+end)
+
+local AntiVampireSword = {}
+AntiVampireSword.Enabled = false
+AntiVampireSword.CharacterAdded = nil
+
+Raven:AddCMD("antivampiresword", "Fixes camera and inventory on spawn.", {"fixonspawn", "antivamp"}, {}, function(arguments)
+    if not AntiVampireSword.Enabled then
+        AntiVampireSword.Enabled = true
+
+        AntiVampireSword.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(character)
+            local Humanoid = character:WaitForChild("Humanoid")
+
+            if workspace.CurrentCamera then
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+                workspace.CurrentCamera.CameraSubject = Humanoid
+            end
+
+            StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+        end)
+
+        Raven.Notif:Success("Enabled antivampiresword.")
+    else
+        Raven.Notif:Error("Antivampiresword is already enabled. Try running \"unantivampiresword\" or \"unantivamp\".")
+    end
+end)
+
+Raven:AddCMD("unantivampiresword", "Disables antivampiresword.", {"nofixonspawn", "unantivamp", "noantivamp", "noantivampiresword"}, {}, function(arguments)
+    if AntiVampireSword.Enabled then
+        AntiVampireSword.Enabled = false
+        
+        if AntiVampireSword.CharacterAdded then
+            AntiVampireSword.CharacterAdded:Disconnect()
+            AntiVampireSword.CharacterAdded = nil
+        end
+
+        Raven.Notif:Success("Disabled antivampiresword.")
+    else
+        Raven.Notif:Error("Antivampiresword is already disabled.")
+    end
+end)
+
+local GetGears = {
+    11377306,
+    101106419,
+    11419319,
+    94794847,
+    31839337,
+    13745494,
+    168141301,
+    11999247,
+    121946387,
+    10472779,
+    11450664,
+    12547976,
+    11563251,
+    16979083,
+    83021250,
+    35683911,
+    82357101,
+    162857357,
+    58574445,
+    104642700,
+    233520257,
+    120307951,
+    159229806,
+    69499437,
+    99119240,
+    139577901,
+    93136802,
+    73829193,
+    80597060,
+    80661504,
+    108158379,
+    2544549379
+}
+
+Raven:AddCMD("getgears", "Gets a ton of gears. Only works if you have enlighten.", {}, {}, function(arguments)
+    for _, gear in pairs(GetGears) do
+        Raven.Player:Say("gear me "..tostring(gear), true)
+        task.wait(.3)
     end
 end)
 
