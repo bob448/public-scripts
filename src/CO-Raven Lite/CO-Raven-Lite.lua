@@ -1294,6 +1294,8 @@ Raven:AddCMD("unantivampiresword", "Disables antivampiresword.", {"nofixonspawn"
             AntiVampireSword.CharacterAdded:Disconnect()
             AntiVampireSword.CharacterAdded = nil
         end
+
+        Raven.Notif:Success("Disabled antivampiresword.")
     else
         Raven.Notif:Error("Antivampiresword is already disabled.")
     end
