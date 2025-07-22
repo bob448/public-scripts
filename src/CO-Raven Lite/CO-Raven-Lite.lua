@@ -12,15 +12,16 @@ local function GetService(name: string)
     return game:GetService(name)
 end
 
-local HttpService = GetService("HttpService")
-local Lighting = GetService("Lighting")
-local ReplicatedStorage = GetService("ReplicatedStorage")
-local RunService = GetService("RunService")
-local Teams = GetService("Teams")
-local Players = GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local TextChatService = GetService("TextChatService")
-local UserInputService = GetService("UserInputService")
+local StarterGui: StarterGui = GetService("StarterGui")
+local HttpService: HttpService = GetService("HttpService")
+local Lighting: Lighting = GetService("Lighting")
+local ReplicatedStorage: ReplicatedStorage = GetService("ReplicatedStorage")
+local RunService: RunService = GetService("RunService")
+local Teams: Teams = GetService("Teams")
+local Players: Players = GetService("Players")
+local LocalPlayer: Player = Players.LocalPlayer
+local TextChatService: TextChatService = GetService("TextChatService")
+local UserInputService: UserInputService = GetService("UserInputService")
 
 local function LoopThroughTables(...: {any?})
     local Tables = {...}
@@ -1257,6 +1258,44 @@ end)
 Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
     if #arguments > 0 then
         Raven.Player:Say(table.concat(arguments, " "), true)
+    end
+end)
+
+local AntiVampireSword = {}
+AntiVampireSword.Enabled = false
+AntiVampireSword.CharacterAdded = nil
+
+Raven:AddCMD("antivampiresword", "Fixes camera and inventory on spawn.", {"fixonspawn", "antivamp"}, {}, function(arguments)
+    if not AntiVampireSword.Enabled then
+        AntiVampireSword.Enabled = true
+
+        AntiVampireSword.CharacterAdded = LocalPlayer.CharacterAdded:Connect(function(character)
+            local Humanoid = character:WaitForChild("Humanoid")
+
+            if workspace.CurrentCamera then
+                workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+                workspace.CurrentCamera.CameraSubject = Humanoid
+            end
+
+            StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+        end)
+
+        Raven.Notif:Success("Enabled antivampiresword.")
+    else
+        Raven.Notif:Error("Antivampiresword is already enabled. Try running \"unantivampiresword\" or \"unantivamp\".")
+    end
+end)
+
+Raven:AddCMD("unantivampiresword", "Disables antivampiresword.", {"nofixonspawn", "unantivamp", "noantivamp", "noantivampiresword"}, {}, function(arguments)
+    if AntiVampireSword.Enabled then
+        AntiVampireSword.Enabled = false
+        
+        if AntiVampireSword.CharacterAdded then
+            AntiVampireSword.CharacterAdded:Disconnect()
+            AntiVampireSword.CharacterAdded = nil
+        end
+    else
+        Raven.Notif:Error("Antivampiresword is already disabled.")
     end
 end)
 
