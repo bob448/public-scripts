@@ -19,10 +19,10 @@ module.Name = "Raven"
 module.VERSION = -1
 
 local function GetService(name: string)
-    return game:GetService(name)
+    return cloneref and cloneref(game:GetService(name)) or game:GetService(name)
 end
 
-local HttpService = game:GetService("HttpService")
+local HttpService = GetService("HttpService")
 local ReplicatedStorage = GetService("ReplicatedStorage")
 local RunService = GetService("RunService")
 local _CoreGui = GetService("CoreGui")

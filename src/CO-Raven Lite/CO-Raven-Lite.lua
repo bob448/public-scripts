@@ -9,7 +9,7 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
 end
 
 local function GetService(name: string)
-    return game:GetService(name)
+    return cloneref and cloneref(game:GetService(name)) or game:GetService(name)
 end
 
 local StarterGui: StarterGui = GetService("StarterGui")
@@ -37,7 +37,6 @@ local function LoopThroughTables(...: {any?})
 end
 
 type CommandTable = {Function: ({string?}) -> (any?), Aliases: {string?}, Arguments: {string?}, Description: string, ModuleAdded: boolean}
-
 type RavenMod = {
     Name: string,
     VERSION: number,
