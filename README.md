@@ -1,3 +1,4 @@
+# Discontinued
 ![Title Image](./assets/img.png)
 
 ## Welcome to the repo! Here you'll find some scripts that I made.
