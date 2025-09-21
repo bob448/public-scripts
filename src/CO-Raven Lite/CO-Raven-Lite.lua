@@ -9,7 +9,7 @@ if game.PlaceId ~= 11137575513 and game.PlaceId ~= 12943245078 then
 end
 
 local function GetService(name: string)
-    return cloneref and cloneref(game:GetService(name)) or game:GetService(name)
+    return game:GetService(name)
 end
 
 local StarterGui: StarterGui = GetService("StarterGui")
