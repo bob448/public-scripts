@@ -2140,9 +2140,11 @@ Raven:AddCMD("saveblocks", "Allows you to select blocks and then save them.", {}
             local FileName: string? = arguments[1]
 
             if FileName then
-                SaveBlocks.Selecting = true
+                if FileName:len() >= 4 and FileName:sub(FileName:len()-4, FileName:len()) ~= ".json" then
+                    FileName = FileName..".json"
+                end
 
-                local GetPos = require(ReplicatedStorage:WaitForChild("GetPos"))
+                SaveBlocks.Selecting = true
 
                 cancel_selection_button.Visible = true
 
@@ -2434,7 +2436,7 @@ end
 
 Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", "y offset", "z offset"}, function(arguments)
     if readfile and isfile and isfolder then
-        local FileName = arguments[1]
+        local FileName:string = arguments[1]
         local XOffset = arguments[2] and tonumber(arguments[2]) or 0
         local YOffset = arguments[3] and tonumber(arguments[3]) or 0
         local ZOffset = arguments[4] and tonumber(arguments[4]) or 0
@@ -2445,6 +2447,10 @@ Raven:AddCMD("loadblocks", "Loads blocks from a file.", {}, {"file","x offset", 
         end
 
         if FileName then
+            if FileName:len() >= 4 and FileName:sub(FileName:len()-4, FileName:len()) ~= ".json" then
+                FileName = FileName..".json"
+            end
+
             if isfolder("CORAVEN_SAVED_BLOCKS") and isfile("CORAVEN_SAVED_BLOCKS/"..FileName) and not LoadBlocks.Loading then
                 local Contents: string = readfile("CORAVEN_SAVED_BLOCKS/"..FileName)
 
