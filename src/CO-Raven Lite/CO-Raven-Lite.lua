@@ -2705,6 +2705,10 @@ Raven:AddCMD("saveimage", "Loads an image file and then converts it into a loadb
     local PNGLIB = loadstring(game:HttpGet("https://raw.githubusercontent.com/bob448/public-scripts/main/src/CO-Raven%20Lite/Libraries/PNG.lua"))()
 
     if ImageFileName and SaveFileName then
+        if SaveFileName:len() >= 4 and SaveFileName:sub(SaveFileName:len()-4, SaveFileName:len()) ~= ".json" then
+            SaveFileName = SaveFileName..".json"
+        end
+        
         if isfile and readfile and writefile and isfolder and makefolder then
             if isfile(ImageFileName) then
                 local ImageBytes = readfile(ImageFileName)
