@@ -643,14 +643,113 @@ Activated["Sign"] = function(tool: Tool)
     end
 end
 
-local ClientBkitTools = {}
+local function PartInPlayer(part: BasePart): boolean
+    for i,v in ipairs(Players:GetPlayers()) do
+        if v.Character then
+            if part:IsDescendantOf(v.Character) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- Decompiled with Medal's Decompiler. (Modified by SignalHub)
+-- Decompiled at: 9/22/2025, 9:41:53 AM
+-- Cached decompilation
+
+-- Requiring the module was crashing the game in some
+-- executors, so having the decompiled function instead,
+-- personally, is an okay fix.
+local function GetPos(p1, p2, p3, p4) --[[ Name: GetPosition ]] --[[ Line: 1 ]]
+    local v5 = p2 / 1
+    local v6 = p2 / 2
+    local v7 = p2 / 4
+    local v8 = p4 - v6
+    if p1 == "Fill" then
+        if p3.Name == "Back" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.Z
+        elseif p3.Name == "Bottom" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.Y
+        elseif p3.Name == "Front" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.Z
+        elseif p3.Name == "Left" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.X
+        elseif p3.Name == "Right" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.X
+        elseif p3.Name == "Top" then
+            v8 = v8 + Vector3.FromNormalId(p3) * v7.Y
+        end;
+    elseif p1 == "Dig" then
+        if p3.Name == "Back" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.Z - Vector3.new(0, 0, v5.Z))
+        elseif p3.Name == "Bottom" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.Y + Vector3.new(0, v5.Y, 0))
+        elseif p3.Name == "Front" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.Z + Vector3.new(0, 0, v5.Z))
+        elseif p3.Name == "Left" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.X + Vector3.new(v5.X, 0, 0))
+        elseif p3.Name == "Right" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.X - Vector3.new(v5.X, 0, 0))
+        elseif p3.Name == "Top" then
+            v8 = v8 + (Vector3.FromNormalId(p3) * v7.Y - Vector3.new(0, v5.Y, 0))
+        end;
+    end;
+    return Vector3.new(math.round(v8.X / v5.X) * v5.X, math.round(v8.Y / v5.Y) * v5.Y, math.round(v8.Z / v5.Z) * v5.Z) + v6;
+end
 
 local function InitBuildScripts(tools: {Tool})
     for i, tool:Tool in pairs(tools) do
         local SelectionBox: SelectionBox = tool:WaitForChild("Preview")
         local Hovering = false
-        local GetPos = require(ReplicatedStorage:WaitForChild("GetPos"))
         local Brick = ReplicatedStorage:FindFirstChild("Brick")
+
+        local HoverCon = RunService.RenderStepped:Connect(function()
+            if not Hovering then return end
+
+            local Mouse = LocalPlayer:GetMouse()
+
+            if not Mouse.Target or PartInPlayer(Mouse.Target) then
+                SelectionBox.Adornee = nil
+                SelectionBox.Visible = false
+                return
+            end
+
+            SelectionBox.Visible = true
+            if tool.Name == "Build" then
+                local Gui = Equipped["Build"]()
+                local Button: TextButton = Gui:WaitForChild("Button")
+
+                if Mouse.Target.Name == "Brick" and Button.Text == "normal" then
+                    SelectionBox.Adornee = Mouse.Target
+                else
+                    SelectionBox.Adornee = Brick
+                end
+            else
+                if Mouse.Target.Name == "Brick" then
+                    SelectionBox.Adornee = Mouse.Target
+                else
+                    SelectionBox.Adornee = Brick
+                end
+            end
+
+            if Mouse.Target then
+                Brick.Position = GetPos("Dig", Brick.Size, Mouse.TargetSurface, Mouse.Hit.Position)
+            end
+
+            if tool.Name == "Build" then
+                local Gui = Equipped["Build"]()
+                local Button: TextButton = Gui:WaitForChild("Button")
+
+                if Button.Text == "normal" then
+                    Brick.Size = Vector3.new(4,4,4)
+                else
+                    Brick.Size = Vector3.new(1,1,1)
+                end
+            else
+                Brick.Size = Vector3.new(4,4,4)
+            end
+        end)
 
         local EquippedCon = tool.Equipped:Connect(function(mouse)
             local Gui = Equipped[tool.Name]()
@@ -658,68 +757,6 @@ local function InitBuildScripts(tools: {Tool})
                 Gui.Enabled = true
             end
             Hovering = true
-            local Con; Con = RunService.RenderStepped:Connect(function()
-                if not Hovering then
-                    Con:Disconnect()
-                    return
-                end
-
-                local Mouse = LocalPlayer:GetMouse()
-                if Mouse.Target then
-                    local InChar=false
-                    for i,v in ipairs(Players:GetPlayers()) do
-                        if v.Character then
-                            if Mouse.Target:IsDescendantOf(v.Character) then
-                                InChar=true
-                                break
-                            end
-                        end
-                    end
-
-                    if not InChar then
-                        SelectionBox.Visible = true
-                        if tool.Name == "Build" then
-                            local Gui = Equipped["Build"]()
-                            local Button: TextButton = Gui:WaitForChild("Button")
-
-                            if Mouse.Target.Name == "Brick" and Button.Text == "normal" then
-                                SelectionBox.Adornee = Mouse.Target
-                            else
-                                SelectionBox.Adornee = Brick
-                            end
-                        else
-                            if Mouse.Target.Name == "Brick" then
-                                SelectionBox.Adornee = Mouse.Target
-                            else
-                                SelectionBox.Adornee = Brick
-                            end
-                        end
-
-                        if Mouse.Target then
-                            Brick.Position = GetPos("Dig", Brick.Size, Mouse.TargetSurface, Mouse.Hit.Position)
-                        end
-
-                        if tool.Name == "Build" then
-                            local Gui = Equipped["Build"]()
-                            local Button: TextButton = Gui:WaitForChild("Button")
-
-                            if Button.Text == "normal" then
-                                Brick.Size = Vector3.new(4,4,4)
-                            else
-                                Brick.Size = Vector3.new(1,1,1)
-                            end
-                        else
-                            Brick.Size = Vector3.new(4,4,4)
-                        end
-                    else
-                        SelectionBox.Adornee = nil
-                        SelectionBox.Visible = false
-                    end
-                else
-                    SelectionBox.Adornee = nil
-                    SelectionBox.Visible = false
-                end
-            end)
         end)
         local function unequipped()
             Hovering = false
@@ -743,12 +780,7 @@ local function InitBuildScripts(tools: {Tool})
                 Unequipped:Disconnect()
                 Deactivated:Disconnect()
                 AncestryChanged:Disconnect()
-
-                local ToolIndex = table.find(ClientBkitTools, tool)
-
-                if ToolIndex then
-                    table.remove(ClientBkitTools, ToolIndex)
-                end
+                HoverCon:Disconnect()
             end
         end)
     end
@@ -759,31 +791,16 @@ local function ToBool(str: string)
 end
 
 Raven:AddCMD("clientbkit", "Adds some client-sided buildtools to your backpack.", {}, {"handle (true/false)"}, function(arguments)
-    local Character = LocalPlayer.Character
     local HasHandle = arguments[1] and ToBool(arguments[1]) or arguments[1] == nil
 
-    if Character then
+    if Raven.Instance:Exists(LocalPlayer.Character) then
         local Tools = InitBuildTools(LocalPlayer.Backpack, HasHandle)
         InitBuildScripts(Tools)
-
-        table.move(Tools, 1, #Tools, 1, ClientBkitTools)
 
         Raven.Notif:Success("Successfully initialized client-sided building tools.")
     else
         Raven.Notif:Error("Could not find character.")
     end
-end)
-
-Raven:AddCMD("unclientbkit", "Removes the client-sided build tools from your character/backpack", {}, {}, function(arguments)
-    for i,v in pairs(ClientBkitTools) do
-        if v and v.Parent then
-            v:Destroy()
-        end
-    end
-
-    table.clear(ClientBkitTools)
-
-    Raven.Notif:Success("Cleared your client building tools.")
 end)
 
 local BreakBkitTools = {
@@ -1220,9 +1237,17 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
                         end
 
                         Waiting = true
+
                         task.wait(.1)
-                        UnanchorAuraHighlights[Brick]:Destroy()
-                        UnanchorAuraHighlights[Brick] = nil
+                        
+                        for i, Brick in pairs(Queue) do
+                            if not Raven.Instance:Exists(Brick) then
+                                Queue[i] = nil
+                            elseif UnanchorAuraHighlights[Brick] then
+                                UnanchorAuraHighlights[Brick]:Destroy()
+                                UnanchorAuraHighlights[Brick] = nil
+                            end
+                        end
 
                         Waiting = false
                     end
