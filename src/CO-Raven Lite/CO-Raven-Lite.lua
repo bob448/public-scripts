@@ -494,14 +494,22 @@ local function GetOtherPlayerToolRemote(name: string)
             table.move(CharacterChildren, 1, #CharacterChildren, 1, LoopThrough)
             table.move(BackpackChildren, 1, #BackpackChildren, 1, LoopThrough)
 
+            local Remotes = {}
+
             for i,v in pairs(LoopThrough) do
                 if v and v.Name == name then
                     local Remote = GetRemoteFromTool(v)
 
                     if Remote then
-                        return Remote
+                        Remotes[#Remotes+1] = Remote
                     end
                 end
+            end
+
+            if #Remotes == 1 then
+                return Remotes[1]
+            elseif #Remotes > 0 then
+                return Remotes[math.random(1, #Remotes)]
             end
         end
     end

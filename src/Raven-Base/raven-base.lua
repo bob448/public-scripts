@@ -32,7 +32,7 @@ local TweenService: TweenService = GetService("TweenService")
 local UserInputService = GetService("UserInputService")
 local Players: Players = GetService("Players")
 local LocalPlayer: Player = Players.LocalPlayer
-local TextChatService = GetService("TextChatService")
+local TextChatService: TextChatService = GetService("TextChatService")
 local TextChannels
 local RBXGeneral: TextChannel? = nil
 local RBXSystem: TextChannel? = nil
@@ -3472,7 +3472,7 @@ end)
 local ChatLogsCon = nil
 
 AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, function(arguments)
-    if not ChatLogsCon then
+    if ChatLogsCon == nil then
         local Succ, Err = pcall(function()
             ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
                 AddChatLog(message, player)
