@@ -24,7 +24,7 @@ end
 
 local HttpService = GetService("HttpService")
 local ReplicatedStorage = GetService("ReplicatedStorage")
-local RunService = GetService("RunService")
+local RunService: RunService = GetService("RunService")
 local _CoreGui = GetService("CoreGui")
 local StarterGui = GetService("StarterGui")
 local TeleportService = GetService("TeleportService")
@@ -4170,6 +4170,70 @@ AddCMD("botmode", "Toggles BotMode. Use this when you want to use bot commands."
     else
         Info("Turned off BotMode.")
     end
+end)
+
+local Swim = false
+
+AddCMD("swim", "Makes you swim in mid-air", {}, {}, function(arguments)
+    if Swim then Error("Swim is already enabled."); return end
+
+    Swim = true
+
+    local LinearVelocity: LinearVelocity
+    local Attachment0: Attachment
+    local Attachment1: Attachment
+
+    Success("Started swimming.")
+
+    while Swim do
+        RunService.RenderStepped:Wait()
+        local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        local Root: BasePart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if Humanoid and Root then
+            Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+            Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+
+            if not Exists(LinearVelocity) then
+                if Exists(Attachment0) then Attachment0:Destroy() end
+                if Exists(Attachment1) then Attachment1:Destroy() end
+
+                LinearVelocity = Instance.new("LinearVelocity", Root)
+                LinearVelocity.MaxForce = math.huge
+                LinearVelocity.MaxAxesForce = Vector3.new(math.huge,math.huge,math.huge)
+                LinearVelocity.Enabled = true
+                LinearVelocity.ReactionForceEnabled = true
+
+                Attachment0 = Instance.new("Attachment", Root)
+                LinearVelocity.Attachment0 = Attachment0
+                Attachment1 = Instance.new("Attachment", Root)
+                LinearVelocity.Attachment1 = Attachment1
+            end
+            LinearVelocity.VectorVelocity = Humanoid.MoveDirection * Humanoid.WalkSpeed
+
+            if Humanoid.Jump then
+                LinearVelocity.VectorVelocity += Vector3.new(0, Humanoid.WalkSpeed, 0)
+            end
+        end
+    end
+
+    if LocalPlayer.Character then
+        local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+        if Humanoid then Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end
+    end
+
+    if Exists(LinearVelocity) then
+        LinearVelocity:Destroy()
+    end
+    if Exists(Attachment0) then Attachment0:Destroy() end
+    if Exists(Attachment1) then Attachment1:Destroy() end
+end)
+
+AddCMD("unswim", "Stops swimming", {}, {}, function(arguments)
+    if not Swim then Error("You are not swimming."); return end
+
+    Swim = false
+    Success("Stopped swimming.")
 end)
 
 local function InitializeBotChatted()
