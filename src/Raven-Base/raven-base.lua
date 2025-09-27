@@ -4270,372 +4270,372 @@ AddCMD("unswim", "Stops swimming", {}, {}, function(arguments)
     Success("Stopped swimming.")
 end)
 
-local function BotChatted(player, message)
-    local IsBot = false
-    local BotIndex = nil
+-- local function BotChatted(player, message)
+--     local IsBot = false
+--     local BotIndex = nil
 
-    for i, name in pairs(BotUtils.Bots) do
-        if name == player.Name then
-            IsBot = true
-            BotIndex = i
-            break
-        end
-    end
+--     for i, name in pairs(BotUtils.Bots) do
+--         if name == player.Name then
+--             IsBot = true
+--             BotIndex = i
+--             break
+--         end
+--     end
 
-    if IsBot then
-        local Decoded = nil
-        local Succ, _ = pcall(function()
-            Decoded = HttpService:JSONDecode(message)
-        end)
+--     if IsBot then
+--         local Decoded = nil
+--         local Succ, _ = pcall(function()
+--             Decoded = HttpService:JSONDecode(message)
+--         end)
 
-        if Decoded and Succ then
-            if Decoded.Status and Decoded.Data and Decoded.Name then
-                if Decoded.Name == LocalPlayer.Name then
-                    local Color = UnserializeStatus(Decoded.Status)
+--         if Decoded and Succ then
+--             if Decoded.Status and Decoded.Data and Decoded.Name then
+--                 if Decoded.Name == LocalPlayer.Name then
+--                     local Color = UnserializeStatus(Decoded.Status)
                     
-                    Notify(Decoded.Data, Color, 4)
-                end
-            end
-        elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
-            local PrefixSplit = message:split(BotUtils.Prefix)
+--                     Notify(Decoded.Data, Color, 4)
+--                 end
+--             end
+--         elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
+--             local PrefixSplit = message:split(BotUtils.Prefix)
             
-            if PrefixSplit and #PrefixSplit > 0 then
-                local Command = PrefixSplit[2]
+--             if PrefixSplit and #PrefixSplit > 0 then
+--                 local Command = PrefixSplit[2]
 
-                if Command == "BIND" then
-                    Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
-                end
-            end
-        end
-    end
-end
+--                 if Command == "BIND" then
+--                     Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
+--                 end
+--             end
+--         end
+--     end
+-- end
 
-local function InitializeBotChatted()
-    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
-        local Succ, _ = pcall(function()
-            BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-                BotChatted(player, message)
-            end)
-        end)
+-- local function InitializeBotChatted()
+--     if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+--         local Succ, _ = pcall(function()
+--             BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+--                 BotChatted(player, message)
+--             end)
+--         end)
 
-        if not Succ then
-            Error("Your exploit does not support PlayerChatted.")
-            return false
-        else
-            return true
-        end
-    else
-        BotUtils.BotChatted = TextChatService.MessageReceived:Connect(function(message)
-            local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
-            if Player then
-                BotChatted(Player, message.Text)
-            end
-        end)
-        return true
-    end
-end
+--         if not Succ then
+--             Error("Your exploit does not support PlayerChatted.")
+--             return false
+--         else
+--             return true
+--         end
+--     else
+--         BotUtils.BotChatted = TextChatService.MessageReceived:Connect(function(message)
+--             local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+--             if Player then
+--                 BotChatted(Player, message.Text)
+--             end
+--         end)
+--         return true
+--     end
+-- end
 
-AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded on their client, and they have added you as an admin.", {}, {"player"}, function(arguments)
-    local Targets = arguments[1] and FindPlayers(arguments[1])
+-- AddCMD("addbot", "Adds a bot. This only works when the target has Raven loaded on their client, and they have added you as an admin.", {}, {"player"}, function(arguments)
+--     local Targets = arguments[1] and FindPlayers(arguments[1])
 
-    if #Targets > 0 then
-        if Targets[1] == LocalPlayer then
-            Error("You cannot add yourself as a bot.")
-            return
-        end
+--     if #Targets > 0 then
+--         if Targets[1] == LocalPlayer then
+--             Error("You cannot add yourself as a bot.")
+--             return
+--         end
 
-        if table.find(BotUtils.Bots, Targets[1].Name) then
-            Error("That player is already added as a bot.")
-            return
-        end
+--         if table.find(BotUtils.Bots, Targets[1].Name) then
+--             Error("That player is already added as a bot.")
+--             return
+--         end
 
-        if BotUtils.BotChatted == nil then
-            if not InitializeBotChatted() then
-                return
-            end
-        end
-        BotUtils.Bots[#BotUtils.Bots+1] = Targets[1].Name
+--         if BotUtils.BotChatted == nil then
+--             if not InitializeBotChatted() then
+--                 return
+--             end
+--         end
+--         BotUtils.Bots[#BotUtils.Bots+1] = Targets[1].Name
 
-        Success("Added bot.")
-    else
-        Error("No target found.")
-    end
-end)
+--         Success("Added bot.")
+--     else
+--         Error("No target found.")
+--     end
+-- end)
 
-AddCMD("removebot", "Removes a bot.", {}, {"name"}, function(arguments)
-    if arguments[1] then
-        local Target = nil
-        local Index = nil
+-- AddCMD("removebot", "Removes a bot.", {}, {"name"}, function(arguments)
+--     if arguments[1] then
+--         local Target = nil
+--         local Index = nil
 
-        for i, Name: string in pairs(BotUtils.Bots) do
-            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
-                Target = Name
-                Index = i
-            end
-        end
+--         for i, Name: string in pairs(BotUtils.Bots) do
+--             if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+--                 Target = Name
+--                 Index = i
+--             end
+--         end
 
-        if Target ~= nil and Index ~= nil then
-            table.remove(BotUtils.Bots, Index)
+--         if Target ~= nil and Index ~= nil then
+--             table.remove(BotUtils.Bots, Index)
 
-            if #BotUtils.Bots == 0 and BotUtils.BotChatted then
-                BotUtils.BotChatted:Disconnect()
-                BotUtils.BotChatted = nil
-            end
+--             if #BotUtils.Bots == 0 and BotUtils.BotChatted then
+--                 BotUtils.BotChatted:Disconnect()
+--                 BotUtils.BotChatted = nil
+--             end
 
-            Success("Removed bot.")
-        else
-            Error("Couldn't find bot.")
-        end
-    else
-        Error("No target specified.") 
-    end
-end)
+--             Success("Removed bot.")
+--         else
+--             Error("Couldn't find bot.")
+--         end
+--     else
+--         Error("No target specified.") 
+--     end
+-- end)
 
-AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
-    table.clear(BotUtils.Bots)
+-- AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
+--     table.clear(BotUtils.Bots)
 
-    if BotUtils.BotChatted ~= nil then
-        BotUtils.BotChatted:Disconnect()
-        BotUtils.BotChatted = nil
-    end
+--     if BotUtils.BotChatted ~= nil then
+--         BotUtils.BotChatted:Disconnect()
+--         BotUtils.BotChatted = nil
+--     end
 
-    Success("Cleared bots.")
-end)
+--     Success("Cleared bots.")
+-- end)
 
-local function AdminChatted(player, message)
-    if message:find(BotUtils.Prefix) then
-        local IsAdmin = false
+-- local function AdminChatted(player, message)
+--     if message:find(BotUtils.Prefix) then
+--         local IsAdmin = false
 
-        for _, name in pairs(BotUtils.Admins) do
-            if name == player.Name then
-                IsAdmin = true
-                break
-            end
-        end
+--         for _, name in pairs(BotUtils.Admins) do
+--             if name == player.Name then
+--                 IsAdmin = true
+--                 break
+--             end
+--         end
 
-        if IsAdmin then
-            local PrefixSplit = message:split(BotUtils.Prefix)
-            local FullCommand = PrefixSplit[2]
+--         if IsAdmin then
+--             local PrefixSplit = message:split(BotUtils.Prefix)
+--             local FullCommand = PrefixSplit[2]
 
-            local SpaceSplit = FullCommand:split(" ")
-            local Arguments = {}
-            local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
+--             local SpaceSplit = FullCommand:split(" ")
+--             local Arguments = {}
+--             local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
             
-            if #SpaceSplit > 0 then
-                table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
-            end
+--             if #SpaceSplit > 0 then
+--                 table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
+--             end
 
-            local Command = nil
+--             local Command = nil
 
-            for Name: string, Table: CommandTable in pairs(Commands) do
-                if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
-                    Command = Table
-                    break
-                end
-            end
+--             for Name: string, Table: CommandTable in pairs(Commands) do
+--                 if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
+--                     Command = Table
+--                     break
+--                 end
+--             end
 
-            if Command then
-                local Succ, Err = pcall(Command.Function, Arguments)
+--             if Command then
+--                 local Succ, Err = pcall(Command.Function, Arguments)
 
-                if not Succ then
-                    if tostring(Err) then
-                        AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
-                    else
-                        AlertAdmin("Unknown error.", player.Name, Statuses.Error)
-                    end
-                end
-            elseif StringCommand == "BIND" then
-                local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
+--                 if not Succ then
+--                     if tostring(Err) then
+--                         AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
+--                     else
+--                         AlertAdmin("Unknown error.", player.Name, Statuses.Error)
+--                     end
+--                 end
+--             elseif StringCommand == "BIND" then
+--                 local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
 
-                if BotIndex then
-                    BotUtils.BotIndex = BotIndex
-                end
-            else
-                AlertAdmin("Command not found.", player.Name, Statuses.Error)
-            end
+--                 if BotIndex then
+--                     BotUtils.BotIndex = BotIndex
+--                 end
+--             else
+--                 AlertAdmin("Command not found.", player.Name, Statuses.Error)
+--             end
 
-            ClearChatFilter()
-        end
-    end
-end
+--             ClearChatFilter()
+--         end
+--     end
+-- end
 
-local function InitializeAdminChatted()
-    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
-        local Succ, _ = pcall(function()
-            BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-                AdminChatted(player, message)
-            end)
-        end)
+-- local function InitializeAdminChatted()
+--     if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+--         local Succ, _ = pcall(function()
+--             BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+--                 AdminChatted(player, message)
+--             end)
+--         end)
 
-        if not Succ then
-            Error("Your exploit does not support PlayerChatted.")
-            return false
-        else
-            return true
-        end
-    else
-        BotUtils.AdminChatted = TextChatService.MessageReceived:Connect(function(message)
-            local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
-            if Player then
-                AdminChatted(Player, message.Text)
-            end
-        end)
-        return true
-    end
-end
+--         if not Succ then
+--             Error("Your exploit does not support PlayerChatted.")
+--             return false
+--         else
+--             return true
+--         end
+--     else
+--         BotUtils.AdminChatted = TextChatService.MessageReceived:Connect(function(message)
+--             local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+--             if Player then
+--                 AdminChatted(Player, message.Text)
+--             end
+--         end)
+--         return true
+--     end
+-- end
 
-AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be in control of your client.", {}, {"player"}, function(arguments)
-    local Targets = arguments[1] and FindPlayers(arguments[1])
+-- AddCMD("addadmin", "Adds an admin. Make sure you really want this person to be in control of your client.", {}, {"player"}, function(arguments)
+--     local Targets = arguments[1] and FindPlayers(arguments[1])
 
-    if #Targets > 0 then
-        if Targets[1] == LocalPlayer then
-            Error("You cannot add yourself as an admin.")
-            return
-        end
+--     if #Targets > 0 then
+--         if Targets[1] == LocalPlayer then
+--             Error("You cannot add yourself as an admin.")
+--             return
+--         end
 
-        if table.find(BotUtils.Admins, Targets[1].Name) then
-            Error("That player is already added as a admin.")
-            return
-        end
+--         if table.find(BotUtils.Admins, Targets[1].Name) then
+--             Error("That player is already added as a admin.")
+--             return
+--         end
 
-        if BotUtils.AdminChatted == nil then
-            if not InitializeAdminChatted() then
-                return
-            end
-        end
+--         if BotUtils.AdminChatted == nil then
+--             if not InitializeAdminChatted() then
+--                 return
+--             end
+--         end
 
-        BotUtils.Admins[#BotUtils.Admins+1] = Targets[1].Name
+--         BotUtils.Admins[#BotUtils.Admins+1] = Targets[1].Name
 
-        Success("Added admin.")
-    else
-        Error("No target found.")
-    end
-end)
+--         Success("Added admin.")
+--     else
+--         Error("No target found.")
+--     end
+-- end)
 
-AddCMD("removeadmin", "Removes an admin.", {}, {"name"}, function(arguments)
-    if arguments[1] then
-        local Target = nil
-        local Index = nil
+-- AddCMD("removeadmin", "Removes an admin.", {}, {"name"}, function(arguments)
+--     if arguments[1] then
+--         local Target = nil
+--         local Index = nil
 
-        for i, Name: string in pairs(BotUtils.Admins) do
-            if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
-                Target = Name
-                Index = i
-            end
-        end
+--         for i, Name: string in pairs(BotUtils.Admins) do
+--             if arguments[1] == Name or Name:sub(1, arguments[1]:len()) == arguments[1] then
+--                 Target = Name
+--                 Index = i
+--             end
+--         end
 
-        if Target ~= nil and Index ~= nil then
-            table.remove(BotUtils.Admins, Index)
+--         if Target ~= nil and Index ~= nil then
+--             table.remove(BotUtils.Admins, Index)
 
-            if #BotUtils.Admins == 0 and BotUtils.AdminChatted then
-                BotUtils.AdminChatted:Disconnect()
-                BotUtils.AdminChatted = nil
-            end
+--             if #BotUtils.Admins == 0 and BotUtils.AdminChatted then
+--                 BotUtils.AdminChatted:Disconnect()
+--                 BotUtils.AdminChatted = nil
+--             end
 
-            Success("Removed admin.")
-        else
-            Error("Couldn't find admin.")
-        end
-    else
-        Error("No target specified.") 
-    end
-end)
+--             Success("Removed admin.")
+--         else
+--             Error("Couldn't find admin.")
+--         end
+--     else
+--         Error("No target specified.") 
+--     end
+-- end)
 
-local function JsonAdmins()
-    local Table = {}
+-- local function JsonAdmins()
+--     local Table = {}
 
-    for _, Name in pairs(BotUtils.Admins) do
-        Table[#Table + 1] = Name
-    end
+--     for _, Name in pairs(BotUtils.Admins) do
+--         Table[#Table + 1] = Name
+--     end
 
-    return HttpService:JSONEncode(Table)
-end
+--     return HttpService:JSONEncode(Table)
+-- end
 
-AddCMD("saveadmins", "Saves admins to a file.", {}, {}, function(arguments)
-    if writefile and isfile and readfile then
-        if #BotUtils.Admins > 0 then
-            if not isfile("RAVEN_SAVED_ADMINS") then
-                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+-- AddCMD("saveadmins", "Saves admins to a file.", {}, {}, function(arguments)
+--     if writefile and isfile and readfile then
+--         if #BotUtils.Admins > 0 then
+--             if not isfile("RAVEN_SAVED_ADMINS") then
+--                 writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
 
-                Success("Saved admins.")
-                return
-            end
+--                 Success("Saved admins.")
+--                 return
+--             end
 
-            local Contents: string = readfile("RAVEN_SAVED_ADMINS")
-            local Decoded = nil
+--             local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+--             local Decoded = nil
 
-            pcall(function()
-                Decoded = HttpService:JSONDecode(Contents)
-            end)
+--             pcall(function()
+--                 Decoded = HttpService:JSONDecode(Contents)
+--             end)
 
-            local Json = JsonAdmins()
+--             local Json = JsonAdmins()
 
-            if Decoded and #Decoded > 0 then
-                local ToAdd = {}
-                for _, Name in pairs(BotUtils.Admins) do
-                    local Index = table.find(Decoded, Name)
+--             if Decoded and #Decoded > 0 then
+--                 local ToAdd = {}
+--                 for _, Name in pairs(BotUtils.Admins) do
+--                     local Index = table.find(Decoded, Name)
 
-                    if not Index then
-                        ToAdd[#ToAdd+1] = Name
-                    end
-                end
+--                     if not Index then
+--                         ToAdd[#ToAdd+1] = Name
+--                     end
+--                 end
 
-                table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
+--                 table.move(ToAdd, 1, #ToAdd, #Decoded, Decoded)
 
-                writefile("RAVEN_SAVED_ADMINS", HttpService:JSONEncode(Decoded))
-            else
-                writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
-            end
+--                 writefile("RAVEN_SAVED_ADMINS", HttpService:JSONEncode(Decoded))
+--             else
+--                 writefile("RAVEN_SAVED_ADMINS", JsonAdmins())
+--             end
 
-            Success("Saved admins.")
-        else
-            Error("No admins to save.")
-        end
-    else
-        Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
-    end
-end)
+--             Success("Saved admins.")
+--         else
+--             Error("No admins to save.")
+--         end
+--     else
+--         Error("Your exploit does not support writefile/isfile/appendfile/readfile.")
+--     end
+-- end)
 
-AddCMD("clearsavedadmins", "Deletes the file with saved admins in it.", {}, {}, function(arguments)
-    if isfile and delfile then
-        if isfile("RAVEN_SAVED_ADMINS") then
-            delfile("RAVEN_SAVED_ADMINS")
+-- AddCMD("clearsavedadmins", "Deletes the file with saved admins in it.", {}, {}, function(arguments)
+--     if isfile and delfile then
+--         if isfile("RAVEN_SAVED_ADMINS") then
+--             delfile("RAVEN_SAVED_ADMINS")
 
-            Success("Cleared saved admins.")
-        else
-            Error("You have not saved any admins yet.")
-        end
-    else
-        Error("Your exploit does not support isfile or delfile.")
-    end
-end)
+--             Success("Cleared saved admins.")
+--         else
+--             Error("You have not saved any admins yet.")
+--         end
+--     else
+--         Error("Your exploit does not support isfile or delfile.")
+--     end
+-- end)
 
-AddCMD("clearadmins", "Removes all admins.", {}, {}, function(arguments)
-    table.clear(BotUtils.Admins)
+-- AddCMD("clearadmins", "Removes all admins.", {}, {}, function(arguments)
+--     table.clear(BotUtils.Admins)
 
-    if BotUtils.AdminChatted ~= nil then
-        BotUtils.AdminChatted:Disconnect()
-        BotUtils.AdminChatted = nil
-    end
+--     if BotUtils.AdminChatted ~= nil then
+--         BotUtils.AdminChatted:Disconnect()
+--         BotUtils.AdminChatted = nil
+--     end
 
-    Success("Cleared admins.")
-end)
+--     Success("Cleared admins.")
+-- end)
 
-AddCMD("listbots", "Lists all bots and puts them in a GUI.", {}, {}, function(arguments)
-    local data = {"All bots:"}
+-- AddCMD("listbots", "Lists all bots and puts them in a GUI.", {}, {}, function(arguments)
+--     local data = {"All bots:"}
 
-    table.move(BotUtils.Bots, 1, #BotUtils.Bots, 2, data)
+--     table.move(BotUtils.Bots, 1, #BotUtils.Bots, 2, data)
 
-    Output(data)
-end)
+--     Output(data)
+-- end)
 
-AddCMD("listadmins", "Lists all admins and puts them in a GUI.", {}, {}, function(arguments)
-    local data = {"All admins:"}
+-- AddCMD("listadmins", "Lists all admins and puts them in a GUI.", {}, {}, function(arguments)
+--     local data = {"All admins:"}
 
-    table.move(BotUtils.Admins, 1, #BotUtils.Admins, 2, data)
+--     table.move(BotUtils.Admins, 1, #BotUtils.Admins, 2, data)
 
-    Output(data)
-end)
+--     Output(data)
+-- end)
 
 --[[
 
@@ -4689,57 +4689,57 @@ if readfile and isfile then
         end
     end
 
-    if isfile("RAVEN_SAVED_BOTS") then
-        local Contents: string = readfile("RAVEN_SAVED_BOTS")
-        local Table = nil
+    -- if isfile("RAVEN_SAVED_BOTS") then
+    --     local Contents: string = readfile("RAVEN_SAVED_BOTS")
+    --     local Table = nil
 
-        pcall(function()
-            Table = HttpService:JSONDecode(Contents)
-        end)
+    --     pcall(function()
+    --         Table = HttpService:JSONDecode(Contents)
+    --     end)
 
-        if Table ~= nil and #Table > 0 then
-            local ToRemove = {}
-            for i, Name in pairs(Table) do
-                if Name == LocalPlayer.Name then
-                    ToRemove[#ToRemove+1] = i
-                end
-            end
+    --     if Table ~= nil and #Table > 0 then
+    --         local ToRemove = {}
+    --         for i, Name in pairs(Table) do
+    --             if Name == LocalPlayer.Name then
+    --                 ToRemove[#ToRemove+1] = i
+    --             end
+    --         end
 
-            for _, i in pairs(ToRemove) do
-                table.remove(Table, i)
-            end
+    --         for _, i in pairs(ToRemove) do
+    --             table.remove(Table, i)
+    --         end
 
-            table.move(Table, 1, #Table, 1, BotUtils.Bots)
+    --         table.move(Table, 1, #Table, 1, BotUtils.Bots)
 
-            InitializeBotChatted()
-        end
-    end
+    --         InitializeBotChatted()
+    --     end
+    -- end
 
-    if isfile("RAVEN_SAVED_ADMINS") then
-        local Contents: string = readfile("RAVEN_SAVED_ADMINS")
-        local Table = nil
+    -- if isfile("RAVEN_SAVED_ADMINS") then
+    --     local Contents: string = readfile("RAVEN_SAVED_ADMINS")
+    --     local Table = nil
 
-        pcall(function()
-            Table = HttpService:JSONDecode(Contents)
-        end)
+    --     pcall(function()
+    --         Table = HttpService:JSONDecode(Contents)
+    --     end)
 
-        if Table and #Table > 0 then
-            local ToRemove = {}
-            for i, Name in pairs(Table) do
-                if Name == LocalPlayer.Name then
-                    ToRemove[#ToRemove+1] = i
-                end
-            end
+    --     if Table and #Table > 0 then
+    --         local ToRemove = {}
+    --         for i, Name in pairs(Table) do
+    --             if Name == LocalPlayer.Name then
+    --                 ToRemove[#ToRemove+1] = i
+    --             end
+    --         end
 
-            for _, i in pairs(ToRemove) do
-                table.remove(Table, i)
-            end
+    --         for _, i in pairs(ToRemove) do
+    --             table.remove(Table, i)
+    --         end
 
-            table.move(Table, 1, #Table, 1, BotUtils.Admins)
+    --         table.move(Table, 1, #Table, 1, BotUtils.Admins)
 
-            InitializeAdminChatted()
-        end
-    end
+    --         InitializeAdminChatted()
+    --     end
+    -- end
 end
 
 local function UpdateName()
