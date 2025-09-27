@@ -2910,17 +2910,16 @@ NetBypass.RenderStepped = nil
 
 AddCMD("netbypass", "Constantly changes your simulationradius to math.huge.", {}, {}, function(arguments)
     if not NetBypass.Enabled then
-        if setsimulationradius then
-            NetBypass.Enabled = true
-
-            NetBypass.RenderStepped = RunService.RenderStepped:Connect(function()
-                setsimulationradius(math.huge)
-            end)
-
-            Success("Enabled netbypass.")
-        else
-            Error("Your exploit does not support setsimulationradius.")
+        local setsimulationradius = setsimulationradius or function(n)
+            LocalPlayer.SimulationRadius = n
         end
+        NetBypass.Enabled = true
+
+        NetBypass.RenderStepped = RunService.RenderStepped:Connect(function()
+            setsimulationradius(math.huge)
+        end)
+
+        Success("Enabled netbypass.")
     else
         Error("Netbypass is already enabled.")
     end
