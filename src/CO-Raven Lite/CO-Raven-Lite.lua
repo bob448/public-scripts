@@ -884,7 +884,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
                 if Arkenstone then
                     Humanoid:EquipTool(Arkenstone)
 
-                    Raven.Player:Say("/reset me", true)
+                    Raven.Player:Say(";reset me")
                 end
             end
         end)
@@ -895,7 +895,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
     end
 end)
 
-Raven:AddCMD("unpermadmin", "Stops pemradmin.", {}, {}, function(arguments)
+Raven:AddCMD("unpermadmin", "Stops permadmin.", {}, {}, function(arguments)
     if PermAdminCon then
         PermAdminCon:Disconnect()
         PermAdminCon = nil
@@ -1287,9 +1287,9 @@ Raven:AddCMD("stopunanchoraura", "Turns off unanchoraura.", {}, {}, function(arg
     end
 end)
 
-Raven:AddCMD("hiddencommand", "Says a chosen one command in RBXSystem.", {}, {"command"}, function(arguments)
+Raven:AddCMD("hiddencommand", "Runs a chosen one command with ;", {}, {"command"}, function(arguments)
     if #arguments > 0 then
-        Raven.Player:Say(table.concat(arguments, " "), true)
+        Raven.Player:Say(";"..table.concat(arguments, " "))
     end
 end)
 
@@ -1370,7 +1370,7 @@ local GetGears = {
 
 Raven:AddCMD("getgears", "Gets a ton of gears. Only works if you have enlighten.", {}, {}, function(arguments)
     for _, gear in pairs(GetGears) do
-        Raven.Player:Say("gear me "..tostring(gear), true)
+        Raven.Player:Say(";gear me "..tostring(gear), true)
         task.wait(.3)
     end
 end)
@@ -1740,7 +1740,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
         local Names = {}
         for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, #v.Name-3).."." end end
 
-        Raven.Player:Say("enlighten "..table.concat(Names, " "), true)
+        Raven.Player:Say(";enlighten "..table.concat(Names, " "), true)
 
         task.wait(.1)
 
@@ -1754,7 +1754,7 @@ Raven:AddCMD("unenlighten", "Unenlightens a player (enlightens them and then cle
                     for _, v in pairs(HasEnlighten) do if v then Names[#Names+1] = v.Name:sub(1, math.ceil(v.Name:len()/2)).."." end end
 
                     if v.Character:FindFirstChild("The Arkenstone") or v.Backpack:FindFirstChild("The Arkenstone") then
-                        Raven.Player:Say("clearinv "..table.concat(Names, " "), true)
+                        Raven.Player:Say(";clearinv "..table.concat(Names, " "), true)
                     else
                         table.remove(HasEnlighten, HasEnlightenIndex)
                     end
@@ -1802,7 +1802,7 @@ Raven:AddCMD("abuse", "Spams commands on a player or group of players.", {}, {"p
                 end
 
                 if #Names > 0 then
-                    Raven.Player:Say(Command.." "..table.concat(Names, " "), true)
+                    Raven.Player:Say(";"..Command.." "..table.concat(Names, " "), true)
                 end
             end)
         end
@@ -1818,7 +1818,7 @@ Raven:AddCMD("abuseall", "Abuses every other player besides yourself.", {"abuseo
             if #PlayerList > 1 then
                 local Command = AbuseCommands[math.random(1, #AbuseCommands)]
 
-                Raven.Player:Say(Command.." others", true)
+                Raven.Player:Say(";"..Command.." others")
             end
         end)
     else

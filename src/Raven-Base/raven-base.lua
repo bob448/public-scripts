@@ -2925,7 +2925,7 @@ AddCMD("netbypass", "Constantly changes your simulationradius to math.huge.", {}
     end
 end)
 
-AddCMD("hiddensay", "Says something but in the system channel", {}, {"message"}, function(arguments)
+AddCMD("hiddensay", "Says something but in the system channel", {"hsay", "h"}, {"message"}, function(arguments)
     local Message = #arguments > 0 and table.concat(arguments, "")
     if Message then Say(Message, true) end
 end)
