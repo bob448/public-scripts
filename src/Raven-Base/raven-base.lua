@@ -3500,6 +3500,17 @@ AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, 
     end
 end)
 
+AddCMD("resetincomingmessage", "On certain games this allows you to see hidden messages.", {}, {}, function(arguments)
+    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        Error("You are on LegacyChatService.")
+        return
+    end
+
+    TextChatService.OnIncomingMessage = function(message) end
+
+    Success("Reset OnIncomingMessage.")
+end)
+
 AddCMD("unchatlogs", "Stop recording chatlogs.", {}, {}, function(arguments)
     if #ChatLogsCons > 0 then
         for _, Con in pairs(ChatLogsCons) do
