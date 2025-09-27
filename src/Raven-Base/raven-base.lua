@@ -2944,6 +2944,29 @@ AddCMD("unnetbypass", "Disables netbypass.", {}, {}, function(arguments)
     end
 end)
 
+local NoVelocity = false
+
+AddCMD("novelocity", "Repeatedly sets your root velocity to 0.", {}, {}, function(arguments)
+    if NoVelocity then Error("Novelocity is already on."); return end
+    NoVelocity = true
+
+    Success("Turned novelocity on.")
+    while NoVelocity do
+        task.wait()
+        local Root: BasePart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            Root.AssemblyLinearVelocity = Vector3.new(0,0,0)
+            Root.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        end
+    end
+end)
+
+AddCMD("yesvelocity", "Disables novelocity.", {}, {}, function(arguments)
+    if not NoVelocity then Error("Novelocity is already off."); return end
+    NoVelocity = false
+    Success("Turned novelocity off.")
+end)
+
 local Spam = false
 
 AddCMD("spam", "Spams a message every specified interval", {}, {"hidden (true/false)","interval","message"}, function(arguments)
