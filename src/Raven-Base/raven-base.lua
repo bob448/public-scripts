@@ -2782,24 +2782,18 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                 local Root: BasePart? = Character and Target.Character:FindFirstChild("HumanoidRootPart")
 
                 if Root then
-                    
                     for _, v: Part | MeshPart in ipairs(workspace:GetDescendants()) do
-                        if (v:IsA("Part") or v:IsA("MeshPart")) and not v.Anchored and not v:IsDescendantOf(Character) and (isnetworkowner and isnetworkowner(v) or not isnetworkowner and LocalPlayer:DistanceFromCharacter(v.Position) <= Size + 30) then
-                            local InPlayer = false
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) then
+                            if v.Parent:FindFirstChildWhichIsA("Humanoid") then continue end
 
-                            for _, player in ipairs(Players:GetPlayers()) do
-                                if player.Character then
-                                    for _, part: BasePart in ipairs(player.Character:GetDescendants()) do
-                                        if part == v then
-                                            InPlayer = true
-                                            break
-                                        end
-                                    end
-                                end
-                            end
-
-                            if not BringUA.Parts[v] and not InPlayer then
+                            if not BringUA.Parts[v] then
                                 BringUA.Parts[v] = {}
+
+                                local Index = 1
+                                for Part, _ in pairs(BringUA.Parts) do
+                                    if Part == v then break end
+                                    Index += 1
+                                end
 
                                 local AlignPosition, AlignOrientation = Instance.new("AlignPosition", v), Instance.new("AlignOrientation", v)
                                 local Attachment0 = Instance.new("Attachment", v)
@@ -2807,58 +2801,48 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
                                 BringUA.Parts[v].AlignPosition = AlignPosition
                                 BringUA.Parts[v].AlignOrientation = AlignOrientation
                                 BringUA.Parts[v].Attachment0 = Attachment0
+                                BringUA.Parts[v].Index = Index
 
                                 AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
                                 AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
 
                                 AlignPosition.Attachment0 = Attachment0
                                 AlignOrientation.Attachment0 = Attachment0
+
+                                BringUA.Parts[v].Initialized = true
+
+                                Mode.Init(
+                                    BringUA.Parts[v].AlignPosition,
+                                    BringUA.Parts[v].AlignOrientation,
+                                    Center or Root.Position,
+                                    BringUA.Parts,
+                                    Index,
+                                    v,
+                                    Persistent,
+                                    Size,
+                                    Speed
+                                )
                             end
                         end
                     end
-
-                    local PartIndex = 1
 
                     for Part, Table in pairs(BringUA.Parts) do
                         if not Exists(Part) then
                             BringUA.Parts[Part] = nil
                             continue
                         end
-
-                        if isnetworkowner and not isnetworkowner(Part) then
-                            BringUA.Parts[Part].AlignPosition:Destroy()
-                            BringUA.Parts[Part].AlignOrientation:Destroy()
-                            BringUA.Parts[Part].Attachment0:Destroy()
-
-                            BringUA.Parts[Part] = nil
-
-                            continue
-                        end
-
-                        local Args = {
+                        
+                        Mode.Function(
                             Table.AlignPosition,
                             Table.AlignOrientation,
                             Center or Root.Position,
                             BringUA.Parts,
-                            PartIndex,
+                            Table.Index,
                             Part,
                             Persistent,
                             Size,
                             Speed
-                        }
-                        
-                        if not BringUA.Parts[Part].Initialized then
-                            BringUA.Parts[Part].Initialized = true
-                            Mode.Init(
-                                unpack(Args)
-                            )
-                        end
-                        
-                        Mode.Function(
-                            unpack(Args)
                         )
-
-                        PartIndex += 1
                     end
                 end
             end)
@@ -3469,14 +3453,36 @@ AddCMD("disablecore", "Disables a coregui", {}, {"gui (backpack/reset/playerlist
     end
 end)
 
-local ChatLogsCon = nil
+local ChatLogsCons = {}
+
+local function AddChatCon(player: Player)
+    Debug("adding chatlogs connection for "..player.Name)
+    ChatLogsCons[#ChatLogsCons+1] = player.Chatted:Connect(function(msg, recipient)
+        Debug("chatlogs message detected from "..player.Name..": \""..msg.."\"")
+        AddChatLog(msg, player)
+    end)
+end
 
 AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, function(arguments)
-    if ChatLogsCon == nil then
+    if #ChatLogsCons == 0 then
         local Succ, Err = pcall(function()
-            ChatLogsCon = Players.PlayerChatted:Connect(function(chatType: Enum.PlayerChatType, player: Player, message: string, targetPlayer: Player)
-                AddChatLog(message, player)
-            end)
+            if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+                ChatLogsCons[#ChatLogsCons+1] = Players.PlayerAdded:Connect(function(player)
+                    AddChatCon(player)
+                end)
+                for _, Player in ipairs(Players:GetPlayers()) do
+                    AddChatCon(Player)
+                end
+            else
+                ChatLogsCons[#ChatLogsCons+1] = TextChatService.MessageReceived:Connect(function(message)
+                    if message.TextSource then
+                        local Player = Players:GetPlayerByUserId(message.TextSource.UserId)
+                        if Player then
+                            AddChatLog(message.Text, Player)
+                        end
+                    end
+                end)
+            end
 
             chat_logs_frame.Visible = true
         end)
@@ -3490,9 +3496,13 @@ AddCMD("chatlogs", "Displays a GUI where chat messages get stored in.", {}, {}, 
 end)
 
 AddCMD("unchatlogs", "Stop recording chatlogs.", {}, {}, function(arguments)
-    if ChatLogsCon then
-        ChatLogsCon:Disconnect()
-        ChatLogsCon = nil
+    if #ChatLogsCons > 0 then
+        for _, Con in pairs(ChatLogsCons) do
+            if Con then
+                Con:Disconnect()
+            end
+        end
+        table.clear(ChatLogsCons)
         ClearChatLogs()
 
         Success("Disabled chatlogs.")
@@ -4143,6 +4153,14 @@ AddCMD("runasbot", "Runs a command as a bot command.", {"b"}, {"command", "argum
     end
 end)
 
+AddCMD("say", "Sends something in chat", {}, {"message"}, function(arguments)
+    local Message = #arguments > 0 and table.concat(arguments, " ")
+
+    if Message then
+        Say(Message, false)
+    end
+end)
+
 local function UpdateBotIndex()
     local Before = BotUtils.BotIndex
     Say(BotUtils.Prefix.."BIND", true);
@@ -4236,53 +4254,67 @@ AddCMD("unswim", "Stops swimming", {}, {}, function(arguments)
     Success("Stopped swimming.")
 end)
 
-local function InitializeBotChatted()
-    local Succ, _ = pcall(function()
-        BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-            local IsBot = false
-            local BotIndex = nil
+local function BotChatted(player, message)
+    local IsBot = false
+    local BotIndex = nil
 
-            for i, name in pairs(BotUtils.Bots) do
-                if name == player.Name then
-                    IsBot = true
-                    BotIndex = i
-                    break
+    for i, name in pairs(BotUtils.Bots) do
+        if name == player.Name then
+            IsBot = true
+            BotIndex = i
+            break
+        end
+    end
+
+    if IsBot then
+        local Decoded = nil
+        local Succ, _ = pcall(function()
+            Decoded = HttpService:JSONDecode(message)
+        end)
+
+        if Decoded and Succ then
+            if Decoded.Status and Decoded.Data and Decoded.Name then
+                if Decoded.Name == LocalPlayer.Name then
+                    local Color = UnserializeStatus(Decoded.Status)
+                    
+                    Notify(Decoded.Data, Color, 4)
                 end
             end
+        elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
+            local PrefixSplit = message:split(BotUtils.Prefix)
+            
+            if PrefixSplit and #PrefixSplit > 0 then
+                local Command = PrefixSplit[2]
 
-            if IsBot then
-                local Decoded = nil
-                local Succ, _ = pcall(function()
-                    Decoded = HttpService:JSONDecode(message)
-                end)
-
-                if Decoded and Succ then
-                    if Decoded.Status and Decoded.Data and Decoded.Name then
-                        if Decoded.Name == LocalPlayer.Name then
-                            local Color = UnserializeStatus(Decoded.Status)
-                            
-                            Notify(Decoded.Data, Color, 4)
-                        end
-                    end
-                elseif message:find(BotUtils.Prefix) and BotIndex ~= nil then
-                    local PrefixSplit = message:split(BotUtils.Prefix)
-                    
-                    if PrefixSplit and #PrefixSplit > 0 then
-                        local Command = PrefixSplit[2]
-
-                        if Command == "BIND" then
-                            Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
-                        end
-                    end
+                if Command == "BIND" then
+                    Say(BotUtils.Prefix.."BIND".." "..BotIndex, true)
                 end
+            end
+        end
+    end
+end
+
+local function InitializeBotChatted()
+    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        local Succ, _ = pcall(function()
+            BotUtils.BotChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+                BotChatted(player, message)
+            end)
+        end)
+
+        if not Succ then
+            Error("Your exploit does not support PlayerChatted.")
+            return false
+        else
+            return true
+        end
+    else
+        BotUtils.BotChatted = TextChatService.MessageReceived:Connect(function(message)
+            local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+            if Player then
+                BotChatted(Player, message.Text)
             end
         end)
-    end)
-
-    if not Succ then
-        Error("Your exploit does not support PlayerChatted.")
-        return false
-    else
         return true
     end
 end
@@ -4354,70 +4386,84 @@ AddCMD("clearbots", "Removes all bots.", {}, {}, function(arguments)
     Success("Cleared bots.")
 end)
 
-local function InitializeAdminChatted()
-    local Succ, _ = pcall(function()
-        BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
-            if message:find(BotUtils.Prefix) then
-                local IsAdmin = false
+local function AdminChatted(player, message)
+    if message:find(BotUtils.Prefix) then
+        local IsAdmin = false
 
-                for _, name in pairs(BotUtils.Admins) do
-                    if name == player.Name then
-                        IsAdmin = true
-                        break
-                    end
-                end
+        for _, name in pairs(BotUtils.Admins) do
+            if name == player.Name then
+                IsAdmin = true
+                break
+            end
+        end
 
-                if IsAdmin then
-                    local PrefixSplit = message:split(BotUtils.Prefix)
-                    local FullCommand = PrefixSplit[2]
+        if IsAdmin then
+            local PrefixSplit = message:split(BotUtils.Prefix)
+            local FullCommand = PrefixSplit[2]
 
-                    local SpaceSplit = FullCommand:split(" ")
-                    local Arguments = {}
-                    local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
-                    
-                    if #SpaceSplit > 0 then
-                        table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
-                    end
+            local SpaceSplit = FullCommand:split(" ")
+            local Arguments = {}
+            local StringCommand = #SpaceSplit > 0 and SpaceSplit[1] or FullCommand
+            
+            if #SpaceSplit > 0 then
+                table.move(SpaceSplit, 2, #SpaceSplit, 1, Arguments)
+            end
 
-                    local Command = nil
+            local Command = nil
 
-                    for Name: string, Table: CommandTable in pairs(Commands) do
-                        if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
-                            Command = Table
-                            break
-                        end
-                    end
-
-                    if Command then
-                        local Succ, Err = pcall(Command.Function, Arguments)
-
-                        if not Succ then
-                            if tostring(Err) then
-                                AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
-                            else
-                                AlertAdmin("Unknown error.", player.Name, Statuses.Error)
-                            end
-                        end
-                    elseif StringCommand == "BIND" then
-                        local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
-
-                        if BotIndex then
-                            BotUtils.BotIndex = BotIndex
-                        end
-                    else
-                        AlertAdmin("Command not found.", player.Name, Statuses.Error)
-                    end
-
-                    ClearChatFilter()
+            for Name: string, Table: CommandTable in pairs(Commands) do
+                if Name == StringCommand or Name:sub(1, #StringCommand) == StringCommand then
+                    Command = Table
+                    break
                 end
             end
-        end)
-    end)
 
-    if not Succ then
-        Error("Your exploit does not support PlayerChatted.")
-        return false
+            if Command then
+                local Succ, Err = pcall(Command.Function, Arguments)
+
+                if not Succ then
+                    if tostring(Err) then
+                        AlertAdmin("Error: "..tostring(Err), player.Name, Statuses.Error)
+                    else
+                        AlertAdmin("Unknown error.", player.Name, Statuses.Error)
+                    end
+                end
+            elseif StringCommand == "BIND" then
+                local BotIndex = Arguments and Arguments[1] and tonumber(Arguments[1])
+
+                if BotIndex then
+                    BotUtils.BotIndex = BotIndex
+                end
+            else
+                AlertAdmin("Command not found.", player.Name, Statuses.Error)
+            end
+
+            ClearChatFilter()
+        end
+    end
+end
+
+local function InitializeAdminChatted()
+    if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        local Succ, _ = pcall(function()
+            BotUtils.AdminChatted = Players.PlayerChatted:Connect(function(chatType, player: Player, message: string, _)
+                AdminChatted(player, message)
+            end)
+        end)
+
+        if not Succ then
+            Error("Your exploit does not support PlayerChatted.")
+            return false
+        else
+            return true
+        end
     else
+        BotUtils.AdminChatted = TextChatService.MessageReceived:Connect(function(message)
+            local Player = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+            if Player then
+                AdminChatted(Player, message.Text)
+            end
+        end)
         return true
     end
 end
