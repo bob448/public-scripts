@@ -884,7 +884,7 @@ Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten 
                 if Arkenstone then
                     Humanoid:EquipTool(Arkenstone)
 
-                    Raven.Player:Say("reset me", true)
+                    Raven.Player:Say("/reset me", true)
                 end
             end
         end)

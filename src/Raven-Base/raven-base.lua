@@ -1033,7 +1033,7 @@ local function Say(message: string, hidden: boolean?)
         if SayMessageRequest then
             SayMessageRequest:FireServer(
                 message,
-                "System"
+                hidden and "System" or "All"
             )
         else
             Error("SayMessageRequest not found in ReplicatedStorage.")
@@ -2923,6 +2923,11 @@ AddCMD("netbypass", "Constantly changes your simulationradius to math.huge.", {}
     else
         Error("Netbypass is already enabled.")
     end
+end)
+
+AddCMD("hiddensay", "Says something but in the system channel", {}, {"message"}, function(arguments)
+    local Message = #arguments > 0 and table.concat(arguments, "")
+    if Message then Say(Message, true) end
 end)
 
 AddCMD("unnetbypass", "Disables netbypass.", {}, {}, function(arguments)
