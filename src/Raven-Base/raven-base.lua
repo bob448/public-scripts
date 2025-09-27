@@ -55,7 +55,7 @@ task.spawn(function()
     end
 end)
 
-local ClosedPosition = UDim2.new(.5, 0, 0, -244)
+local ClosedPosition = UDim2.new(.5, 0, 0, -122)
 local OpenPosition = UDim2.new(.5, 0, 0, 4)
 
 local CanAccessCoreGui = true
@@ -168,8 +168,8 @@ main_frame.AnchorPoint = Vector2.new(0.5, 0)
 main_frame.BackgroundColor3 = Color3.new(0, 0, 0)
 main_frame.BorderColor3 = Color3.new(0, 0, 0)
 main_frame.BorderSizePixel = 0
-main_frame.Position = UDim2.new(0.5, 0, 0, -270)
-main_frame.Size = UDim2.new(0, 475, 0, 240)
+main_frame.Position = UDim2.new(0.5, 0, -0, -148)
+main_frame.Size = UDim2.new(0, 304, 0, 121)
 main_frame.Visible = true
 main_frame.Name = "MainFrame"
 main_frame.Parent = raven
@@ -178,20 +178,19 @@ local uicorner = Instance.new("UICorner")
 uicorner.Parent = main_frame
 
 local welcome_label = Instance.new("TextLabel")
-welcome_label.Font = Enum.Font.Arimo
+welcome_label.Font = Enum.Font.Arial
 welcome_label.Text = "Welcome To Raven!"
 welcome_label.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
 welcome_label.TextSize = 50
 welcome_label.TextStrokeColor3 = Color3.new(0.443137, 0.305882, 1)
 welcome_label.TextWrapped = true
+welcome_label.AnchorPoint = Vector2.new(0.5, 0.5)
 welcome_label.BackgroundColor3 = Color3.new(0, 0, 0)
-welcome_label.BackgroundTransparency = 0
 welcome_label.BorderColor3 = Color3.new(0, 0, 0)
 welcome_label.BorderSizePixel = 0
-welcome_label.Position = UDim2.new(.5, 0, .5, 0)
+welcome_label.Position = UDim2.new(0.5, 0, 0.5, 0)
 welcome_label.Size = UDim2.new(1, 0, 1, 0)
 welcome_label.Visible = false
-welcome_label.AnchorPoint = Vector2.new(.5,.5)
 welcome_label.ZIndex = 999999
 welcome_label.Name = "WelcomeLabel"
 welcome_label.Parent = main_frame
@@ -212,9 +211,9 @@ animated_main_gradient.Parent = uistroke
 
 local command_box = Instance.new("TextBox")
 command_box.CursorPosition = -1
-command_box.Font = Enum.Font.Arimo
+command_box.Font = Enum.Font.Code
 command_box.PlaceholderColor3 = Color3.new(0.423529, 0.423529, 0.423529)
-command_box.PlaceholderText = "Enter Command Here.."
+command_box.PlaceholderText = "enter command here.."
 command_box.RichText = true
 command_box.Text = ""
 command_box.TextColor3 = Color3.new(0.423529, 0.321569, 0.764706)
@@ -223,8 +222,8 @@ command_box.TextWrapped = true
 command_box.BackgroundColor3 = Color3.new(0.0941177, 0.0941177, 0.0941177)
 command_box.BorderColor3 = Color3.new(0, 0, 0)
 command_box.BorderSizePixel = 0
-command_box.Position = UDim2.new(0.0210526325, 0, 0.17302078, 0)
-command_box.Size = UDim2.new(0.957894802, 0, 0.694077313, 0)
+command_box.Position = UDim2.new(0.032894738, 0, 0.255665421, 0)
+command_box.Size = UDim2.new(0.9342103, 0, 0.686483324, 0)
 command_box.Visible = true
 command_box.Name = "CommandBox"
 command_box.Parent = main_frame
@@ -244,7 +243,7 @@ animated_command_gradient.Name = "AnimatedCommandGradient"
 animated_command_gradient.Parent = uistroke_2
 
 local title_label = Instance.new("TextLabel")
-title_label.Font = Enum.Font.Arimo
+title_label.Font = Enum.Font.Unknown
 title_label.Text = "Raven"
 title_label.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
 title_label.TextScaled = true
@@ -256,35 +255,14 @@ title_label.BackgroundColor3 = Color3.new(1, 1, 1)
 title_label.BackgroundTransparency = 1
 title_label.BorderColor3 = Color3.new(0, 0, 0)
 title_label.BorderSizePixel = 0
-title_label.Position = UDim2.new(-0.00210526306, 0, 0, 0)
-title_label.Size = UDim2.new(1.00210524, 0, 0.17302078, 0)
+title_label.Position = UDim2.new(-0.00210531126, 0, 0, 0)
+title_label.Size = UDim2.new(1.00210536, 0, 0.255665421, 0)
 title_label.Visible = true
 title_label.Name = "TitleLabel"
 title_label.Parent = main_frame
 
-local help_label = Instance.new("TextLabel")
-help_label.Font = Enum.Font.Arimo
-help_label.Text = "Type \"cmds\" into the command prompt above to begin.\
-Incomplete commands will be autocompleted for you."
-help_label.TextColor3 = Color3.new(0.494118, 0.164706, 0.87451)
-help_label.TextScaled = true
-help_label.TextSize = 14
-help_label.TextStrokeColor3 = Color3.new(0.494118, 0.164706, 0.87451)
-help_label.TextStrokeTransparency = 0.5
-help_label.TextWrapped = true
-help_label.BackgroundColor3 = Color3.new(1, 1, 1)
-help_label.BackgroundTransparency = 1
-help_label.BorderColor3 = Color3.new(0, 0, 0)
-help_label.BorderSizePixel = 0
-help_label.Position = UDim2.new(0, 0, 0.867098212, 0)
-help_label.Size = UDim2.new(1, 0, 0.132901862, 0)
-help_label.Visible = true
-help_label.ZIndex = 2
-help_label.Name = "HelpLabel"
-help_label.Parent = main_frame
-
 local toggle_button = Instance.new("TextButton")
-toggle_button.Font = Enum.Font.Arimo
+toggle_button.Font = Enum.Font.Arial
 toggle_button.Text = "V"
 toggle_button.TextColor3 = Color3.new(1, 1, 1)
 toggle_button.TextScaled = true
