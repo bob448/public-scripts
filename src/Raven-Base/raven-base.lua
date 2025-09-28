@@ -2761,7 +2761,7 @@ AddCMD("bringua", "Brings unanchored parts using the specified center and mode."
 
                 if Root then
                     for _, v: Part | MeshPart in ipairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and not v.Anchored then
+                        if v:IsA("BasePart") and not v.Anchored and not v:IsDescendantOf(Character) then
                             if v.Parent:FindFirstChildWhichIsA("Humanoid") then continue end
 
                             if not BringUA.Parts[v] then
