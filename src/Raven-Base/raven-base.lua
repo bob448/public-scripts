@@ -3035,7 +3035,11 @@ AddCMD("jp", "Changes your jumppower.", {}, {"power"}, function(arguments)
     local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
 
     if Humanoid then
-        Humanoid.WalkSpeed = Power
+        if Humanoid.UseJumpPower then
+            Humanoid.JumpPower = Power
+        else
+            Humanoid.JumpHeight = Power
+        end
     end
 end)
 
