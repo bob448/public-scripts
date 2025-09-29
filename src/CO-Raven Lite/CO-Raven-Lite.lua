@@ -1802,7 +1802,7 @@ Raven:AddCMD("abuse", "Spams commands on a player or group of players.", {}, {"p
                 end
 
                 if #Names > 0 then
-                    Raven.Player:Say(";"..Command.." "..table.concat(Names, " "), true)
+                    Raven.Player:Say(";"..Command.." "..table.concat(Names, " "))
                 end
             end)
         end
