@@ -2923,6 +2923,27 @@ AddCMD("unnetbypass", "Disables netbypass.", {}, {}, function(arguments)
     end
 end)
 
+AddCMD("reversenetbypass", "Constantly changes your simulationradius to 0.", {}, {}, function(arguments)
+    if not NetBypass.Enabled then
+        local setsimulationradius = setsimulationradius or function(n)
+            LocalPlayer.SimulationRadius = n
+        end
+        NetBypass.Enabled = true
+
+        NetBypass.RenderStepped = RunService.RenderStepped:Connect(function()
+            setsimulationradius(0)
+        end)
+
+        Success("Enabled reversenetbypass.")
+    else
+        Error("Reversenetbypass is already enabled.")
+    end
+end)
+
+AddCMD("unreversenetbypass", "Constantly changes your simulationradius to 0.", {}, {}, function(arguments)
+    RunCMD("unnetbypass", {})
+end)
+
 local NoVelocity = false
 
 AddCMD("novelocity", "Repeatedly sets your root velocity to 0.", {}, {}, function(arguments)
