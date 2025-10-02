@@ -1,3 +1,5 @@
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 -- CO-RAVEN LITE
 -- made by @bob448 or bobmichealson8 on scriptblox
 
@@ -1135,8 +1137,13 @@ end)
 local DeleteAuraCon = nil
 local DeleteAuraHighlights = {}
 
-Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, function(arguments)
+Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {"queue limit"}, function(arguments)
     if not DeleteAuraCon then
+        local QueueLimit = #arguments > 0 and arguments[1] and tonumber(arguments[1]) or 25
+        if QueueLimit < 0 then
+            QueueLimit = 25
+        end
+
         local Queue = {}
         local Waiting = false
 
@@ -1164,7 +1171,7 @@ Raven:AddCMD("deleteaura", "Deletes parts within the distance limit.", {}, {}, f
 
                 if #Remotes > 0 then
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if #Queue > 25 then
+                        if #Queue > QueueLimit then
                             break
                         end
                         if v:IsA("BasePart") and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
@@ -1240,6 +1247,132 @@ Raven:AddCMD("undeleteaura", "Turns off deleteaura.", {}, {}, function(arguments
     end
 end)
 
+local ShovelAuraCon = nil
+local ShovelAuraHighlights = {}
+
+Raven:AddCMD("shovelaura", "Thanks to @cozzyreacts on scriptblox.com for the idea.", {}, {"type (dig/fill)", "queue limit"}, function(arguments)
+    if not ShovelAuraCon then
+        local Type = #arguments > 0 and arguments[1] and arguments[1]:lower() == "fill"
+        local QueueLimit = #arguments > 1 and arguments[2] and tonumber(arguments[2]) or 50
+        if QueueLimit < 0 then
+            QueueLimit = 50
+        end
+
+        local Queue = {}
+        local Waiting = false
+
+        ShovelAuraCon = RunService.Heartbeat:Connect(function(delta)
+            if Waiting then return end
+
+            local Root: BasePart? = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if Root then
+                local Remotes = {}
+
+                for i, v: Player in ipairs(Players:GetPlayers()) do
+                    if v.Character then
+                        local LoopThrough = LoopThroughTables(v.Character:GetChildren(), v.Backpack:GetChildren())
+
+                        for _, v: Tool in pairs(LoopThrough) do
+                            if v:IsA("Tool") and v.Name == "Shovel" then
+                                local Remote = GetRemoteFromTool(v)
+
+                                if Remote then Remotes[#Remotes+1] = Remote end
+                            end
+                        end
+                    end
+                end
+
+                if #Remotes > 0 then
+                    for i=1, 50 do
+                        if #Queue > QueueLimit then
+                            break
+                        end
+
+                        Queue[#Queue+1] = Root.Position + Vector3.new(math.random(-23,23), math.random(-23,23), math.random(-23,23))
+                    end
+
+                    if #Queue > 0 then
+                        for i, Position in pairs(Queue) do
+                            if not ShovelAuraHighlights[Position] then
+                                local Brick = Instance.new("Part", workspace)
+                                Brick.Transparency = .8
+                                Brick.Material = Enum.Material.SmoothPlastic
+                                Brick.Anchored = true
+                                Brick.Size = Vector3.new(4,4,4)
+                                Brick.Position = Position
+                                Brick.Name = "FakeBrick"
+                                Brick.CanCollide = false
+                                Brick.CanQuery = false
+                                Brick.CanTouch = false
+                                Brick.Color = Color3.new(0.360784, 0.196078, 0.047059)
+
+                                ShovelAuraHighlights[Position] = Brick
+                            end
+
+                            local Remote = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
+
+                            Remote:FireServer(
+                                Workspace.Terrain,
+                                Enum.NormalId.Top,
+                                Position,
+                                Type and "fill" or "dig"
+                            )
+                        end
+
+                        Waiting = true
+
+                        task.wait(.1)
+
+                        for i, Position in pairs(Queue) do
+                            if ShovelAuraHighlights[Position] then
+                                task.spawn(function()
+                                    local Tween = TweenService:Create(
+                                        ShovelAuraHighlights[Position],
+                                        TweenInfo.new(.5),
+                                        {["Transparency"] = 1}
+                                    )
+                                    Tween:Play()
+                                    Tween.Completed:Wait()
+
+                                    ShovelAuraHighlights[Position]:Destroy()
+                                    ShovelAuraHighlights[Position] = nil
+                                end)
+                            end
+                        end
+
+                        table.clear(Queue)
+
+                        Waiting = false
+                    end
+                end
+            end
+        end)
+        Raven.Notif:Success("Enabled shovel aura.")
+    else
+        Raven.Notif:Error("Shovel aura is already on. Try executing the command \"unshovelaura\".")
+    end
+end)
+
+Raven:AddCMD("unshovelaura", "Turns off shovelaura.", {}, {}, function(arguments)
+    if ShovelAuraCon then
+        ShovelAuraCon:Disconnect()
+        ShovelAuraCon = nil
+
+        for _, v in pairs(ShovelAuraHighlights) do
+            if v and v.Parent then
+                v:Destroy()
+            end
+        end
+
+        table.clear(ShovelAuraHighlights)
+
+        Raven.Notif:Success("Disabled shovel aura.")
+    else
+        Raven.Notif:Error("Shovel aura is already disabled.") 
+    end
+end)
+
 local AntiDrag = {}
 AntiDrag.Enabled = false
 AntiDrag.Heartbeat = nil
@@ -1297,9 +1430,14 @@ end)
 local UnanchorAuraCon = nil
 local UnanchorAuraHighlights = {}
 
-Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {}, function(arguments)
+Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {"queue limit"}, function(arguments)
     if not UnanchorAuraCon then
         local Queue = {}
+        local QueueLimit = #arguments > 0 and arguments[1] and tonumber(arguments[1]) or 25
+        if QueueLimit < 0 then
+            QueueLimit = 25
+        end
+
         local Waiting = false
 
         UnanchorAuraCon = RunService.Heartbeat:Connect(function(delta)
@@ -1326,7 +1464,7 @@ Raven:AddCMD("unanchoraura", "Unanchors parts within the distance limit.", {}, {
 
                 if #Remotes > 0 then
                     for _, v: BasePart in ipairs(workspace.Bricks:GetDescendants()) do
-                        if #Queue > 5 then
+                        if #Queue > QueueLimit then
                             break
                         end
                         if v:IsA("BasePart") and v.Anchored and LocalPlayer:DistanceFromCharacter(v.Position) <= 23 and not table.find(Queue, v) then
@@ -1762,8 +1900,8 @@ Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions 
                     local RemoteTable = Remotes[#Remotes > 1 and math.random(1, #Remotes) or 1]
                     local Remote = RemoteTable[2]
 
-                    for _=1, 10 do
-                        if #Queue > 10 then
+                    for _=1, 30 do
+                        if #Queue > 15 then
                             break
                         end
                         Queue[#Queue+1] = Root.Position + Vector3.new(math.random(-23,23),math.random(-23,23),math.random(-23,23))
