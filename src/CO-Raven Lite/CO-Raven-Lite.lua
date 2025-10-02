@@ -906,6 +906,24 @@ Raven:AddCMD("unpermadmin", "Stops permadmin.", {}, {}, function(arguments)
     end
 end)
 
+Raven:AddCMD("enableessentials", "Enables all of the \"anti\" commands and others as well.", {"essentials"}, {}, function(arguments)
+    Raven:RunCMD("antivampiresword", {})
+    Raven:RunCMD("antiafk", {})
+    Raven:RunCMD("antibring", {})
+    Raven:RunCMD("antidrag", {})
+    Raven:RunCMD("antifreeze", {})
+    Raven:RunCMD("deathtp", {})
+end)
+
+Raven:AddCMD("disableessentials", "Disables everything that \"enableessentials\" enables.", {"unessentials"}, {}, function(arguments)
+    Raven:RunCMD("unantivampiresword", {})
+    Raven:RunCMD("unantiafk", {})
+    Raven:RunCMD("unantibring", {})
+    Raven:RunCMD("unantidrag", {})
+    Raven:RunCMD("unantifreeze", {})
+    Raven:RunCMD("undeathtp", {})
+end)
+
 local DisableToxic = {}
 DisableToxic.Heartbeat = nil
 DisableToxic.Enabled = false
