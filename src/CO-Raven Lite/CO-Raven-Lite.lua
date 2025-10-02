@@ -1874,7 +1874,7 @@ end)
 local BuildAuraCon = nil
 local BuildAuraPreviews = {}
 
-Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions within the distance limit.", {}, {}, function(arguments)
+Raven:AddCMD("buildaura", "Starts building signs and blocks in random positions within the distance limit.", {}, {"queue limit"}, function(arguments)
     if not BuildAuraCon then
         local Queue = {}
 
