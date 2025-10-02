@@ -871,6 +871,108 @@ Raven:AddCMD("unbreakbkit", "Stops spamming remotes.", {}, {}, function(argument
     Raven.Notif:Success("Turned off breakbkit.")
 end)
 
+local BlockToolTips = {}
+BlockToolTips.Enabled = false
+BlockToolTips.MouseCon = nil
+BlockToolTips.CurrentTarget = {}
+BlockToolTips.CurrentTarget.Brick = nil
+BlockToolTips.CurrentTarget.Box = nil
+BlockToolTips.CurrentTarget.BillboardGui = nil
+
+local function ClearToolTips()
+    if BlockToolTips.CurrentTarget.Brick ~= nil then
+        if BlockToolTips.CurrentTarget.Box then
+            BlockToolTips.CurrentTarget.Box:Destroy()
+        end
+        if BlockToolTips.CurrentTarget.BillboardGui then
+            BlockToolTips.CurrentTarget.BillboardGui:Destroy()
+        end
+        BlockToolTips.CurrentTarget.Brick = nil
+    end
+end
+
+local function InitToolTips(brick: BasePart)
+    BlockToolTips.CurrentTarget.Brick = brick
+
+    local selection_box = Instance.new("SelectionBox")
+    selection_box.LineThickness = 0.009999999776482582
+    selection_box.SurfaceColor3 = Color3.new(0.235294, 0.631373, 1)
+    selection_box.SurfaceTransparency = 0.699999988079071
+    selection_box.Adornee = brick
+    selection_box.Color3 = Color3.new(0.235294, 0.631373, 1)
+    selection_box.Visible = true
+    selection_box.Parent = brick
+
+    BlockToolTips.CurrentTarget.Box = selection_box
+
+    local billboard_gui = Instance.new("BillboardGui")
+    billboard_gui.Active = true
+    billboard_gui.Adornee = brick
+    billboard_gui.AlwaysOnTop = true
+    billboard_gui.ClipsDescendants = true
+    billboard_gui.LightInfluence = 1
+    billboard_gui.Size = UDim2.new(0, 200, 0, 30)
+    billboard_gui.StudsOffset = Vector3.new(0, 2, 0)
+    billboard_gui.ResetOnSpawn = false
+    billboard_gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    billboard_gui.Parent = brick
+
+    local text_label = Instance.new("TextLabel")
+    text_label.Font = Enum.Font.Unknown
+    text_label.Text = "creator: "..brick.Parent.Name
+    text_label.TextColor3 = Color3.new(0.0117647, 0.701961, 1)
+    text_label.TextSize = 16
+    text_label.TextStrokeColor3 = Color3.new(1, 1, 1)
+    text_label.TextWrapped = true
+    text_label.BackgroundColor3 = Color3.new(1, 1, 1)
+    text_label.BackgroundTransparency = 1
+    text_label.BorderColor3 = Color3.new(0.235294, 0.631373, 1)
+    text_label.BorderSizePixel = 0
+    text_label.Size = UDim2.new(1, 0, 1, 0)
+    text_label.Visible = true
+    text_label.RichText = true
+    text_label.TextScaled = true
+    text_label.Parent = billboard_gui
+
+    BlockToolTips.CurrentTarget.BillboardGui = billboard_gui
+end
+
+Raven:AddCMD("blocktooltips", "Shows who built the brick you're hovering your mouse over. (PC ONLY)", {"tooltips", "bricktooltips"}, {}, function(arguments)
+    if Raven.IsMobile then Raven.Notif:Error("Not supported on mobile."); return end
+    if BlockToolTips.Enabled then Raven.Notif:Error("Tooltips are already on."); return end
+
+    Raven.Notif:Success("Enabled tooltips.")
+
+    BlockToolTips.Enabled = true
+
+    BlockToolTips.MouseCon = RunService.RenderStepped:Connect(function(d)
+        local Mouse = LocalPlayer:GetMouse()
+
+        if Mouse.Target and Mouse.Target:IsDescendantOf(workspace.Bricks) and Mouse.Target.Name == "Brick" then
+            if BlockToolTips.CurrentTarget.Brick ~= nil and BlockToolTips.CurrentTarget.Brick ~= Mouse.Target then
+                ClearToolTips()
+            elseif BlockToolTips.CurrentTarget.Brick == nil then
+                InitToolTips(Mouse.Target)
+            end
+        else
+            ClearToolTips()
+        end
+    end)
+end)
+
+Raven:AddCMD("unblocktooltips", "Disables tooltips", {"untooltips", "bricktooltips"}, {}, function(arguments)
+    if not BlockToolTips.Enabled then Raven.Notif:Error("Tooltips are already off!"); return end
+
+    BlockToolTips.Enabled = false
+    BlockToolTips.MouseCon:Disconnect()
+    ClearToolTips()
+
+    BlockToolTips.CurrentTarget.Box = nil
+    BlockToolTips.CurrentTarget.BillboardGui = nil
+
+    Raven.Notif:Success("Disabled tooltips.")
+end)
+
 local PermAdminCon = nil
 
 Raven:AddCMD("permadmin", "Spams reset in the system channel whenever enlighten is in your backpack or character.", {}, {}, function(arguments)
